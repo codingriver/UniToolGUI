@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/AIGate/GateTheme.uss" />
+    <ui:VisualElement class="panel-root">
+
+        <ui:VisualElement class="panel-header">
+            <ui:Label text="状态总览" class="panel-title" />
+            <ui:Label text="全局代理 + 应用配置 + 预设" class="panel-subtitle" />
+            <ui:VisualElement class="panel-header-actions">
+                <ui:Button name="btn-refresh-status" text="刷新" class="btn btn-secondary btn-sm" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 全局代理 -->
+        <ui:VisualElement class="status-card">
+            <ui:Label text="全局代理（环境变量）" class="card-section-title" />
+            <ui:VisualElement class="status-row">
+                <ui:Label text="HTTP_PROXY"  class="status-key" />
+                <ui:Label name="status-http"    text="(未设置)" class="status-value status-value--empty" />
+                <ui:Button name="btn-edit-http"    text="编辑" class="btn-inline" />
+            </ui:VisualElement>
+            <ui:VisualElement class="status-row">
+                <ui:Label text="HTTPS_PROXY" class="status-key" />
+                <ui:Label name="status-https"   text="(未设置)" class="status-value status-value--empty" />
+                <ui:Button name="btn-edit-https"   text="编辑" class="btn-inline" />
+            </ui:VisualElement>
+            <ui:VisualElement class="status-row">
+                <ui:Label text="NO_PROXY"    class="status-key" />
+                <ui:Label name="status-noproxy" text="(未设置)" class="status-value status-value--empty" />
+                <ui:Button name="btn-edit-noproxy" text="编辑" class="btn-inline" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 应用代理 -->
+        <ui:VisualElement class="status-card">
+            <ui:VisualElement class="card-header-row">
+                <ui:Label text="应用代理配置" class="card-section-title" />
+                <ui:Label name="configured-count" text="已配置 0 个" class="card-count-badge" />
+            </ui:VisualElement>
+            <ui:ScrollView name="status-tool-scroll" class="status-tool-scroll">
+                <ui:VisualElement name="status-tool-list" class="status-tool-list" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+
+        <!-- 当前预设 -->
+        <ui:VisualElement class="status-card status-card--preset">
+            <ui:Label text="当前预设" class="card-section-title" />
+            <ui:Label name="current-preset-label" text="(无)" class="current-preset-value" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/CloudflareST/CfstTheme.uss" />
+    <ui:VisualElement class="cfst-panel-root">
+
+        <ui:VisualElement class="cfst-panel-header">
+            <ui:Label text="关于" class="cfst-panel-title" />
+            <ui:Label text="About CloudflareST" class="cfst-panel-subtitle" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="cfst-card">
+            <ui:Label text="项目信息" class="cfst-card-title" />
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="项目名称" class="cfst-form-label" />
+                <ui:Label text="CloudflareST for .NET" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="版本" class="cfst-form-label" />
+                <ui:Label name="about-version" text="v2.0" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="Core 框架" class="cfst-form-label" />
+                <ui:Label text="netstandard2.0 (Unity 2022 兼容)" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="CLI 框架" class="cfst-form-label" />
+                <ui:Label text="net8.0 (自包含发布)" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="Unity 版本" class="cfst-form-label" />
+                <ui:Label text="2022+ (UIToolkit)" class="cfst-td" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="cfst-card">
+            <ui:Label text="功能" class="cfst-card-title" />
+            <ui:Label text="支持 ICMP Ping / TCPing / HTTPing 三种测速方式" class="cfst-td" />
+            <ui:Label text="支持下载速度测试，可配置测速 URL" class="cfst-td" />
+            <ui:Label text="支持定时调度：间隔、每日定点、Cron 表达式" class="cfst-td" />
+            <ui:Label text="支持 Hosts 自动更新" class="cfst-td" />
+            <ui:Label text="支持 IPv4 / IPv6" class="cfst-td" />
+            <ui:Label text="支持多平台 CLI 发布：Windows / Linux / macOS" class="cfst-td" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="cfst-card">
+            <ui:Label text="开源协议" class="cfst-card-title" />
+            <ui:Label text="MIT License" class="cfst-td" />
+            <ui:Label text="基于 XIU2/CloudflareSpeedTest 的 C# 实现" class="cfst-td" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

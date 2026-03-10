@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/AIGate/GateTheme.uss" />
+    <ui:VisualElement class="gate-root">
+
+        <!-- 标题栏 -->
+        <ui:VisualElement class="gate-titlebar">
+            <ui:Label text="GATE" class="titlebar-logo" />
+            <ui:Label text="代理配置管理" class="titlebar-subtitle" />
+            <ui:VisualElement class="titlebar-spacer" />
+            <ui:Label name="version-label" text="v1.0" class="titlebar-version" />
+        </ui:VisualElement>
+
+        <!-- 主体 -->
+        <ui:VisualElement class="gate-body">
+
+            <!-- 侧边导航 -->
+            <ui:VisualElement name="nav-sidebar" class="nav-sidebar">
+                <ui:Button name="nav-global" text="[G]  全局代理" class="nav-item nav-item--active" />
+                <ui:Button name="nav-app"    text="[A]  应用代理" class="nav-item" />
+                <ui:Button name="nav-preset" text="[P]  预  设"  class="nav-item" />
+                <ui:Button name="nav-status" text="[S]  状态总览" class="nav-item" />
+                <ui:Button name="nav-test"   text="[T]  连通测试" class="nav-item" />
+                <ui:VisualElement class="nav-divider" />
+                <ui:Button name="nav-wizard" text="[W]  配置向导" class="nav-item nav-item--wizard" />
+            </ui:VisualElement>
+
+            <!-- 内容区 -->
+            <ui:VisualElement name="content-area" class="content-area" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

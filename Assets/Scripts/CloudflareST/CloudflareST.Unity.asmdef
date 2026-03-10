@@ -1,0 +1,16 @@
+{
+    "name": "CloudflareST.Unity",
+    "rootNamespace": "CloudflareST.Unity.UI",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "CloudflareST.Core.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

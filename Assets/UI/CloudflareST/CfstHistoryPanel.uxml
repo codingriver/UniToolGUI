@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/CloudflareST/CfstTheme.uss" />
+    <ui:VisualElement class="cfst-panel-root">
+
+        <ui:VisualElement class="cfst-panel-header">
+            <ui:Label text="历史记录" class="cfst-panel-title" />
+            <ui:Label name="history-count-badge" text="0 条" class="cfst-badge cfst-badge--idle" />
+            <ui:VisualElement class="cfst-panel-header-right">
+                <ui:Button name="history-btn-clear" text="清空历史" class="cfst-btn cfst-btn-danger cfst-btn-sm" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 历史列表表头 -->
+        <ui:VisualElement class="cfst-table-header">
+            <ui:Label text="时间"     class="cfst-th cfst-history-time" />
+            <ui:Label text="模式"     class="cfst-th cfst-history-mode" />
+            <ui:Label text="摘要"     class="cfst-th cfst-history-summary" />
+            <ui:Label text="状态"     class="cfst-th cfst-history-status" />
+        </ui:VisualElement>
+        <ui:ListView name="history-list" item-height="38" class="cfst-table-body" />
+
+        <!-- 选中详情 -->
+        <ui:VisualElement name="history-detail-card" class="cfst-card">
+            <ui:Label text="选中记录详情" class="cfst-card-title" />
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="时间" class="cfst-form-label" />
+                <ui:Label name="detail-time" text="—" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="协议" class="cfst-form-label" />
+                <ui:Label name="detail-protocol" text="—" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="用时" class="cfst-form-label" />
+                <ui:Label name="detail-duration" text="—" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="最佳 IP" class="cfst-form-label" />
+                <ui:Label name="detail-best-ip" text="—" class="cfst-td cfst-td--ip" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="摘要" class="cfst-form-label" />
+                <ui:Label name="detail-summary" text="—" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-action-row">
+                <ui:Button name="detail-btn-rerun" text="重新测速" class="cfst-btn cfst-btn-secondary cfst-btn-sm" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

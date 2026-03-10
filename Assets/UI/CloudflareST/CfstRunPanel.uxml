@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/CloudflareST/CfstTheme.uss" />
+    <ui:VisualElement class="cfst-panel-root">
+
+        <!-- 面板标题 -->
+        <ui:VisualElement class="cfst-panel-header">
+            <ui:Label text="测速进度" class="cfst-panel-title" />
+            <ui:Label name="cfst-run-status-badge" text="空闲" class="cfst-badge cfst-badge--idle" />
+            <ui:VisualElement class="cfst-panel-header-right">
+                <ui:Button name="run-btn-start"  text="开始测速" class="cfst-btn cfst-btn-primary" />
+                <ui:Button name="run-btn-cancel" text="取消" class="cfst-btn cfst-btn-danger" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 当前配置摘要 -->
+        <ui:VisualElement class="cfst-card">
+            <ui:Label text="当前配置" class="cfst-card-title" />
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="协议" class="cfst-form-label" />
+                <ui:Label name="run-info-protocol" text="ICMP Ping" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="并发" class="cfst-form-label" />
+                <ui:Label name="run-info-concurrency" text="200" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="IP 来源" class="cfst-form-label" />
+                <ui:Label name="run-info-ip-source" text="ip.txt" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="测速 URL" class="cfst-form-label" />
+                <ui:Label name="run-info-url" text="—" class="cfst-td" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 进度条 -->
+        <ui:VisualElement class="cfst-card">
+            <ui:Label text="进度" class="cfst-card-title" />
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="延迟测速" class="cfst-form-label" />
+                <ui:Label name="run-ping-count" text="0 / 0" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement name="run-ping-track" class="cfst-progress-track">
+                <ui:VisualElement name="run-ping-fill" class="cfst-progress-fill" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="下载测速" class="cfst-form-label" />
+                <ui:Label name="run-dl-count" text="0 / 0" class="cfst-td" />
+            </ui:VisualElement>
+            <ui:VisualElement name="run-dl-track" class="cfst-progress-track">
+                <ui:VisualElement name="run-dl-fill" class="cfst-progress-fill" />
+            </ui:VisualElement>
+            <ui:VisualElement class="cfst-form-row">
+                <ui:Label text="已用时间" class="cfst-form-label" />
+                <ui:Label name="run-elapsed" text="0s" class="cfst-td" />
+                <ui:VisualElement class="cfst-titlebar-spacer" />
+                <ui:Label text="当前 IP" class="cfst-form-label" />
+                <ui:Label name="run-current-ip" text="—" class="cfst-td cfst-td--ip" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 实时日志 -->
+        <ui:VisualElement class="cfst-card">
+            <ui:Label text="实时日志" class="cfst-card-title" />
+            <ui:ScrollView name="run-log-scroll" class="cfst-log-scroll">
+                <ui:Label name="run-log-text" text="等待开始..." class="cfst-log-text" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

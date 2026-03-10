@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/CloudflareST/CfstTheme.uss" />
+    <ui:VisualElement class="cfst-root">
+
+        <!-- 标题栏 -->
+        <ui:VisualElement class="cfst-titlebar">
+            <ui:Label text="CloudflareST" class="cfst-titlebar-logo" />
+            <ui:Label text="Cloudflare IP 优选工具" class="cfst-titlebar-subtitle" />
+            <ui:VisualElement class="cfst-titlebar-spacer" />
+            <ui:Label name="cfst-version-label" text="v2.0" class="cfst-titlebar-version" />
+        </ui:VisualElement>
+
+        <!-- 主体 -->
+        <ui:VisualElement class="cfst-body">
+
+            <!-- 侧边导航 -->
+            <ui:VisualElement name="cfst-sidebar" class="cfst-sidebar">
+                <ui:Button name="cfst-nav-config"   text="⚙  配置"   class="cfst-nav-item cfst-nav-item--active" />
+                <ui:Button name="cfst-nav-run"      text="▶  测速"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-result"   text="★  结果"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-schedule" text="◷  调度"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-history"  text="☰  历史"   class="cfst-nav-item" />
+                <ui:VisualElement class="cfst-nav-divider" />
+                <ui:Button name="cfst-nav-about"    text="ℹ  关于"   class="cfst-nav-item" />
+            </ui:VisualElement>
+
+            <!-- 内容区（各面板由 C# 动态加载） -->
+            <ui:VisualElement name="cfst-content" class="cfst-content" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,12 @@
+/*
+  DefaultTheme.uss
+  Applied via PanelSettings > Theme Style Sheet.
+  Sets base dark background on the UIDocument root element.
+  Font is applied at runtime by ChineseFontLoader.cs.
+*/
+
+:root {
+    background-color: #0f1117;
+    color: #e2e8f0;
+    font-size: 13px;
+}

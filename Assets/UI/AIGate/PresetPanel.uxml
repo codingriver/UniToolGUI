@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/AIGate/GateTheme.uss" />
+    <ui:VisualElement class="panel-root">
+
+        <!-- 面板标题 -->
+        <ui:VisualElement class="panel-header">
+            <ui:Label text="💾 预设配置集" class="panel-title" />
+            <ui:Label text="Preset Management  ·  保存/加载代理场景" class="panel-subtitle" />
+        </ui:VisualElement>
+
+        <!-- 主体：左右两列 -->
+        <ui:VisualElement class="preset-body">
+
+            <!-- 左：预设列表 -->
+            <ui:VisualElement class="preset-list-pane">
+                <ui:Label text="已保存的预设" class="card-section-title" />
+                <ui:ListView name="preset-list" item-height="40" class="preset-list" />
+                <ui:Button name="btn-new-preset" text="+ 新建预设" class="btn btn-primary btn-full" />
+            </ui:VisualElement>
+
+            <!-- 右：预设详情 -->
+            <ui:VisualElement name="preset-detail-pane" class="preset-detail-pane">
+                <ui:Label text="预设详情" class="card-section-title" />
+
+                <ui:VisualElement class="detail-row">
+                    <ui:Label text="名称"     class="detail-key" />
+                    <ui:Label name="detail-name"      text="-" class="detail-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="detail-row">
+                    <ui:Label text="创建时间" class="detail-key" />
+                    <ui:Label name="detail-created"   text="-" class="detail-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="detail-row">
+                    <ui:Label text="更新时间" class="detail-key" />
+                    <ui:Label name="detail-updated"   text="-" class="detail-value" />
+                </ui:VisualElement>
+                <ui:VisualElement class="detail-row">
+                    <ui:Label text="HTTP_PROXY" class="detail-key" />
+                    <ui:Label name="detail-http"      text="-" class="detail-value detail-value--proxy" />
+                </ui:VisualElement>
+                <ui:VisualElement class="detail-row">
+                    <ui:Label text="应用配置数" class="detail-key" />
+                    <ui:Label name="detail-app-count" text="-" class="detail-value" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="detail-actions">
+                    <ui:Button name="btn-apply-preset"  text="应用"    class="btn btn-primary btn-sm" />
+                    <ui:Button name="btn-set-default"   text="设为默认" class="btn btn-secondary btn-sm" />
+                    <ui:Button name="btn-export-preset" text="导出"    class="btn btn-secondary btn-sm" />
+                    <ui:Button name="btn-delete-preset" text="删除"    class="btn btn-danger btn-sm" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <!-- 保存当前配置为新预设 -->
+        <ui:VisualElement class="save-bar">
+            <ui:Label text="保存当前配置：" class="save-bar-label" />
+            <ui:TextField name="save-name-input" placeholder-text="输入预设名称" class="save-bar-input" />
+            <ui:Button name="btn-save-preset" text="保存" class="btn btn-primary" />
+        </ui:VisualElement>
+
+        <!-- 反馈 -->
+        <ui:Label name="preset-feedback" text="" class="feedback-label" />
+
+        <!-- 新建预设弹窗 -->
+        <ui:VisualElement name="new-preset-overlay" class="overlay">
+            <ui:VisualElement class="overlay-panel">
+                <ui:Label text="新建预设" class="overlay-title" />
+                <ui:Label text="输入名称后将保存当前环境变量和工具代理配置" class="overlay-subtitle" />
+                <ui:VisualElement class="form-row">
+                    <ui:Label text="预设名称" class="form-label" />
+                    <ui:TextField name="new-preset-name" placeholder-text="如: office, home, project" class="form-input" />
+                </ui:VisualElement>
+                <ui:VisualElement class="form-row">
+                    <ui:Label text="描述（可选）" class="form-label" />
+                    <ui:TextField name="new-preset-desc" placeholder-text="描述此预设的使用场景" class="form-input" />
+                </ui:VisualElement>
+                <ui:VisualElement class="overlay-actions">
+                    <ui:Button name="btn-new-cancel" text="取消" class="btn btn-secondary" />
+                    <ui:Button name="btn-new-save"   text="创建" class="btn btn-primary" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
