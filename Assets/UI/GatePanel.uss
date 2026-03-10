@@ -1,0 +1,366 @@
+/* Global Container */
+.main-container {
+    flex-grow: 1;
+    background-color: #f5f5f5; /* Light gray background */
+    padding: 16px;
+    font-size: 14px;
+    color: #333333;
+}
+
+/* --- Header Area --- */
+.header-area {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-color: #e0e0e0;
+    border-width: 1px;
+}
+
+.title-container {
+    flex-direction: column;
+}
+
+.main-title {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: #222222;
+    margin: 0;
+    padding: 0;
+}
+
+.sub-title {
+    font-size: 12px;
+    color: #888888;
+    margin-top: 4px;
+    padding: 0;
+}
+
+.btn-refresh {
+    background-color: #1890ff;
+    color: #ffffff;
+    border-radius: 6px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    border-width: 0;
+    cursor: link;
+    transition-duration: 0.2s;
+}
+
+.btn-refresh:hover {
+    background-color: #40a9ff;
+}
+
+.btn-refresh:active {
+    background-color: #096dd9;
+}
+
+/* --- List Header --- */
+.list-header {
+    flex-direction: row;
+    background-color: #e8e8e8;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-color: #d9d9d9;
+    border-width: 1px;
+    border-bottom-width: 0; /* Connects with list */
+}
+
+.header-col {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: #555555;
+    padding: 0;
+    margin: 0;
+}
+
+/* Column sizing matching the item rows */
+.col-name { width: 180px; }
+.col-detail { flex-grow: 1; }
+.col-status { width: 80px; -unity-text-align: middle-center; }
+.col-action { width: 80px; -unity-text-align: middle-center; }
+
+/* --- List Content --- */
+.tool-list {
+    flex-grow: 1;
+    background-color: #ffffff;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-color: #d9d9d9;
+    border-width: 1px;
+    margin-bottom: 8px;
+}
+
+/* --- Dynamic List Items (created in C#) --- */
+.row {
+    flex-direction: row;
+    align-items: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-left: 8px;
+    margin-right: 8px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    border-color: #ebebeb;
+    border-width: 1px;
+    transition-duration: 0.15s;
+}
+
+.row:hover {
+    background-color: #f8f9fa;
+    border-color: #d6d6d6;
+}
+
+/* 1. Name Column */
+.tool-name {
+    width: 180px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: #333333;
+}
+
+/* 2. Detail Column */
+.tool-detail {
+    flex-grow: 1;
+    font-size: 13px;
+    color: #666666;
+    -unity-text-overflow-position: end;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* 3. Status Column (Dot + Toggle) */
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background-color: #cccccc;
+    margin-right: 8px;
+}
+
+.toggle-button {
+    width: 60px;
+    height: 28px;
+    background-color: #ffffff;
+    color: #333333;
+    border-color: #d9d9d9;
+    border-width: 2px;
+    border-radius: 4px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-right: 8px;
+    cursor: link;
+    transition-duration: 0.2s;
+}
+
+/* 4. Action Column (Buttons) */
+.open-button {
+    width: 80px;
+    height: 28px;
+    background-color: #ffffff;
+    color: #333333;
+    border-color: #d9d9d9;
+    border-width: 2px;
+    border-radius: 4px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    cursor: link;
+    transition-duration: 0.2s;
+}
+
+.open-button:hover {
+    color: #1890ff;
+    border-color: #1890ff;
+    background-color: #e6f7ff;
+}
+
+.open-button:active {
+    color: #096dd9;
+    border-color: #096dd9;
+}
+.view-button {
+    width: 60px;
+    height: 28px;
+    background-color: #ffffff;
+    color: #333333;
+    border-color: #d9d9d9;
+    border-width: 2px;
+    border-radius: 4px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-right: 8px;
+    cursor: link;
+    transition-duration: 0.2s;
+}
+
+.view-button:hover {
+    color: #52c41a;
+    border-color: #52c41a;
+    background-color: #f6ffed;
+}
+
+.view-button:active {
+    color: #389e0d;
+    border-color: #389e0d;
+}
+
+/* --- Edit Panel Overlay --- */
+.edit-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.35);
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.edit-panel {
+    width: 480px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    border-color: #d9d9d9;
+    border-width: 1px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    padding-left: 28px;
+    padding-right: 28px;
+}
+
+.edit-panel-title {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: #222222;
+    margin-bottom: 4px;
+}
+
+.edit-panel-subtitle {
+    font-size: 12px;
+    color: #888888;
+    margin-bottom: 20px;
+}
+
+.edit-field-label {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: #555555;
+    margin-bottom: 6px;
+}
+
+.edit-field-input {
+    font-size: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 6px;
+    border-color: #d9d9d9;
+    border-width: 1px;
+    margin-bottom: 16px;
+    background-color: #ffffff;
+    color: #333333;
+}
+
+.edit-field-input:focus {
+    border-color: #1890ff;
+}
+.edit-field-multiline {
+    min-height: 60px;
+    max-height: 120px;
+    white-space: normal;
+    overflow: scroll;
+}
+
+.edit-field-readonly {
+    background-color: #f5f5f5;
+    color: #999999;
+}
+
+.edit-env-hint {
+    font-size: 12px;
+    color: #888888;
+    margin-bottom: 6px;
+}
+
+.edit-status-active {
+    font-size: 12px;
+    color: #52c41a;
+    -unity-font-style: bold;
+    margin-bottom: 16px;
+}
+
+.edit-status-inactive {
+    font-size: 12px;
+    color: #ff4d4f;
+    -unity-font-style: bold;
+    margin-bottom: 16px;
+}
+
+.edit-button-row {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.btn-cancel {
+    height: 32px;
+    width: 80px;
+    background-color: #ffffff;
+    color: #333333;
+    border-color: #d9d9d9;
+    border-width: 1px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-right: 12px;
+    cursor: link;
+    transition-duration: 0.2s;
+}
+
+.btn-cancel:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.btn-save {
+    height: 32px;
+    width: 80px;
+    background-color: #1890ff;
+    color: #ffffff;
+    border-width: 0;
+    border-radius: 6px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    cursor: link;
+    transition-duration: 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #40a9ff;
+}
+
+.btn-save:active {
+    background-color: #096dd9;
+}
+
+.btn-save-disabled {
+    background-color: #d9d9d9;
+    color: #999999;
+}
