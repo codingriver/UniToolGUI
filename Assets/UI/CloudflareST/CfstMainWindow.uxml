@@ -16,13 +16,13 @@
 
             <!-- 侧边导航 -->
             <ui:VisualElement name="cfst-sidebar" class="cfst-sidebar">
-                <ui:Button name="cfst-nav-config"   text="⚙  配置"   class="cfst-nav-item cfst-nav-item--active" />
-                <ui:Button name="cfst-nav-run"      text="▶  测速"   class="cfst-nav-item" />
-                <ui:Button name="cfst-nav-result"   text="★  结果"   class="cfst-nav-item" />
-                <ui:Button name="cfst-nav-schedule" text="◷  调度"   class="cfst-nav-item" />
-                <ui:Button name="cfst-nav-history"  text="☰  历史"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-config"   text="⚙ 配置"   class="cfst-nav-item cfst-nav-item--active" />
+                <ui:Button name="cfst-nav-run"      text="▶ 测速"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-result"   text="★ 结果"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-schedule" text="◷ 调度"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-history"  text="☰ 历史"   class="cfst-nav-item" />
                 <ui:VisualElement class="cfst-nav-divider" />
-                <ui:Button name="cfst-nav-about"    text="ℹ  关于"   class="cfst-nav-item" />
+                <ui:Button name="cfst-nav-about"    text="i 关于"   class="cfst-nav-item" />
             </ui:VisualElement>
 
             <!-- 内容区（各面板由 C# 动态加载） -->

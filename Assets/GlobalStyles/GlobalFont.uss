@@ -1,0 +1,13 @@
+:root {
+    /*
+     * Unity USS 中 -unity-font-definition 只接受 resource() 或 url() 指向已编译的 FontAsset，
+     * 不支持 system-font() 或 CSS 字体回退列表。
+     *
+     * 当前使用项目内已有的思源黑体（Source Han Sans SC Bold）FontAsset，
+     * 支持简体中文、日文、韩文等 CJK 字符。
+     *
+     * 路径说明：resource() 从 Assets/Resources/ 下查找，
+     * 因该文件不在 Resources/ 下，改用 project-relative 路径的 url() 引用。
+     */
+    -unity-font-definition: url("/Assets/Fonts/SourceHanSansSC-Bold SDF.asset");
+}

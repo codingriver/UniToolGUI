@@ -20,6 +20,7 @@ namespace AIGate.UI
         public VisualTreeAsset presetPanelAsset;
         public VisualTreeAsset statusPanelAsset;
         public VisualTreeAsset testPanelAsset;
+        public VisualTreeAsset toolPathPanelAsset;
 
         private VisualElement _root;
         private VisualElement _contentArea;
@@ -30,8 +31,9 @@ namespace AIGate.UI
         private PresetPanelController  _presetCtrl;
         private StatusPanelController  _statusCtrl;
         private TestPanelController    _testCtrl;
+        private ToolPathPanelController _toolPathCtrl;
 
-        private enum Panel { Global, App, Preset, Status, Test }
+        private enum Panel { Global, App, Preset, Status, Test, ToolPath }
         private Panel _activePanel = Panel.Global;
 
         private readonly Dictionary<Panel, Button>        _navButtons = new();
@@ -69,6 +71,7 @@ namespace AIGate.UI
             BindNav("nav-preset",  Panel.Preset);
             BindNav("nav-status",  Panel.Status);
             BindNav("nav-test",    Panel.Test);
+            BindNav("nav-paths",   Panel.ToolPath);
 
             // Wizard button — CLI only; show hint in Unity context
             var wizardBtn = _root.Q<Button>("nav-wizard");
@@ -124,11 +127,12 @@ namespace AIGate.UI
             // Refresh data on panel show
             switch (panel)
             {
-                case Panel.Global: _globalCtrl?.Refresh(); break;
-                case Panel.App:    _appCtrl?.Refresh();    break;
-                case Panel.Preset: _presetCtrl?.Refresh(); break;
-                case Panel.Status: _statusCtrl?.Refresh(); break;
-                case Panel.Test:   _testCtrl?.Refresh();   break;
+                case Panel.Global:   _globalCtrl?.Refresh();   break;
+                case Panel.App:      _appCtrl?.Refresh();      break;
+                case Panel.Preset:   _presetCtrl?.Refresh();   break;
+                case Panel.Status:   _statusCtrl?.Refresh();   break;
+                case Panel.Test:     _testCtrl?.Refresh();     break;
+                case Panel.ToolPath: _toolPathCtrl?.Refresh(); break;
             }
         }
 
@@ -136,18 +140,20 @@ namespace AIGate.UI
 
         private void BuildPanels()
         {
-            _panels[Panel.Global] = InstantiatePanel(globalPanelAsset, "GlobalPanel");
-            _panels[Panel.App]    = InstantiatePanel(appPanelAsset,    "AppPanel");
-            _panels[Panel.Preset] = InstantiatePanel(presetPanelAsset, "PresetPanel");
-            _panels[Panel.Status] = InstantiatePanel(statusPanelAsset,  "StatusPanel");
-            _panels[Panel.Test]   = InstantiatePanel(testPanelAsset,    "TestPanel");
+            _panels[Panel.Global]   = InstantiatePanel(globalPanelAsset,   "GlobalPanel");
+            _panels[Panel.App]      = InstantiatePanel(appPanelAsset,      "AppPanel");
+            _panels[Panel.Preset]   = InstantiatePanel(presetPanelAsset,   "PresetPanel");
+            _panels[Panel.Status]   = InstantiatePanel(statusPanelAsset,   "StatusPanel");
+            _panels[Panel.Test]     = InstantiatePanel(testPanelAsset,     "TestPanel");
+            _panels[Panel.ToolPath] = InstantiatePanel(toolPathPanelAsset, "ToolPathPanel");
 
             // Attach sub-controllers
-            _globalCtrl = new GlobalPanelController(_panels[Panel.Global]);
-            _appCtrl    = new AppPanelController(_panels[Panel.App]);
-            _presetCtrl = new PresetPanelController(_panels[Panel.Preset]);
-            _statusCtrl = new StatusPanelController(_panels[Panel.Status]);
-            _testCtrl   = new TestPanelController(_panels[Panel.Test]);
+            _globalCtrl   = new GlobalPanelController(_panels[Panel.Global]);
+            _appCtrl      = new AppPanelController(_panels[Panel.App]);
+            _presetCtrl   = new PresetPanelController(_panels[Panel.Preset]);
+            _statusCtrl   = new StatusPanelController(_panels[Panel.Status]);
+            _testCtrl     = new TestPanelController(_panels[Panel.Test]);
+            _toolPathCtrl = new ToolPathPanelController(_panels[Panel.ToolPath]);
 
             // Add all to content area (hidden by default)
             foreach (var kv in _panels)

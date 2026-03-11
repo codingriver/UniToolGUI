@@ -3,6 +3,7 @@
     <Style src="project://database/Assets/UI/CloudflareST/CfstTheme.uss" />
     <ui:VisualElement class="cfst-panel-root">
 
+        <!-- 标题（固定） -->
         <ui:VisualElement class="cfst-panel-header">
             <ui:Label text="历史记录" class="cfst-panel-title" />
             <ui:Label name="history-count-badge" text="0 条" class="cfst-badge cfst-badge--idle" />
@@ -11,16 +12,18 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- 历史列表表头 -->
+        <!-- 表头（固定） -->
         <ui:VisualElement class="cfst-table-header">
-            <ui:Label text="时间"     class="cfst-th cfst-history-time" />
-            <ui:Label text="模式"     class="cfst-th cfst-history-mode" />
-            <ui:Label text="摘要"     class="cfst-th cfst-history-summary" />
-            <ui:Label text="状态"     class="cfst-th cfst-history-status" />
+            <ui:Label text="时间"  class="cfst-th cfst-history-time" />
+            <ui:Label text="模式"  class="cfst-th cfst-history-mode" />
+            <ui:Label text="摘要"  class="cfst-th cfst-history-summary" />
+            <ui:Label text="状态"  class="cfst-th cfst-history-status" />
         </ui:VisualElement>
-        <ui:ListView name="history-list" item-height="38" class="cfst-table-body" />
 
-        <!-- 选中详情 -->
+        <!-- 历史列表（填满剩余空间） -->
+        <ui:ListView name="history-list" item-height="38" class="cfst-table-body" style="flex-grow:1; min-height:100px;" />
+
+        <!-- 选中详情（固定在底部） -->
         <ui:VisualElement name="history-detail-card" class="cfst-card">
             <ui:Label text="选中记录详情" class="cfst-card-title" />
             <ui:VisualElement class="cfst-form-row">

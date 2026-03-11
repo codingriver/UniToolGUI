@@ -11,58 +11,62 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- 调度模式 -->
-        <ui:VisualElement class="cfst-card">
-            <ui:Label text="调度模式（三选一，留空则禁用）" class="cfst-card-title" />
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="间隔(分钟) -interval" class="cfst-form-label" />
-                <ui:TextField name="sched-interval" placeholder-text="0 = 禁用" class="cfst-form-input" />
-                <ui:Label text="如 360 = 每 6 小时" class="cfst-form-hint" />
-            </ui:VisualElement>
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="每日定点 -at" class="cfst-form-label" />
-                <ui:TextField name="sched-at" placeholder-text="6:00,18:00" class="cfst-form-input" />
-            </ui:VisualElement>
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="Cron -cron" class="cfst-form-label" />
-                <ui:TextField name="sched-cron" placeholder-text="0 */6 * * *" class="cfst-form-input" />
-            </ui:VisualElement>
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="时区 -tz" class="cfst-form-label" />
-                <ui:TextField name="sched-tz" placeholder-text="local" class="cfst-form-input" />
-            </ui:VisualElement>
-        </ui:VisualElement>
+        <ui:ScrollView class="cfst-scroll-view" mode="Vertical">
+            <ui:VisualElement class="cfst-panel-inner">
 
-        <!-- Hosts 更新 -->
-        <ui:VisualElement class="cfst-card">
-            <ui:Label text="Hosts 自动更新" class="cfst-card-title" />
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="域名 -hosts" class="cfst-form-label" />
-                <ui:TextField name="sched-hosts" placeholder-text="cdn.example.com,*.example.com" class="cfst-form-input" />
-            </ui:VisualElement>
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Toggle name="sched-hosts-dry-run" label="仅预览，不写入 (-hosts-dry-run)" class="cfst-form-toggle" />
-            </ui:VisualElement>
-        </ui:VisualElement>
+                <!-- 调度模式 -->
+                <ui:VisualElement class="cfst-card">
+                    <ui:Label text="调度模式（三选一，留空则禁用）" class="cfst-card-title" />
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="间隔(分钟)" class="cfst-form-label" />
+                        <ui:TextField name="sched-interval" placeholder-text="0=禁用" class="cfst-form-input" />
+                        <ui:Label text="如 360=每6小时" class="cfst-form-hint" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="每日定点 -at" class="cfst-form-label" />
+                        <ui:TextField name="sched-at" placeholder-text="6:00,18:00" class="cfst-form-input" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="Cron -cron" class="cfst-form-label" />
+                        <ui:TextField name="sched-cron" placeholder-text="0 */6 * * *" class="cfst-form-input" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="时区 -tz" class="cfst-form-label" />
+                        <ui:TextField name="sched-tz" placeholder-text="local" class="cfst-form-input" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
 
-        <!-- 调度状态 -->
-        <ui:VisualElement class="cfst-card">
-            <ui:Label text="调度状态" class="cfst-card-title" />
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="状态" class="cfst-form-label" />
-                <ui:Label name="sched-status" text="未配置" class="cfst-badge cfst-badge--idle" />
-            </ui:VisualElement>
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="下次运行" class="cfst-form-label" />
-                <ui:Label name="sched-next-run" text="—" class="cfst-td" />
-            </ui:VisualElement>
-            <ui:VisualElement class="cfst-form-row">
-                <ui:Label text="上次运行" class="cfst-form-label" />
-                <ui:Label name="sched-last-run" text="—" class="cfst-td" />
-            </ui:VisualElement>
-        </ui:VisualElement>
+                <!-- Hosts 更新 -->
+                <ui:VisualElement class="cfst-card">
+                    <ui:Label text="Hosts 自动更新" class="cfst-card-title" />
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="域名 -hosts" class="cfst-form-label" />
+                        <ui:TextField name="sched-hosts" placeholder-text="cdn.example.com" class="cfst-form-input" />
+                    </ui:VisualElement>
+                    <ui:Toggle name="sched-hosts-dry-run" label="仅预览，不写入" class="cfst-form-toggle" />
+                </ui:VisualElement>
 
-        <ui:Label name="sched-feedback" class="cfst-feedback" />
+                <!-- 调度状态 -->
+                <ui:VisualElement class="cfst-card">
+                    <ui:Label text="调度状态" class="cfst-card-title" />
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="状态" class="cfst-form-label" />
+                        <ui:Label name="sched-status" text="未配置" class="cfst-badge cfst-badge--idle" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="下次运行" class="cfst-form-label" />
+                        <ui:Label name="sched-next-run" text="—" class="cfst-td" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="cfst-form-row">
+                        <ui:Label text="上次运行" class="cfst-form-label" />
+                        <ui:Label name="sched-last-run" text="—" class="cfst-td" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:Label name="sched-feedback" class="cfst-feedback" />
+
+            </ui:VisualElement>
+        </ui:ScrollView>
 
     </ui:VisualElement>
 </ui:UXML>

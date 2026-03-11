@@ -23,6 +23,8 @@
                 <ui:Button name="nav-test"   text="[T]  连通测试" class="nav-item" />
                 <ui:VisualElement class="nav-divider" />
                 <ui:Button name="nav-wizard" text="[W]  配置向导" class="nav-item nav-item--wizard" />
+                <ui:VisualElement class="nav-divider" />
+                <ui:Button name="nav-paths"  text="[R]  工具路径" class="nav-item nav-item--wizard" />
             </ui:VisualElement>
 
             <!-- 内容区 -->
