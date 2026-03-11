@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4706329974223632807}
   - component: {fileID: 191466712807686118}
   - component: {fileID: 4275983110603768695}
-  - component: {fileID: 2756037705513581342}
   m_Layer: 5
   m_Name: AIGate
   m_TagString: Untagged
@@ -68,15 +67,4 @@ MonoBehaviour:
   presetPanelAsset: {fileID: 9197481963319205126, guid: c01faade1c2c32940a5c6d4512ecd95e, type: 3}
   statusPanelAsset: {fileID: 9197481963319205126, guid: 7404ceb7bbe43a648ac4e41c2fe299b2, type: 3}
   testPanelAsset: {fileID: 9197481963319205126, guid: 695cee963868eb74a8fe456c0ee11cd8, type: 3}
---- !u!114 &2756037705513581342
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4049858037965052327}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8046be39e6c85ae4e9f0c7bf5e410d3c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  toolPathPanelAsset: {fileID: 0}

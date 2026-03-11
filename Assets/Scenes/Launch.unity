@@ -134,10 +134,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: CloudflareST
       objectReference: {fileID: 0}
-    - target: {fileID: 993015470448593954, guid: ccbfc1038e0513d4282f9feb737bbff4, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 5167664414571388085, guid: ccbfc1038e0513d4282f9feb737bbff4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -332,10 +328,6 @@ PrefabInstance:
     - target: {fileID: 4049858037965052327, guid: d8f636b8da760ba4d90f89444cb3ec51, type: 3}
       propertyPath: m_Name
       value: AIGate
-      objectReference: {fileID: 0}
-    - target: {fileID: 4049858037965052327, guid: d8f636b8da760ba4d90f89444cb3ec51, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4706329974223632807, guid: d8f636b8da760ba4d90f89444cb3ec51, type: 3}
       propertyPath: m_LocalPosition.x
