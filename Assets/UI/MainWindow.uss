@@ -318,26 +318,35 @@
 /* TextField */
 .field-text {
     flex-grow: 1;
-    background-color: #1e2535;
+    height: 30px;
     border-width: 1px;
     border-color: #303a50;
     border-radius: 5px;
+    background-color: #1e2535;
+}
+.field-text > .unity-base-text-field__input {
+    background-color: #1e2535;
+    border-width: 0;
+    border-radius: 5px;
     color: #e8eaf0;
     font-size: 12px;
-    padding: 6px 8px;
-    height: 30px;
+    padding: 4px 8px;
+    -unity-text-align: middle-left;
+    margin: 0;
 }
-.field-text:focus {
-    border-color: #f48120;
+.field-text:focus > .unity-base-text-field__input {
+    background-color: #252d3d;
 }
-.field-text--error {
+.field-text--error > .unity-base-text-field__input {
     border-color: #ff4d6a;
 }
-.field-text--warning {
+.field-text--warning > .unity-base-text-field__input {
     border-color: #ffcc44;
 }
 .field-text--multiline {
     height: 72px;
+}
+.field-text--multiline > .unity-base-text-field__input {
     white-space: normal;
 }
 
@@ -358,21 +367,35 @@
     color: #e8eaf0;
 }
 
-/* IntegerField / FloatField */
+/* IntegerField / FloatField / DropdownField */
 .field-int {
     width: 90px;
-    background-color: #1e2535;
+    height: 30px;
     border-width: 1px;
     border-color: #303a50;
     border-radius: 5px;
+    background-color: #1e2535;
+}
+.field-int > .unity-base-text-field__input {
+    background-color: #1e2535;
+    border-width: 0;
+    border-radius: 5px;
     color: #e8eaf0;
     font-size: 12px;
-    height: 30px;
+    padding: 4px 6px;
+    -unity-text-align: middle-left;
+    margin: 0;
 }
-.field-int:focus {
-    border-color: #f48120;
+.field-int > .unity-base-field__input {
+    background-color: #1e2535;
+    border-width: 0;
+    border-radius: 5px;
+    color: #e8eaf0;
+    font-size: 12px;
+    padding: 4px 6px;
+    margin: 0;
 }
-.field-int--error {
+.field-int--error > .unity-base-text-field__input {
     border-color: #ff4d6a;
 }
 .field-unit {
@@ -388,6 +411,18 @@
 }
 .field-toggle > .unity-toggle__input {
     margin-right: 6px;
+}
+.field-toggle > .unity-toggle__input > .unity-toggle__checkmark {
+    background-color: #1e2535;
+    border-width: 1px;
+    border-color: #303a50;
+    border-radius: 3px;
+    width: 16px;
+    height: 16px;
+}
+.field-toggle > .unity-toggle__input:checked > .unity-toggle__checkmark {
+    background-color: #f48120;
+    border-color: #f48120;
 }
 .field-toggle .unity-label {
     font-size: 12px;
@@ -405,6 +440,27 @@
     margin-bottom: 6px;
 }
 .radio-item .unity-label {
+    font-size: 12px;
+    color: #e8eaf0;
+}
+.unity-radio-button > .unity-radio-button__input > .unity-radio-button__checkmark-background {
+    background-color: #1e2535;
+    border-width: 1px;
+    border-color: #303a50;
+    border-radius: 8px;
+    width: 16px;
+    height: 16px;
+}
+.unity-radio-button:checked > .unity-radio-button__input > .unity-radio-button__checkmark-background > .unity-radio-button__checkmark {
+    background-color: #f48120;
+    border-radius: 5px;
+    width: 8px;
+    height: 8px;
+}
+.unity-radio-button > .unity-radio-button__input > #unity-checkmark {
+    -unity-background-image-tint-color: #e8eaf0;
+}
+.unity-radio-button .unity-label {
     font-size: 12px;
     color: #e8eaf0;
 }
