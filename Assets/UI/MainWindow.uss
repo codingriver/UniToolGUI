@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
    MainWindow.uss  —  Cloudflare Speed Test GUI
    主题：深色控制台风格 + 橙色 Cloudflare 强调色
    ══════════════════════════════════════════════════════════ */
@@ -607,4 +607,73 @@
     color: #5a6480;
     -unity-text-align: middle-center;
     margin-bottom: 4px;
+}
+
+/* ======================================================
+   ScrollView Scrollbar styles
+   Matches dark console theme.
+   ====================================================== */
+
+/* vertical scroller container */
+.unity-scroll-view .unity-scroller--vertical {
+    background-color: #161b24;
+    background-image: none;
+    width: 10px;
+    border-left-width: 1px;
+    border-left-color: #252d3d;
+}
+
+/* tracker (track background) */
+.unity-scroll-view .unity-scroller--vertical .unity-base-slider__tracker {
+    background-color: #161b24;
+    background-image: none;
+    border-width: 0;
+}
+
+/* dragger (thumb) */
+.unity-scroll-view .unity-scroller--vertical .unity-base-slider__dragger {
+    background-color: #303a50;
+    background-image: none;
+    border-width: 0;
+    border-radius: 3px;
+    min-height: 24px;
+}
+.unity-scroll-view .unity-scroller--vertical .unity-base-slider__dragger:hover {
+    background-color: #f48120;
+}
+
+/* low-button (top arrow) */
+.unity-scroll-view .unity-scroller--vertical .unity-scroller__low-button {
+    background-color: #1e2535;
+    background-image: none;
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-color: #252d3d;
+    border-radius: 0;
+    padding: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    color: #5a6480;
+}
+.unity-scroll-view .unity-scroller--vertical .unity-scroller__low-button:hover {
+    background-color: #252d3d;
+    color: #9aa3b5;
+}
+
+/* high-button (bottom arrow) */
+.unity-scroll-view .unity-scroller--vertical .unity-scroller__high-button {
+    background-color: #1e2535;
+    background-image: none;
+    border-width: 0;
+    border-top-width: 1px;
+    border-top-color: #252d3d;
+    border-radius: 0;
+    padding: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    color: #5a6480;
+}
+.unity-scroll-view .unity-scroller--vertical .unity-scroller__high-button:hover {
+    background-color: #252d3d;
+    color: #9aa3b5;
 }

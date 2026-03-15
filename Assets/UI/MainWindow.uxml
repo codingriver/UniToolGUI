@@ -27,7 +27,7 @@
             </ui:VisualElement>
 
             <!-- 导航菜单 -->
-            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical">
+            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical" vertical-scroller-visibility="AlwaysVisible">
                 <ui:VisualElement name="nav-list" class="nav-list">
                     <ui:Button name="nav-ip"       text="IP 来源"     class="nav-item nav-item--active" />
                     <ui:Button name="nav-latency"  text="延迟测速"    class="nav-item" />
