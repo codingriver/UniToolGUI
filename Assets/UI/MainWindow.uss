@@ -608,3 +608,85 @@
     -unity-text-align: middle-center;
     margin-bottom: 4px;
 }
+
+/* == ScrollView / Scrollbar 娣辫壊涓婚瑕嗙洊 == */
+
+/* 婊氬姩鏉¤建閬撹儗鏅?*/
+.unity-scroll-view__vertical-scroller {
+    width: 8px;
+    background-color: #0f1117;
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+}
+.unity-scroll-view__horizontal-scroller {
+    height: 8px;
+    background-color: #0f1117;
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+}
+
+/* 涓婁笅绠ご鎸夐挳闅愯棌 */
+.unity-scroll-view__vertical-scroller > .unity-base-slider__drag-container > .unity-scroller__high-button,
+.unity-scroll-view__vertical-scroller > .unity-base-slider__drag-container > .unity-scroller__low-button,
+.unity-scroll-view__horizontal-scroller > .unity-base-slider__drag-container > .unity-scroller__high-button,
+.unity-scroll-view__horizontal-scroller > .unity-base-slider__drag-container > .unity-scroller__low-button {
+    display: none;
+}
+
+/* 婊戝潡杞ㄩ亾 */
+.unity-scroll-view__vertical-scroller > .unity-base-slider__drag-container {
+    background-color: #0f1117;
+    border-width: 0;
+    margin: 0;
+    padding: 0;
+}
+.unity-scroll-view__horizontal-scroller > .unity-base-slider__drag-container {
+    background-color: #0f1117;
+    border-width: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* 婊戝潡鏈綋锛坉ragger锛?*/
+.unity-scroll-view__vertical-scroller .unity-base-slider__dragger {
+    background-color: #303a50;
+    border-radius: 4px;
+    border-width: 0;
+    min-height: 24px;
+    width: 6px;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+.unity-scroll-view__vertical-scroller .unity-base-slider__dragger:hover {
+    background-color: #424f6a;
+}
+.unity-scroll-view__vertical-scroller .unity-base-slider__dragger:active {
+    background-color: #f48120;
+}
+
+.unity-scroll-view__horizontal-scroller .unity-base-slider__dragger {
+    background-color: #303a50;
+    border-radius: 4px;
+    border-width: 0;
+    min-width: 24px;
+    height: 6px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+.unity-scroll-view__horizontal-scroller .unity-base-slider__dragger:hover {
+    background-color: #424f6a;
+}
+.unity-scroll-view__horizontal-scroller .unity-base-slider__dragger:active {
+    background-color: #f48120;
+}
+
+/* ScrollView 鍐呭鍖鸿儗鏅€忔槑 */
+.unity-scroll-view {
+    background-color: transparent;
+    border-width: 0;
+}
+.unity-scroll-view__content-and-vertical-scroll-container {
+    background-color: transparent;
+}
