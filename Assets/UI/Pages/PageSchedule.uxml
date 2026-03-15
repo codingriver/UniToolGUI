@@ -1,0 +1,73 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+
+    <ui:Label text="定时调度" class="page-title" />
+    <ui:VisualElement class="page-divider" />
+
+    <ui:ScrollView mode="Vertical">
+
+        <!-- 调度模式 -->
+        <ui:VisualElement class="group-box">
+            <ui:Label text="调度模式" class="group-title" />
+            <ui:VisualElement class="radio-group">
+                <ui:RadioButton name="radio-sched-none"     label="不启用"             value="true"  class="radio-item" />
+                <ui:RadioButton name="radio-sched-interval" label="间隔执行 (-interval)" value="false" class="radio-item" />
+                <ui:RadioButton name="radio-sched-daily"    label="每日定点 (-at)"       value="false" class="radio-item" />
+                <ui:RadioButton name="radio-sched-cron"     label="Cron 表达式 (-cron)"  value="false" class="radio-item" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 间隔参数 -->
+        <ui:VisualElement name="group-interval" class="group-box">
+            <ui:Label text="间隔参数" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Label text="间隔分钟数" class="form-label" />
+                <ui:IntegerField name="field-intervalmin" value="60" class="field-int" />
+                <ui:Label text="分钟 (1~10080)" class="field-unit" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 每日定点 -->
+        <ui:VisualElement name="group-daily" class="group-box">
+            <ui:Label text="定点参数" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Label text="执行时间" class="form-label" />
+                <ui:TextField name="field-dailyat" class="field-text" placeholder-text="6:00,12:00,18:00" />
+            </ui:VisualElement>
+            <ui:Label text="逗号分隔多个时间点，格式 H:mm 或 HH:mm" class="form-hint" style="margin-left:0;" />
+        </ui:VisualElement>
+
+        <!-- Cron -->
+        <ui:VisualElement name="group-cron" class="group-box">
+            <ui:Label text="Cron 参数" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Label text="Cron 表达式" class="form-label" />
+                <ui:TextField name="field-cron" class="field-text" placeholder-text="0 */6 * * *" />
+            </ui:VisualElement>
+            <ui:Label text="格式：分 时 日 月 周  示例：0 */6 * * *（每6小时整点）" class="form-hint" style="margin-left:0;" />
+        </ui:VisualElement>
+
+        <!-- 时区 -->
+        <ui:VisualElement name="group-timezone" class="group-box">
+            <ui:Label text="时区设置" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Label text="时区 (-tz)" class="form-label" />
+                <ui:DropdownField name="dropdown-timezone" class="field-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 调度预览 -->
+        <ui:VisualElement class="group-box">
+            <ui:Label text="调度预览" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Label text="下次执行" class="form-label" />
+                <ui:Label name="label-next1" text="-" style="color:#e8eaf0;font-size:12px;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="form-row">
+                <ui:Label text="再下次" class="form-label" />
+                <ui:Label name="label-next2" text="-" style="color:#e8eaf0;font-size:12px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+
+</ui:UXML>

@@ -1,0 +1,52 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+
+    <ui:Label text="输出设置" class="page-title" />
+    <ui:VisualElement class="page-divider" />
+
+    <ui:ScrollView mode="Vertical">
+
+        <!-- 输出文件 -->
+        <ui:VisualElement class="group-box">
+            <ui:Label text="输出文件" class="group-title" />
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="CSV 文件路径 (-o)" class="form-label" />
+                <ui:TextField name="field-outputfile" value="result.csv" class="field-text" />
+                <ui:Button name="btn-browse-output" text="浏览..." class="btn-browse" />
+            </ui:VisualElement>
+            <ui:Label name="hint-outputfile" text="" class="form-hint" style="margin-left:0;" />
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="最终输出IP数 (-p)" class="form-label" />
+                <ui:IntegerField name="field-outputcount" value="10" class="field-int" />
+                <ui:Label text="控制台/CSV/onlyip 均受此限制" class="field-unit" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 静默模式 -->
+        <ui:VisualElement class="group-box">
+            <ui:Label text="静默模式" class="group-title" />
+
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-silent" label="静默模式 (-silent) — 只向 stdout 逐行输出IP，适合脚本/管道调用" class="field-toggle" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="onlyip 文件路径 (-onlyip)" class="form-label" />
+                <ui:TextField name="field-onlyipfile" value="onlyip.txt" class="field-text" />
+                <ui:Button name="btn-browse-onlyip" text="浏览..." class="btn-browse" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 上次生成文件预览 -->
+        <ui:VisualElement class="group-box">
+            <ui:Label text="上次生成文件" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Label name="label-lastfile" text="尚未生成" style="font-size:12px;color:#9aa3b5;flex-grow:1;" />
+                <ui:Button name="btn-open-output-dir" text="打开所在位置" class="btn-sm" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+
+</ui:UXML>

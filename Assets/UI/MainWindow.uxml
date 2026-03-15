@@ -1,0 +1,90 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
+    xsi="http://www.w3.org/2001/XMLSchema-instance"
+    noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd"
+    editor-extension-mode="False">
+
+    <ui:Template name="PageIpSource"   src="Pages/PageIpSource.uxml" />
+    <ui:Template name="PageLatency"    src="Pages/PageLatency.uxml" />
+    <ui:Template name="PageDownload"   src="Pages/PageDownload.uxml" />
+    <ui:Template name="PageSchedule"   src="Pages/PageSchedule.uxml" />
+    <ui:Template name="PageHosts"      src="Pages/PageHosts.uxml" />
+    <ui:Template name="PageOutput"     src="Pages/PageOutput.uxml" />
+    <ui:Template name="PageOther"      src="Pages/PageOther.uxml" />
+    <ui:Template name="PageResults"    src="Pages/PageResults.uxml" />
+
+    <Style src="MainWindow.uss" />
+
+    <!-- Root -->
+    <ui:VisualElement name="root" class="root">
+
+        <!-- ══ 左侧导航栏 ══ -->
+        <ui:VisualElement name="sidebar" class="sidebar">
+
+            <!-- Logo / 标题 -->
+            <ui:VisualElement name="logo-area" class="logo-area">
+                <ui:Label name="logo-icon" text="☁" class="logo-icon" />
+                <ui:Label name="logo-text" text="CFST" class="logo-text" />
+            </ui:VisualElement>
+
+            <!-- 导航菜单 -->
+            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical">
+                <ui:VisualElement name="nav-list" class="nav-list">
+                    <ui:Button name="nav-ip"       text="IP 来源"     class="nav-item nav-item--active" />
+                    <ui:Button name="nav-latency"  text="延迟测速"    class="nav-item" />
+                    <ui:Button name="nav-download" text="下载测速"    class="nav-item" />
+                    <ui:Button name="nav-schedule" text="定时调度"    class="nav-item" />
+                    <ui:Button name="nav-hosts"    text="Hosts 更新"  class="nav-item" />
+                    <ui:Button name="nav-output"   text="输出设置"    class="nav-item" />
+                    <ui:Button name="nav-other"    text="其他设置"    class="nav-item" />
+                    <ui:VisualElement class="nav-divider" />
+                    <ui:Button name="nav-results"  class="nav-item nav-item--results">
+                        <ui:Label text="测速结果" class="nav-results-label" />
+                        <ui:Label name="result-badge" text="" class="result-badge result-badge--hidden" />
+                    </ui:Button>
+                </ui:VisualElement>
+            </ui:ScrollView>
+
+            <!-- 底部操作区 -->
+            <ui:VisualElement name="sidebar-bottom" class="sidebar-bottom">
+                <ui:Button name="btn-start" text="▶  开始测速" class="btn-start" />
+                <ui:Button name="btn-stop"  text="■  停  止"  class="btn-stop btn-stop--disabled" />
+
+                <!-- 进度条区域 -->
+                <ui:VisualElement class="progress-area">
+                    <ui:VisualElement class="progress-track">
+                        <ui:VisualElement name="progress-fill" class="progress-fill" />
+                    </ui:VisualElement>
+                    <ui:Label name="progress-pct" text="0%" class="progress-pct" />
+                </ui:VisualElement>
+                <ui:Label name="status-text" text="就绪" class="status-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ══ 右侧内容区 ══ -->
+        <ui:VisualElement name="content-area" class="content-area">
+
+            <!-- 页面容器 -->
+            <ui:VisualElement name="page-container" class="page-container">
+                <ui:Instance template="PageIpSource"  name="page-ip"       class="page page--active" />
+                <ui:Instance template="PageLatency"   name="page-latency"  class="page" />
+                <ui:Instance template="PageDownload"  name="page-download" class="page" />
+                <ui:Instance template="PageSchedule"  name="page-schedule" class="page" />
+                <ui:Instance template="PageHosts"     name="page-hosts"    class="page" />
+                <ui:Instance template="PageOutput"    name="page-output"   class="page" />
+                <ui:Instance template="PageOther"     name="page-other"    class="page" />
+                <ui:Instance template="PageResults"   name="page-results"  class="page" />
+            </ui:VisualElement>
+
+            <!-- 底部状态栏 -->
+            <ui:VisualElement name="statusbar" class="statusbar">
+                <ui:Label name="sb-status" text="@ 就绪" class="sb-item sb-status" />
+                <ui:Label class="sb-sep">|</ui:Label>
+                <ui:Label name="sb-tested" text="已测: --" class="sb-item" />
+                <ui:Label class="sb-sep">|</ui:Label>
+                <ui:Label name="sb-elapsed" text="耗时: --" class="sb-item" />
+                <ui:Label class="sb-sep">|</ui:Label>
+                <ui:Label name="sb-best" text="当前最快: --" class="sb-item" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

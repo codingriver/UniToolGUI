@@ -1,0 +1,54 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+
+    <ui:Label text="下载测速" class="page-title" />
+    <ui:VisualElement class="page-divider" />
+
+    <ui:ScrollView mode="Vertical">
+
+        <!-- 禁用开关 -->
+        <ui:VisualElement class="group-box">
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-disabledownload" label="禁用下载测速 (-dd) — 只测延迟，速度更快" class="field-toggle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 测速参数 -->
+        <ui:VisualElement name="download-params" class="group-box">
+            <ui:Label text="测速参数" class="group-title" />
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="测速 URL (-url)" class="form-label" />
+                <ui:TextField name="field-downloadurl"
+                    value="https://speed.cloudflare.com/__down?bytes=52428800"
+                    class="field-text" />
+            </ui:VisualElement>
+            <ui:Label name="hint-url" text="" class="form-hint" style="margin-left:0;" />
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="测速端口 (-tp)" class="form-label" />
+                <ui:IntegerField name="field-downloadport" value="443" class="field-int" />
+                <ui:Label text="HTTPS=443 / HTTP=80" class="field-unit" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="参与测速IP数 (-dn)" class="form-label" />
+                <ui:IntegerField name="field-downloadcount" value="10" class="field-int" />
+                <ui:Label text="从延迟通过IP中取前N个" class="field-unit" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="下载超时 (-dt)" class="form-label" />
+                <ui:IntegerField name="field-downloadtimeout" value="10" class="field-int" />
+                <ui:Label text="秒" class="field-unit" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="form-row">
+                <ui:Label text="速度下限 (-sl)" class="form-label" />
+                <ui:FloatField name="field-speedmin" value="0" class="field-int" />
+                <ui:Label text="MB/s (0 = 不过滤)" class="field-unit" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+
+</ui:UXML>
