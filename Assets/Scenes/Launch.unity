@@ -448,8 +448,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   languagePreset: 1
   primaryFontAsset: {fileID: 0}
-  atlasSizePreset: 256
+  atlasSizePreset: 512
   renderModePreset: 0
+  samplingPointSize: 36
+  atlasPadding: 6
   enableLog: 1
 --- !u!1 &1885131101
 GameObject:
