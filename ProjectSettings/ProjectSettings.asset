@@ -841,7 +841,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Standalone: 
+    Standalone: UNITY_BUILD
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

@@ -279,6 +279,7 @@ GameObject:
   - component: {fileID: 1665289806}
   - component: {fileID: 1665289805}
   - component: {fileID: 1665289804}
+  - component: {fileID: 1665289812}
   m_Layer: 0
   m_Name: CFST
   m_TagString: Untagged
@@ -433,6 +434,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9c93653815c87440b73ac0f443f5cb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1665289812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665289800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284efdf87034b45439794e74f8124a74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  languagePreset: 1
+  primaryFontAsset: {fileID: 0}
+  atlasSizePreset: 256
+  renderModePreset: 0
+  enableLog: 1
 --- !u!1 &1885131101
 GameObject:
   m_ObjectHideFlags: 0
