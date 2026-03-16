@@ -24,7 +24,7 @@ public static class WindowsTheme
     {
         try
         {
-            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+            using (var key = RegistryHelper.OpenCurrentUserKey(
                 @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize", false))
             {
                 if (key == null) return false;
@@ -68,7 +68,7 @@ public static class WindowsTheme
     {
         try
         {
-            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+            using (var key = RegistryHelper.OpenCurrentUserKey(
                 @"Software\Microsoft\Windows\DWM", false))
             {
                 if (key == null) return new Color32(0, 120, 215, 255);

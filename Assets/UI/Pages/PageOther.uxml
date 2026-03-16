@@ -1,5 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
 
+    <Style src="/Assets/UI/MainWindow.uss" />
+
     <ui:Label text="其他设置" class="page-title" />
     <ui:VisualElement class="page-divider" />
 

@@ -19,7 +19,7 @@ public static class WindowsStartup
     {
         try
         {
-            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunKeyPath, false))
+            using (var key = RegistryHelper.OpenCurrentUserKey(RunKeyPath, false))
             {
                 if (key == null) return false;
                 var value = key.GetValue(GetStartupKeyName());
@@ -45,7 +45,7 @@ public static class WindowsStartup
                 return false;
             }
             var name = keyName ?? GetStartupKeyName();
-            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunKeyPath, true))
+            using (var key = RegistryHelper.OpenCurrentUserKey(RunKeyPath, true))
             {
                 if (key == null) return false;
                 key.SetValue(name, "\"" + exePath + "\"");
@@ -64,7 +64,7 @@ public static class WindowsStartup
         try
         {
             var name = keyName ?? GetStartupKeyName();
-            using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(RunKeyPath, true))
+            using (var key = RegistryHelper.OpenCurrentUserKey(RunKeyPath, true))
             {
                 if (key == null) return false;
                 key.DeleteValue(name, false);

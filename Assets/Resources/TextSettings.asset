@@ -13,12 +13,9 @@ MonoBehaviour:
   m_Name: TextSettings
   m_EditorClassIdentifier: 
   m_Version: 
-  m_DefaultFontAsset: {fileID: 11400000, guid: 537b7a534eb2228489b8b4444213c99c, type: 2}
+  m_DefaultFontAsset: {fileID: 11400000, guid: 62b74a42afdf3454d9461b6617daa86a, type: 2}
   m_DefaultFontAssetPath: Fonts & Materials/
-  m_FallbackFontAssets:
-  - {fileID: 11400000, guid: ba18e9755c1697a41a2bd14dc730f2ff, type: 2}
-  - {fileID: 11400000, guid: 53a21e9bf9b361e4ca8229a26aebae13, type: 2}
-  - {fileID: 11400000, guid: 8b3b99e106aaeb4449c8fcfac5f47e8c, type: 2}
+  m_FallbackFontAssets: []
   m_MatchMaterialPreset: 0
   m_MissingCharacterUnicode: 0
   m_ClearDynamicDataOnBuild: 1

@@ -1,9 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
 
+    <Style src="/Assets/UI/MainWindow.uss" />
+
     <ui:Label text="定时调度" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
 
         <!-- 调度模式 -->
         <ui:VisualElement class="group-box">

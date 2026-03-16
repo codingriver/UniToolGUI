@@ -12,7 +12,7 @@
     <ui:Template name="PageOther"      src="Pages/PageOther.uxml" />
     <ui:Template name="PageResults"    src="Pages/PageResults.uxml" />
 
-    <Style src="MainWindow.uss" />
+    <Style src="/Assets/UI/MainWindow.uss" />
 
     <!-- Root -->
     <ui:VisualElement name="root" class="root">

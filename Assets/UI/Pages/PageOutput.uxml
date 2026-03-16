@@ -1,9 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
 
+    <Style src="/Assets/UI/MainWindow.uss" />
+
     <ui:Label text="输出设置" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
 
         <!-- 输出文件 -->
         <ui:VisualElement class="group-box">

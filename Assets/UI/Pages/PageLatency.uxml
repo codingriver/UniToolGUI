@@ -1,9 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
 
+    <Style src="/Assets/UI/MainWindow.uss" />
+
     <ui:Label text="延迟测速" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
 
         <!-- 测速方式 -->
         <ui:VisualElement class="group-box">

@@ -1,9 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
 
+    <Style src="/Assets/UI/MainWindow.uss" />
+
     <ui:Label text="Hosts 更新" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
 
         <!-- 权限提示条 -->
         <ui:VisualElement name="perm-infobar" class="info-bar info-bar--warning">
