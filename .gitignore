@@ -76,3 +76,6 @@ ehthumbs.db
 Thumbs.db
 /nul
 /Assets/Fonts
+/cfst_decompiled
+/__pycache__
+/layout
