@@ -6,7 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using CloudflareST;  // cfst.dll 命名空间
+using CloudflareST;
+using Newtonsoft.Json.Schema;
+using UnityEditor;
+using UnityEngine; // cfst.dll 命名空间
 
 namespace CloudflareST.GUI
 {
@@ -71,6 +74,57 @@ namespace CloudflareST.GUI
                 IReadOnlyList<CloudflareST.IPInfo> results = null;
                 try
                 {
+                    // ── 打印 Config 所有参数（含默认值）──────────────────
+                    string arg=@"[CFST][Config] ====== RunSpeedTestAsync 参数一览 ======\n" +
+                        $"  [IP来源]\n" +
+                        $"    IpRanges          = {(string.IsNullOrEmpty(config.IpRanges) ? "(空，使用文件)" : config.IpRanges)}\n" +
+                        $"    IpFiles           = [{(config.IpFiles == null ? "null" : string.Join(", ", config.IpFiles))}]\n" +
+                        $"    MaxIpCount        = {config.MaxIpCount}  (0=不限)\n" +
+                        $"    AllIp             = {config.AllIp}\n" +
+                        $"  [延迟测速]\n" +
+                        $"    TcpPingMode       = {config.TcpPingMode}\n" +
+                        $"    HttpingMode       = {config.HttpingMode}\n" +
+                        $"    ForceIcmp         = {config.ForceIcmp}\n" +
+                        $"    PingThreads       = {config.PingThreads}\n" +
+                        $"    PingCount         = {config.PingCount}\n" +
+                        $"    DelayThresholdMs  = {config.DelayThresholdMs} ms\n" +
+                        $"    DelayMinMs        = {config.DelayMinMs} ms\n" +
+                        $"    LossRateThreshold = {config.LossRateThreshold:F2} (0~1)\n" +
+                        $"    HttpingStatusCode = {config.HttpingStatusCode}  (0=接受200/301/302)\n" +
+                        $"    CfColo            = {(string.IsNullOrEmpty(config.CfColo) ? "(不过滤)" : config.CfColo)}\n" +
+                        $"  [下载测速]\n" +
+                        $"    DisableSpeedTest       = {config.DisableSpeedTest}\n" +
+                        $"    SpeedUrl               = {config.SpeedUrl}\n" +
+                        $"    Port                   = {config.Port}\n" +
+                        $"    SpeedNum               = {config.SpeedNum}\n" +
+                        $"    DownloadTimeoutSeconds = {config.DownloadTimeoutSeconds} s\n" +
+                        $"    SpeedMinMbps           = {config.SpeedMinMbps:F2} Mbps\n" +
+                        $"  [输出]\n" +
+                        $"    OutputFile    = {config.OutputFile}\n" +
+                        $"    OutputNum     = {config.OutputNum}\n" +
+                        $"    OnlyIpFile    = {config.OnlyIpFile}\n" +
+                        $"    Silent        = {config.Silent}\n" +
+                        $"    Debug         = {config.Debug}\n" +
+                        $"    ShowProgress  = {config.ShowProgress}\n" +
+                        $"  [定时调度]\n" +
+                        $"    IntervalMinutes = {config.IntervalMinutes}\n" +
+                        $"    AtTimes         = {(string.IsNullOrEmpty(config.AtTimes) ? "(未设置)" : config.AtTimes)}\n" +
+                        $"    CronExpression  = {(string.IsNullOrEmpty(config.CronExpression) ? "(未设置)" : config.CronExpression)}\n" +
+                        $"    TimeZoneId      = {(string.IsNullOrEmpty(config.TimeZoneId) ? "(系统默认)" : config.TimeZoneId)}\n" +
+                        $"  [Hosts更新]\n" +
+                        $"    HostEntries   = {(config.HostEntries == null || config.HostEntries.Count == 0 ? "(未启用)" : config.HostEntries.Count + " 条")}\n" +
+                        $"    HostsFilePath = {(string.IsNullOrEmpty(config.HostsFilePath) ? "(系统默认)" : config.HostsFilePath)}\n" +
+                        $"    HostsDryRun   = {config.HostsDryRun}\n" +
+                        "  ===========================================";
+                    Debug.Log(arg);
+                    if (config.IpFiles != null)
+                    {
+                        foreach (string ipFile in config.IpFiles)
+                        {
+                            FireOnLog(ipFile);        
+                        }
+                    }
+                    FireOnLog("开始");
                     results = await CfstRunner.RunSpeedTestAsync(config, ct);
                 }
                 catch (OperationCanceledException)
@@ -109,21 +163,41 @@ namespace CloudflareST.GUI
         // ── 私有触发 ──────────────────────────────────────────
         private void FireOnLog(string line)
         {
+            if (line.StartsWith('\r'))
+            {
+                line=line.TrimStart('\r'); // 去掉行首的回车符，避免在 Unity Console 中出现多行输出
+            }            
+            Debug.Log(line);
             try { OnLog?.Invoke(line); } catch { }
         }
 
         private void FireOnProgress(string json)
         {
+            Debug.LogWarning(json);
             try { OnProgress?.Invoke(json); } catch { }
         }
 
         private void FireOnFinished(IReadOnlyList<CloudflareST.IPInfo> results)
         {
+            if (results == null)
+            {
+                Debug.Log("[FireOnFinished] results = null（已取消或失败）");
+            }
+            else
+            {
+                Debug.Log($"[FireOnFinished] 共 {results.Count} 条结果:");
+                for (int i = 0; i < results.Count; i++)
+                {
+                    var r = results[i];
+                    Debug.Log($"  [{i}] IP={r.IP}  延迟={r.DelayMs}ms  丢包={r.LossRate:P1}  速度={r.DownloadSpeedMbps:F2}MB/s  数据中心={r.Colo}");
+                }
+            }
             try { OnFinished?.Invoke(results); } catch { }
         }
 
         private void FireOnError(Exception ex)
         {
+            Debug.LogError($"ERROR::{ex}");
             try { OnError?.Invoke(ex); } catch { }
         }
 

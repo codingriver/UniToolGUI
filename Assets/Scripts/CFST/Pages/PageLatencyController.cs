@@ -64,6 +64,8 @@ namespace CloudflareST.GUI
                 _opts.CfColo = string.IsNullOrEmpty(raw) ? null : raw;
             });
 
+            // 强制选中第一项，确保运行时 RadioButtonGroup 有默认选中状态
+            if (_pingModeGroup != null) _pingModeGroup.value = 0;
             SetMode(PingMode.IcmpAuto);
         }
 

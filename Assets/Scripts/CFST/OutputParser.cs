@@ -97,7 +97,11 @@ namespace CloudflareST.GUI
             s.PassedCount = passed;
             // ping 阶段：若未禁用下载测速则占 0~50%，否则占 0~100%
             float pingWeight = s.SpeedDisabled ? 1.0f : 0.5f;
-            s.Progress    = Mathf.Clamp01((float)(pct / 100.0)) * pingWeight;
+            if (s.Progress < 1f)
+            {
+                s.Progress    = Mathf.Clamp01((float)(pct / 100.0)) * pingWeight;    
+            }
+            
             // pingMode 字段只在 init 阶段发送，ping 阶段无该字段，使用缓存值
             s.StatusText  = s.PingModeLabel + ": " + done + "/" + total + "  有效:" + passed;
         }
@@ -120,7 +124,11 @@ namespace CloudflareST.GUI
             int total     = JInt(j, "total");
             double pct    = JDbl(j, "progressPct");
             double bestSpd= JDbl(j, "bestSpeedMbps");
-            s.Progress    = 0.5f + Mathf.Clamp01((float)(pct / 100.0)) * 0.5f;
+            if (s.Progress < 1f)
+            {
+                s.Progress    = 0.5f + Mathf.Clamp01((float)(pct / 100.0)) * 0.5f;    
+            }
+            
             s.BestSpeed   = (float)(bestSpd / 8.0);
             s.StatusText  = "下载测速: " + done + "/" + total + "  最高:" + bestSpd.ToString("F1") + "Mbps";
         }
@@ -129,7 +137,10 @@ namespace CloudflareST.GUI
         {
             double best = JDbl(j, "bestSpeedMbps");
             double avg  = JDbl(j, "avgSpeedMbps");
-            s.Progress  = 0.95f;
+            if (s.Progress < 1f)
+            {
+                s.Progress  = 0.95f;    
+            }
             s.BestSpeed = (float)(best / 8.0);
             s.StatusText = "下载完成  最高:" + best.ToString("F1") + "Mbps  均速:" + avg.ToString("F1") + "Mbps";
         }

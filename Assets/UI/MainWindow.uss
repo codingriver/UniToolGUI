@@ -1,4 +1,4 @@
-﻿/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════
    MainWindow.uss  �? Cloudflare Speed Test GUI
    主题：深色控制台风格 + 橙色 Cloudflare 强调�?   ══════════════════════════════════════════════════════════ */
 
@@ -412,15 +412,20 @@
 }
 .field-toggle > .unity-toggle__input > .unity-toggle__checkmark {
     background-color: #1e2535;
+    background-image: none;
     border-width: 1px;
     border-color: #303a50;
     border-radius: 3px;
     width: 16px;
     height: 16px;
+    -unity-background-image-tint-color: rgba(0,0,0,0);
 }
 .field-toggle > .unity-toggle__input:checked > .unity-toggle__checkmark {
     background-color: #f48120;
+    background-image: resource("unity-builtin-extra/toggle-check");
     border-color: #f48120;
+    -unity-background-image-tint-color: #ffffff;
+    background-size: contain;
 }
 .field-toggle .unity-label {
     font-size: 12px;
@@ -454,6 +459,9 @@
     border-radius: 5px;
     width: 8px;
     height: 8px;
+    position: absolute;
+    top: 3px;
+    left: 3px;
 }
 .unity-radio-button > .unity-radio-button__input > #unity-checkmark {
     -unity-background-image-tint-color: #e8eaf0;

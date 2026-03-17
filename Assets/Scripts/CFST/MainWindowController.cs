@@ -148,7 +148,7 @@ namespace CloudflareST.GUI
 
         public void NavigateTo(int idx)
         {
-            UnityEngine.Debug.Log("[NAV] NavigateTo(" + idx + ")");
+            // UnityEngine.Debug.Log("[NAV] NavigateTo(" + idx + ")");
             AppState.Instance.CurrentPage = idx;
             for (int i = 0; i < PAGE_COUNT; i++)
             {
@@ -157,8 +157,8 @@ namespace CloudflareST.GUI
                 {
                     if (active) _pages[i].AddToClassList("page--active");
                     else        _pages[i].RemoveFromClassList("page--active");
-                    UnityEngine.Debug.Log("[NAV] page[" + i + "] active=" + active
-                        + " classes=" + string.Join(",", _pages[i].GetClasses()));
+                    // UnityEngine.Debug.Log("[NAV] page[" + i + "] active=" + active
+                    //     + " classes=" + string.Join(",", _pages[i].GetClasses()));
                 }
                 if (_navBtns[i] != null)
                 {
@@ -224,9 +224,11 @@ namespace CloudflareST.GUI
             _runner.OnFinished += dllResults =>
                 UnityMainThreadDispatcher.Enqueue(() =>
                 {
+                    
                     // DLL 返回的完整排序结果列表覆盖进度 JSON 中的简略结果
                     OutputParser.ApplyDllResults(dllResults, AppState.Instance, TestResult.Instance);
                     HandleFinished(dllResults == null ? -1 : 0);
+                    PageOther?.AppendLog($"完成");
                 });
 
             _runner.OnError += ex =>
@@ -239,7 +241,7 @@ namespace CloudflareST.GUI
             try
             {
                 _runner.Start(cfg);
-                PageOther?.AppendLog("[INFO] 测速已启动（DLL 模式）");
+                PageOther?.AppendLog("[INFO] 测速已启动");
                 StartCoroutine(ElapsedTimer());
             }
             catch (Exception ex)

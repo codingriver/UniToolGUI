@@ -30,10 +30,10 @@ namespace CloudflareST.GUI
         {
             while (true)
             {
+                if (_queue.Count == 0) break;
                 Action action;
                 lock (_queue)
                 {
-                    if (_queue.Count == 0) break;
                     action = _queue.Dequeue();
                 }
                 try { action(); }

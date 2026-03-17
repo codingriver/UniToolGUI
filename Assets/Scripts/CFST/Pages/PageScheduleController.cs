@@ -86,6 +86,8 @@ namespace CloudflareST.GUI
                 UpdatePreview();
             });
 
+            // 强制选中第一项，确保运行时 RadioButtonGroup 有默认选中状态
+            if (_schedModeGroup != null) _schedModeGroup.value = 0;
             SetMode(ScheduleMode.None);
         }
 

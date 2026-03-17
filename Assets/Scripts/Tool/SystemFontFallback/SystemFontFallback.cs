@@ -32,7 +32,7 @@ public class SystemFontFallback : MonoBehaviour
     public enum LanguagePreset
     {
         LatinOnly, ChineseSimplified, ChineseTraditional, ChineseBoth,
-        Japanese, Korean, CJKAll, Arabic, Thai, AllLanguages,
+        Japanese, Korean, CJKAll, Arabic, Thai, Greek, Cyrillic, Indic, AllLanguages,
     }
     public enum AtlasSizePreset
     {
@@ -274,16 +274,19 @@ public class SystemFontFallback : MonoBehaviour
         var g = new List<string[]>();
         switch (languagePreset)
         {
-            case LanguagePreset.LatinOnly:          g.Add(PathsLatin); break;
-            case LanguagePreset.ChineseSimplified:  g.Add(PathsCJK_SC); g.Add(PathsLatin); break;
-            case LanguagePreset.ChineseTraditional: g.Add(PathsCJK_TC); g.Add(PathsLatin); break;
-            case LanguagePreset.ChineseBoth:        g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsLatin); break;
-            case LanguagePreset.Japanese:           g.Add(PathsJapanese); g.Add(PathsLatin); break;
-            case LanguagePreset.Korean:             g.Add(PathsKorean); g.Add(PathsLatin); break;
-            case LanguagePreset.CJKAll:             g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsLatin); break;
-            case LanguagePreset.Arabic:             g.Add(PathsArabic); g.Add(PathsLatin); break;
-            case LanguagePreset.Thai:               g.Add(PathsThai); g.Add(PathsLatin); break;
-            case LanguagePreset.AllLanguages:       g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsArabic); g.Add(PathsThai); g.Add(PathsLatin); break;
+            case LanguagePreset.LatinOnly:          g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.ChineseSimplified:  g.Add(PathsCJK_SC); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.ChineseTraditional: g.Add(PathsCJK_TC); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.ChineseBoth:        g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Japanese:           g.Add(PathsJapanese); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Korean:             g.Add(PathsKorean); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.CJKAll:             g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Arabic:             g.Add(PathsArabic); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Thai:               g.Add(PathsThai); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Greek:              g.Add(PathsGreek); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Cyrillic:           g.Add(PathsCyrillic); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.Indic:              g.Add(PathsIndic); g.Add(PathsLatin); g.Add(PathsEmoji); break;
+            case LanguagePreset.AllLanguages:       g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsArabic); g.Add(PathsThai); g.Add(PathsLatin); g.Add(PathsEmoji); g.Add(PathsGreek); g.Add(PathsCyrillic); g.Add(PathsIndic); break;
         }
         return g;
     }
@@ -352,6 +355,20 @@ public class SystemFontFallback : MonoBehaviour
         }
         Debug.Log(sb.ToString());
     }
+
+    // Emoji/Symbol font fallback to cover characters not present in primary/CJK fonts
+    private static readonly string[] PathsEmoji =
+    {
+    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        @"C:\Windows\Fonts\seguiemj.ttf",
+    #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+        @"/System/Library/Fonts/Apple Color Emoji.ttf",
+    #elif UNITY_ANDROID
+        @"/system/fonts/NotoColorEmoji.ttf",
+    #elif UNITY_IOS
+        @"/System/Library/Fonts/Apple Color Emoji.ttf",
+    #endif
+    };
 
     #region Font Paths
     private static readonly string[] PathsLatin =
@@ -440,4 +457,43 @@ public class SystemFontFallback : MonoBehaviour
 #endif
     };
     #endregion
+
+    // Additional global-script coverage: Cyrillic, Greek, Indic (Devanagari, etc.)
+    // These paths are best-effort and may not exist on all platforms. We rely on File.Exists checks.
+    private static readonly string[] PathsGreek =
+    {
+    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        @"C:\Windows\Fonts\times.ttf", @"C:\Windows\Fonts\aria.ttf", // common generic fonts with Greek glyphs
+    #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+        @"/System/Library/Fonts/Times New Roman.ttf", @"/Library/Fonts/Arial.ttf",
+    #elif UNITY_ANDROID
+        @"/system/fonts/NotoSans-Regular.ttf",
+    #elif UNITY_IOS
+        @"/System/Library/Fonts/Times New Roman.ttf",
+    #endif
+    };
+    private static readonly string[] PathsCyrillic =
+    {
+    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        @"C:\Windows\Fonts\times.ttf", @"C:\Windows\Fonts\arial.ttf",
+    #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+        @"/System/Library/Fonts/Times New Roman.ttf", @"/Library/Fonts/Arial.ttf",
+    #elif UNITY_ANDROID
+        @"/system/fonts/NotoSans-Regular.ttf",
+    #elif UNITY_IOS
+        @"/System/Library/Fonts/Times New Roman.ttf",
+    #endif
+    };
+    private static readonly string[] PathsIndic =
+    {
+    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        @"C:\Windows\Fonts\MSMINCHO.TTF", @"C:\Windows\Fonts\Latha.ttf",
+    #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+        @"/System/Library/Fonts/Times New Roman.ttf", @"/Library/Fonts/Arial Unicode.ttf",
+    #elif UNITY_ANDROID
+        @"/system/fonts/NotoSansDevanagari-Regular.ttf", @"/system/fonts/NotoSans-Regular.ttf",
+    #elif UNITY_IOS
+        @"/System/Library/Fonts/Devanagari.ttf",
+    #endif
+    };
 }

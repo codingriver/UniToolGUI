@@ -41,7 +41,7 @@ namespace CloudflareST.GUI
             _logScroll?.verticalScroller.RegisterCallback<ChangeEvent<float>>(_ => CheckAutoScroll());
 
             // 启动提示
-            AppendLog("[INFO] CFST DLL 模式已就绪，无需 cfst.exe");
+            AppendLog("[INFO] CFST 已就绪");
         }
 
         private void CheckAutoScroll()

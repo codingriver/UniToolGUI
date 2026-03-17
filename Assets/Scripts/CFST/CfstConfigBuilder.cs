@@ -3,6 +3,8 @@
 //                          cfst.dll 的 CloudflareST.Config
 // ============================================================
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 namespace CloudflareST.GUI
 {
@@ -13,6 +15,13 @@ namespace CloudflareST.GUI
         /// </summary>
         public static CloudflareST.Config Build(CfstOptions o)
         {
+#if UNITY_ANDROID || UNITY_IOS
+            // 移动平台：使用持久化目录（有写权限的沙盒路径
+            string baseDir = Application.persistentDataPath;
+#else
+            // 其他平台：使用当前运行目录的绝对路径
+            string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
+#endif            
             var cfg = new CloudflareST.Config();
 
             // ── IP 来源 ──────────────────────────────────────
@@ -28,7 +37,14 @@ namespace CloudflareST.GUI
                 if (!string.IsNullOrWhiteSpace(o.IPv6File))
                     cfg.IpFiles.Add(o.IPv6File.Trim());
                 if (cfg.IpFiles.Count == 0)
-                    cfg.IpFiles = new List<string> { "ip.txt", "ipv6.txt" };
+                {
+                    cfg.IpFiles = new List<string>
+                    {
+                        Path.Combine(baseDir, "ip.txt"),
+                        Path.Combine(baseDir, "ipv6.txt")
+                    };
+                }
+                    
             }
 
             cfg.MaxIpCount = o.IpLoadLimit;
@@ -71,7 +87,11 @@ namespace CloudflareST.GUI
             cfg.OnlyIpFile  = o.OnlyIpFile  ?? "onlyip.txt";
             cfg.Silent      = o.Silent;
             cfg.Debug       = o.Debug;
-
+#if UNITY_ANDROID || UNITY_IOS 
+            // 移动平台：使用持久化目录（有写权限的沙盒路径）
+            cfg.OutputFile=Path.Combine(baseDir, "result.csv");
+            cfg.OnlyIpFile=Path.Combine(baseDir, "onlyip.txt");                    
+#endif
             // ShowProgress = true 使 ProgressReporter 发出 JSON 事件
             cfg.ShowProgress = true;
 
