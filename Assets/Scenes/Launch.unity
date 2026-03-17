@@ -279,7 +279,6 @@ GameObject:
   - component: {fileID: 1665289806}
   - component: {fileID: 1665289805}
   - component: {fileID: 1665289804}
-  - component: {fileID: 1665289812}
   m_Layer: 0
   m_Name: CFST
   m_TagString: Untagged
@@ -434,16 +433,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9c93653815c87440b73ac0f443f5cb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1665289812
+--- !u!1 &1782109576
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1782109578}
+  - component: {fileID: 1782109579}
+  m_Layer: 0
+  m_Name: SystemFontFallback
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1782109578
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782109576}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.3485208, y: 0.12238634, z: 0.012901574}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1782109579
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1665289800}
+  m_GameObject: {fileID: 1782109576}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 284efdf87034b45439794e74f8124a74, type: 3}
+  m_Script: {fileID: 11500000, guid: 64ee845cdaca8b04cbf145f133f90dc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   languagePreset: 1
@@ -452,6 +483,9 @@ MonoBehaviour:
   renderModePreset: 0
   samplingPointSize: 36
   atlasPadding: 6
+  targetPanelSettings:
+  - {fileID: 11400000, guid: d3e25df7860298248b5a7ce4b5a2d5ef, type: 2}
+  targetDocuments: []
   enableLog: 1
 --- !u!1 &1885131101
 GameObject:
@@ -505,3 +539,4 @@ SceneRoots:
   - {fileID: 517777543}
   - {fileID: 1665289802}
   - {fileID: 1885131103}
+  - {fileID: 1782109578}
