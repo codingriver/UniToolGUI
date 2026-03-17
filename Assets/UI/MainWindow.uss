@@ -1,18 +1,26 @@
 /* ══════════════════════════════════════════════════════════
-   MainWindow.uss  �? Cloudflare Speed Test GUI
-   主题：深色控制台风格 + 橙色 Cloudflare 强调�?   ══════════════════════════════════════════════════════════ */
+   MainWindow.uss  — Cloudflare Speed Test GUI
+   主题：深色控制台风格 + 橙色 Cloudflare 强调色
+   ══════════════════════════════════════════════════════════ */
 
-/* ── 根容�?───────────────────────────────────────────────── */
+/* ── 根容器 ───────────────────────────────────────────────── */
 .root {
-    flex-direction: row;
+    flex-direction: column;
     width: 100%;
     height: 100%;
     background-color: #0f1117;
     color: #e8eaf0;
 }
 
+/* ── 左右分栏区域（不含状态栏）──────────────────────────────── */
+.main-area {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
 /* ══════════════════════════════════════════════════════════
-   左侧导航�?   ══════════════════════════════════════════════════════════ */
+   左侧导航栏
+   ══════════════════════════════════════════════════════════ */
 .sidebar {
     width: 192px;
     min-width: 192px;
@@ -54,14 +62,13 @@
     padding: 0;
 }
 
-
 /* 导航列表 */
 .nav-list {
     flex-direction: column;
     padding: 4px 8px;
 }
 
-/* 导航菜单项（Button�?*/
+/* 导航菜单项（Button）*/
 .nav-item {
     background-color: transparent;
     border-width: 0;
@@ -88,14 +95,14 @@
     background-color: rgba(244, 129, 32, 0.20);
 }
 
-/* 分隔�?*/
+/* 分隔线 */
 .nav-divider {
     height: 1px;
     background-color: #252d3d;
     margin: 6px 4px;
 }
 
-/* 结果页菜单项（含角标�?*/
+/* 结果页菜单项（含角标）*/
 .nav-item--results {
     flex-direction: row;
     align-items: center;
@@ -119,7 +126,7 @@
     display: none;
 }
 
-/* ── 底部操作�?───────────────────────────────────────────── */
+/* ── 底部操作区 ───────────────────────────────────────────── */
 .sidebar-bottom {
     flex-direction: column;
     padding: 10px 8px 12px 8px;
@@ -166,7 +173,7 @@
     cursor: arrow;
 }
 
-/* 进度�?*/
+/* 进度条 */
 .progress-area {
     flex-direction: row;
     align-items: center;
@@ -203,7 +210,8 @@
 }
 
 /* ══════════════════════════════════════════════════════════
-   右侧内容�?   ══════════════════════════════════════════════════════════ */
+   右侧内容区
+   ══════════════════════════════════════════════════════════ */
 .content-area {
     flex-grow: 1;
     flex-direction: column;
@@ -269,7 +277,7 @@
     margin-bottom: 20px;
 }
 
-/* 表单�?*/
+/* 表单行 */
 .form-row {
     flex-direction: row;
     align-items: center;
@@ -296,7 +304,7 @@
     margin-left: 130px;
 }
 
-/* 分组�?*/
+/* 分组框 */
 .group-box {
     border-width: 1px;
     border-color: #252d3d;
@@ -471,7 +479,7 @@
     color: #e8eaf0;
 }
 
-/* 通用小按�?*/
+/* 通用小按钮 */
 .btn-sm {
     background-color: #1e2535;
     border-width: 1px;
@@ -494,7 +502,7 @@
     background-color: rgba(244, 129, 32, 0.22);
 }
 
-/* Info/Warning/Error 提示�?*/
+/* Info/Warning/Error 提示条 */
 .info-bar {
     flex-direction: row;
     align-items: center;
@@ -532,7 +540,7 @@
     margin-right: 8px;
 }
 
-/* 日志控制�?*/
+/* 日志控制台 */
 .log-console {
     flex-grow: 1;
     background-color: #0a0d13;
@@ -545,7 +553,7 @@
     white-space: normal;
 }
 
-/* 数据表格�?*/
+/* 数据表格行 */
 .table-header {
     flex-direction: row;
     background-color: #161b24;
@@ -586,7 +594,7 @@
 .col-dc     { width: 60px; }
 .col-region { width: 90px; }
 
-/* 空态提�?*/
+/* 空态提示 */
 .empty-hint {
     font-size: 13px;
     color: #5a6480;

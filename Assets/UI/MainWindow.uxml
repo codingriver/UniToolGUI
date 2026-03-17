@@ -18,6 +18,9 @@
     <!-- Root -->
     <ui:VisualElement name="root" class="root">
 
+        <!-- ══ 左右分栏区域 ══ -->
+        <ui:VisualElement name="main-area" class="main-area">
+
         <!-- ══ 左侧导航栏 ══ -->
         <ui:VisualElement name="sidebar" class="sidebar">
 
@@ -76,16 +79,19 @@
                 <ui:Instance template="PageResults"   name="page-results"  class="page" />
             </ui:VisualElement>
 
-            <!-- 底部状态栏 -->
-            <ui:VisualElement name="statusbar" class="statusbar">
-                <ui:Label name="sb-status" text="@ 就绪" class="sb-item sb-status" />
-                <ui:Label class="sb-sep">|</ui:Label>
-                <ui:Label name="sb-tested" text="已测: --" class="sb-item" />
-                <ui:Label class="sb-sep">|</ui:Label>
-                <ui:Label name="sb-elapsed" text="耗时: --" class="sb-item" />
-                <ui:Label class="sb-sep">|</ui:Label>
-                <ui:Label name="sb-best" text="当前最快: --" class="sb-item" />
-            </ui:VisualElement>
+        </ui:VisualElement>
+
+        </ui:VisualElement><!-- end main-area -->
+
+        <!-- ══ 底部状态栏（全宽）══ -->
+        <ui:VisualElement name="statusbar" class="statusbar">
+            <ui:Label name="sb-status" text="@ 就绪" class="sb-item sb-status" />
+            <ui:Label class="sb-sep">|</ui:Label>
+            <ui:Label name="sb-tested" text="已测: --" class="sb-item" />
+            <ui:Label class="sb-sep">|</ui:Label>
+            <ui:Label name="sb-elapsed" text="耗时: --" class="sb-item" />
+            <ui:Label class="sb-sep">|</ui:Label>
+            <ui:Label name="sb-best" text="当前最快: --" class="sb-item" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
