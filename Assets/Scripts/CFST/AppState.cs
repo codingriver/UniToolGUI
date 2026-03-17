@@ -8,11 +8,9 @@ namespace CloudflareST.GUI
     /// </summary>
     public class AppState
     {
-        // ── 单例 ──────────────────────────────────────────────
         public static readonly AppState Instance = new AppState();
         private AppState() { }
 
-        // ── 事件 ──────────────────────────────────────────────
         public event Action OnChanged;
         private void Notify() => OnChanged?.Invoke();
 
@@ -22,6 +20,15 @@ namespace CloudflareST.GUI
         {
             get => _isRunning;
             set { if (_isRunning == value) return; _isRunning = value; Notify(); }
+        }
+
+        // ── 当前阶段 ──────────────────────────────────────────
+        public enum Stage { Idle, Init, Ping, PingDone, Speed, SpeedDone, Done, Error }
+        private Stage _currentStage = Stage.Idle;
+        public Stage CurrentStage
+        {
+            get => _currentStage;
+            set { if (_currentStage == value) return; _currentStage = value; Notify(); }
         }
 
         // ── 导航页 ────────────────────────────────────────────
@@ -86,7 +93,7 @@ namespace CloudflareST.GUI
         }
 
         // ── 时间 ──────────────────────────────────────────────
-        public DateTime StartTime { get; set; }
+        public DateTime StartTime  { get; set; }
         public DateTime FinishTime { get; set; }
 
         private TimeSpan _elapsed;
@@ -104,18 +111,27 @@ namespace CloudflareST.GUI
             set { if (_resultCount == value) return; _resultCount = value; Notify(); }
         }
 
+        // ── 进度辅助字段（由 OutputParser 写入，不触发 Notify）────
+        /// <summary>true = 本次测速禁用了下载测速（-dd），Ping 阶段占满 100% 进度</summary>
+        public bool SpeedDisabled { get; set; }
+        /// <summary>当前 Ping 模式显示名称（ICMP / TCPing / HTTPing），缓存自 init JSON</summary>
+        public string PingModeLabel { get; set; } = "ICMP";
+
         // ── 重置 ──────────────────────────────────────────────
         public void Reset()
         {
-            _isRunning    = false;
-            _progress     = 0f;
-            _statusText   = "就绪";
-            _testedCount  = 0;
-            _totalCount   = 0;
-            _passedCount  = 0;
-            _bestLatency  = -1f;
-            _bestSpeed    = -1f;
-            _elapsed      = TimeSpan.Zero;
+            _isRunning     = false;
+            _currentStage  = Stage.Idle;
+            _progress      = 0f;
+            _statusText    = "就绪";
+            _testedCount   = 0;
+            _totalCount    = 0;
+            _passedCount   = 0;
+            _bestLatency   = -1f;
+            _bestSpeed     = -1f;
+            _elapsed       = TimeSpan.Zero;
+            SpeedDisabled  = false;
+            PingModeLabel  = "ICMP";
             Notify();
         }
     }

@@ -10,12 +10,12 @@
         <!-- 调度模式 -->
         <ui:VisualElement class="group-box">
             <ui:Label text="调度模式" class="group-title" />
-            <ui:VisualElement class="radio-group">
-                <ui:RadioButton name="radio-sched-none"     label="不启用"             value="true"  class="radio-item" />
-                <ui:RadioButton name="radio-sched-interval" label="间隔执行 (-interval)" value="false" class="radio-item" />
-                <ui:RadioButton name="radio-sched-daily"    label="每日定点 (-at)"       value="false" class="radio-item" />
-                <ui:RadioButton name="radio-sched-cron"     label="Cron 表达式 (-cron)"  value="false" class="radio-item" />
-            </ui:VisualElement>
+            <ui:RadioButtonGroup name="sched-mode-group" class="radio-group" value="0">
+                <ui:RadioButton name="radio-sched-none"     label="不启用"              class="radio-item" />
+                <ui:RadioButton name="radio-sched-interval" label="间隔执行 (-interval)" class="radio-item" />
+                <ui:RadioButton name="radio-sched-daily"    label="每日定点 (-at)"        class="radio-item" />
+                <ui:RadioButton name="radio-sched-cron"     label="Cron 表达式 (-cron)"  class="radio-item" />
+            </ui:RadioButtonGroup>
         </ui:VisualElement>
 
         <!-- 间隔参数 -->

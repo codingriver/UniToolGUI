@@ -10,11 +10,11 @@
         <!-- 测速方式 -->
         <ui:VisualElement class="group-box">
             <ui:Label text="测速方式" class="group-title" />
-            <ui:VisualElement class="radio-group">
-                <ui:RadioButton name="radio-icmp"    label="ICMP Auto（默认）" value="true"  class="radio-item" />
-                <ui:RadioButton name="radio-tcping"  label="TCPing (-tcping)"  value="false" class="radio-item" />
-                <ui:RadioButton name="radio-httping" label="HTTPing (-httping)" value="false" class="radio-item" />
-            </ui:VisualElement>
+            <ui:RadioButtonGroup name="ping-mode-group" class="radio-group" value="0">
+                <ui:RadioButton name="radio-icmp"    label="ICMP Auto（默认）" class="radio-item" />
+                <ui:RadioButton name="radio-tcping"  label="TCPing (-tcping)"  class="radio-item" />
+                <ui:RadioButton name="radio-httping" label="HTTPing (-httping)" class="radio-item" />
+            </ui:RadioButtonGroup>
             <ui:VisualElement class="form-row" style="margin-top:6px;">
                 <ui:Toggle name="toggle-forceicmp" label="强制 ICMP，禁止自动降级到 TCPing (-icmp)" class="field-toggle" />
             </ui:VisualElement>

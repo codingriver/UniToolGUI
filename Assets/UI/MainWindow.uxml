@@ -10,6 +10,7 @@
     <ui:Template name="PageHosts"      src="Pages/PageHosts.uxml" />
     <ui:Template name="PageOutput"     src="Pages/PageOutput.uxml" />
     <ui:Template name="PageOther"      src="Pages/PageOther.uxml" />
+    <ui:Template name="PageAbout"      src="Pages/PageAbout.uxml" />
     <ui:Template name="PageResults"    src="Pages/PageResults.uxml" />
 
     <Style src="/Assets/UI/MainWindow.uss" />
@@ -27,7 +28,7 @@
             </ui:VisualElement>
 
             <!-- 导航菜单 -->
-            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical" vertical-scroller-visibility="AlwaysVisible">
+            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical" vertical-scroller-visibility="Auto" mouse-wheel-scroll-size="36">
                 <ui:VisualElement name="nav-list" class="nav-list">
                     <ui:Button name="nav-ip"       text="IP 来源"     class="nav-item nav-item--active" />
                     <ui:Button name="nav-latency"  text="延迟测速"    class="nav-item" />
@@ -36,6 +37,7 @@
                     <ui:Button name="nav-hosts"    text="Hosts 更新"  class="nav-item" />
                     <ui:Button name="nav-output"   text="输出设置"    class="nav-item" />
                     <ui:Button name="nav-other"    text="其他设置"    class="nav-item" />
+                    <ui:Button name="nav-about"    text="关于"         class="nav-item" />
                     <ui:VisualElement class="nav-divider" />
                     <ui:Button name="nav-results"  class="nav-item nav-item--results">
                         <ui:Label text="测速结果" class="nav-results-label" />
@@ -43,8 +45,6 @@
                     </ui:Button>
                 </ui:VisualElement>
             </ui:ScrollView>
-
-            <!-- 底部操作区 -->
             <ui:VisualElement name="sidebar-bottom" class="sidebar-bottom">
                 <ui:Button name="btn-start" text="▶  开始测速" class="btn-start" />
                 <ui:Button name="btn-stop"  text="■  停  止"  class="btn-stop btn-stop--disabled" />
@@ -72,6 +72,7 @@
                 <ui:Instance template="PageHosts"     name="page-hosts"    class="page" />
                 <ui:Instance template="PageOutput"    name="page-output"   class="page" />
                 <ui:Instance template="PageOther"     name="page-other"    class="page" />
+                <ui:Instance template="PageAbout"     name="page-about"    class="page" />
                 <ui:Instance template="PageResults"   name="page-results"  class="page" />
             </ui:VisualElement>
 

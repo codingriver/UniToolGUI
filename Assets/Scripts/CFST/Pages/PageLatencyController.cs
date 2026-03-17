@@ -5,31 +5,27 @@ namespace CloudflareST.GUI
 {
     public class PageLatencyController : MonoBehaviour
     {
-        private VisualElement _root;
-        private CfstOptions   _opts;
+        private VisualElement    _root;
+        private CfstOptions      _opts;
 
-        private RadioButton   _radioIcmp;
-        private RadioButton   _radioTcping;
-        private RadioButton   _radioHttping;
-        private Toggle        _forceIcmpToggle;
-        private IntegerField  _pingConcField;
-        private IntegerField  _pingCountField;
-        private IntegerField  _latencyMaxField;
-        private IntegerField  _latencyMinField;
-        private FloatField    _packetLossField;
-        private VisualElement _httpingGroup;
-        private IntegerField  _httpingCodeField;
-        private TextField     _cfColoField;
-        private Label         _hintLatencyMax;
+        private RadioButtonGroup _pingModeGroup;
+        private Toggle           _forceIcmpToggle;
+        private IntegerField     _pingConcField;
+        private IntegerField     _pingCountField;
+        private IntegerField     _latencyMaxField;
+        private IntegerField     _latencyMinField;
+        private FloatField       _packetLossField;
+        private VisualElement    _httpingGroup;
+        private IntegerField     _httpingCodeField;
+        private TextField        _cfColoField;
+        private Label            _hintLatencyMax;
 
         public void Init(VisualElement root, CfstOptions opts)
         {
             _root = root;
             _opts = opts;
 
-            _radioIcmp        = root.Q<RadioButton>("radio-icmp");
-            _radioTcping      = root.Q<RadioButton>("radio-tcping");
-            _radioHttping     = root.Q<RadioButton>("radio-httping");
+            _pingModeGroup    = root.Q<RadioButtonGroup>("ping-mode-group");
             _forceIcmpToggle  = root.Q<Toggle>("toggle-forceicmp");
             _pingConcField    = root.Q<IntegerField>("field-pingconcurrency");
             _pingCountField   = root.Q<IntegerField>("field-pingcount");
@@ -41,9 +37,16 @@ namespace CloudflareST.GUI
             _cfColoField      = root.Q<TextField>("field-cfcolo");
             _hintLatencyMax   = root.Q<Label>("hint-latencymax");
 
-            _radioIcmp?   .RegisterValueChangedCallback(e => { if (e.newValue) SetMode(PingMode.IcmpAuto); });
-            _radioTcping? .RegisterValueChangedCallback(e => { if (e.newValue) SetMode(PingMode.TcPing);   });
-            _radioHttping?.RegisterValueChangedCallback(e => { if (e.newValue) SetMode(PingMode.Httping);  });
+            // RadioButtonGroup: value = index of selected (0=ICMP, 1=TCPing, 2=HTTPing)
+            _pingModeGroup?.RegisterValueChangedCallback(e =>
+            {
+                switch (e.newValue)
+                {
+                    case 1: SetMode(PingMode.TcPing);   break;
+                    case 2: SetMode(PingMode.Httping);  break;
+                    default: SetMode(PingMode.IcmpAuto); break;
+                }
+            });
 
             _forceIcmpToggle?.RegisterValueChangedCallback(e => _opts.ForceIcmp = e.newValue);
 
@@ -75,10 +78,7 @@ namespace CloudflareST.GUI
             if (!isIcmp) { _opts.ForceIcmp = false; if (_forceIcmpToggle != null) _forceIcmpToggle.value = false; }
 
             if (_httpingGroup != null)
-            {
-                _httpingGroup.style.display = isHttping
-                    ? DisplayStyle.Flex : DisplayStyle.None;
-            }
+                _httpingGroup.style.display = isHttping ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void ValidateLatencyRange()

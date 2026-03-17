@@ -36,83 +36,86 @@
       bgColor: RGBA(0.086, 0.106, 0.141, 1.000)
       children: 3
       [VisualElement] #logo-area .logo-area 
-        layout : pos=(0,0) size=(191 x 72)
+        layout : pos=(0,0) size=(191 x 71)
         visible: True  opacity=1.00  display=Flex
         children: 2
         [Label] #logo-icon .unity-text-element.unity-label.logo-icon 
-          layout : pos=(18,22) size=(26 x 34)
+          layout : pos=(18,22) size=(18 x 32)
           visible: True  opacity=1.00  display=Flex
         [Label] #logo-text .unity-text-element.unity-label.logo-text 
-          layout : pos=(54,24) size=(57 x 30)
+          layout : pos=(46,23) size=(57 x 30)
           visible: True  opacity=1.00  display=Flex
-      [ScrollView] #nav-scroll .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.nav-scroll 
-        layout : pos=(0,78) size=(191 x 353)
+      [VisualElement] #nav-scroll .nav-scroll 
+        layout : pos=(0,77) size=(191 x 362)
         visible: True  opacity=1.00  display=Flex
         children: 1
         [VisualElement] #nav-list .nav-list 
-          layout : pos=(0,0) size=(185 x 360)
+          layout : pos=(0,0) size=(191 x 362)
           visible: True  opacity=1.00  display=Flex
-          children: 9
+          children: 10
           [Button] #nav-ip .unity-text-element.unity-button.nav-item 
-            layout : pos=(12,6) size=(161 x 37)
+            layout : pos=(12,6) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
           [Button] #nav-latency .unity-text-element.unity-button.nav-item 
-            layout : pos=(12,47) size=(161 x 37)
+            layout : pos=(12,46) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
           [Button] #nav-download .unity-text-element.unity-button.nav-item 
-            layout : pos=(12,88) size=(161 x 37)
+            layout : pos=(12,86) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
           [Button] #nav-schedule .unity-text-element.unity-button.nav-item 
-            layout : pos=(12,129) size=(161 x 37)
+            layout : pos=(12,126) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
           [Button] #nav-hosts .unity-text-element.unity-button.nav-item 
-            layout : pos=(12,170) size=(161 x 34)
+            layout : pos=(12,166) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
           [Button] #nav-output .unity-text-element.unity-button.nav-item 
-            layout : pos=(12,208) size=(161 x 37)
+            layout : pos=(12,206) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
-          [Button] #nav-other .unity-text-element.unity-button.nav-item.nav-item--active 
-            layout : pos=(12,249) size=(161 x 37)
+          [Button] #nav-other .unity-text-element.unity-button.nav-item 
+            layout : pos=(12,246) size=(167 x 36)
+            visible: True  opacity=1.00  display=Flex
+          [Button] #nav-about .unity-text-element.unity-button.nav-item 
+            layout : pos=(12,286) size=(167 x 36)
             visible: True  opacity=1.00  display=Flex
           [VisualElement] .nav-divider 
-            layout : pos=(12,294) size=(161 x 1)
+            layout : pos=(12,330) size=(167 x 0)
             visible: True  opacity=1.00  display=Flex
-          [Button] #nav-results .unity-text-element.unity-button.nav-item.nav-item--results 
-            layout : pos=(12,303) size=(161 x 51)
+          [Button] #nav-results .unity-text-element.unity-button.nav-item.nav-item--results.nav-item--active 
+            layout : pos=(12,338) size=(167 x 50)
             visible: True  opacity=1.00  display=Flex
             children: 2
             [Label] .unity-text-element.unity-label.nav-results-label 
-              layout : pos=(14,13) size=(56 x 27)
+              layout : pos=(14,13) size=(59 x 26)
               visible: True  opacity=1.00  display=Flex
-            [Label] #result-badge .unity-text-element.unity-label.result-badge.result-badge--hidden 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: False  opacity=1.00  display=None
+            [Label] #result-badge .unity-text-element.unity-label.result-badge 
+              layout : pos=(125,18) size=(26 x 15)
+              visible: True  opacity=1.00  display=Flex
       [VisualElement] #sidebar-bottom .sidebar-bottom 
-        layout : pos=(0,431) size=(191 x 169)
+        layout : pos=(0,439) size=(191 x 161)
         visible: True  opacity=1.00  display=Flex
         children: 4
         [Button] #btn-start .unity-text-element.unity-button.btn-start 
-          layout : pos=(12,13) size=(167 x 39)
+          layout : pos=(12,13) size=(167 x 38)
           visible: True  opacity=1.00  display=Flex
         [Button] #btn-stop .unity-text-element.unity-button.btn-stop.unity-disabled.btn-stop--disabled 
-          layout : pos=(12,60) size=(167 x 30)
+          layout : pos=(12,59) size=(167 x 34)
           visible: True  opacity=0.50  display=Flex
         [VisualElement] .progress-area 
-          layout : pos=(8,98) size=(175 x 24)
+          layout : pos=(8,101) size=(175 x 14)
           visible: True  opacity=1.00  display=Flex
           children: 2
           [VisualElement] .progress-track 
-            layout : pos=(0,9) size=(133 x 6)
+            layout : pos=(0,4) size=(133 x 6)
             visible: True  opacity=1.00  display=Flex
             children: 1
             [VisualElement] #progress-fill .progress-fill 
-              layout : pos=(0,0) size=(0 x 6)
+              layout : pos=(0,0) size=(126 x 6)
               visible: True  opacity=1.00  display=Flex
           [Label] #progress-pct .unity-text-element.unity-label.progress-pct 
-            layout : pos=(141,3) size=(30 x 19)
+            layout : pos=(141,4) size=(30 x 8)
             visible: True  opacity=1.00  display=Flex
         [Label] #status-text .unity-text-element.unity-label.status-text 
-          layout : pos=(10,131) size=(169 x 24)
+          layout : pos=(10,124) size=(169 x 23)
           visible: True  opacity=1.00  display=Flex
     [VisualElement] #content-area .content-area 
       layout : pos=(192,0) size=(708 x 600)
@@ -128,7 +131,7 @@
       [VisualElement] #page-container .page-container 
         layout : pos=(0,0) size=(708 x 572)
         visible: True  opacity=1.00  display=Flex
-        children: 8
+        children: 9
         [TemplateContainer] #page-ip .page 
           layout : pos=(0,0) size=(0 x 0)
           visible: False  opacity=1.00  display=None
@@ -139,7 +142,7 @@
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 3
@@ -165,7 +168,7 @@
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 4
@@ -195,7 +198,7 @@
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 2
@@ -217,7 +220,7 @@
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 6
@@ -255,10 +258,10 @@
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-            children: 3
+            children: 4
             [VisualElement] #perm-infobar .info-bar.info-bar--warning 
               layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
@@ -266,11 +269,15 @@
             [VisualElement] .group-box 
               layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
-              children: 1
+              children: 2
             [VisualElement] #hosts-params .group-box.unity-disabled 
               layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=0.50  display=Flex
-              children: 7
+              children: 5
+            [VisualElement] .info-bar.info-bar--info 
+              layout : pos=(0,0) size=(0 x 0)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
         [TemplateContainer] #page-output .page 
           layout : pos=(0,0) size=(0 x 0)
           visible: False  opacity=1.00  display=None
@@ -281,7 +288,7 @@
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 3
@@ -297,127 +304,134 @@
               layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
               children: 2
-        [TemplateContainer] #page-other .page.page--active 
-          layout : pos=(0,0) size=(708 x 572)
-          visible: True  opacity=1.00  display=Flex
-          children: 5
+        [TemplateContainer] #page-other .page 
+          layout : pos=(0,0) size=(0 x 0)
+          visible: False  opacity=1.00  display=None
+          children: 4
           [Label] .unity-text-element.unity-label.page-title 
-            layout : pos=(30,28) size=(646 x 35)
+            layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
           [VisualElement] .page-divider 
-            layout : pos=(28,67) size=(652 x 0)
+            layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
           [VisualElement] .group-box 
-            layout : pos=(28,87) size=(652 x 30)
+            layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 2
             [Label] .unity-text-element.unity-label.group-title 
-              layout : pos=(19,19) size=(612 x 8)
+              layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
             [VisualElement] .form-row 
-              layout : pos=(17,39) size=(618 x 0)
+              layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
               children: 1
           [VisualElement] .group-box 
-            layout : pos=(28,133) size=(652 x 353)
+            layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 2
-            [VisualElement] .form-row 
-              layout : pos=(17,15) size=(618 x 34)
+            [VisualElement] 
+              layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
               children: 2
             [ScrollView] #log-scroll .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
-              layout : pos=(17,71) size=(618 x 267)
+              layout : pos=(0,0) size=(0 x 0)
               visible: True  opacity=1.00  display=Flex
-              children: 132
-          [VisualElement] .group-box 
-            layout : pos=(28,502) size=(652 x 30)
-            visible: True  opacity=1.00  display=Flex
-            children: 3
-            [Label] .unity-text-element.unity-label.group-title 
-              layout : pos=(19,19) size=(612 x 8)
-              visible: True  opacity=1.00  display=Flex
-            [VisualElement] .form-row 
-              layout : pos=(17,39) size=(618 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-            [VisualElement] .form-row 
-              layout : pos=(17,53) size=(618 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-        [TemplateContainer] #page-results .page 
+              children: 7
+        [TemplateContainer] #page-about .page 
           layout : pos=(0,0) size=(0 x 0)
           visible: False  opacity=1.00  display=None
-          children: 7
+          children: 3
           [Label] .unity-text-element.unity-label.page-title 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
           [VisualElement] .page-divider 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
-          [VisualElement] .group-box 
-            layout : pos=(0,0) size=(0 x 0)
-            visible: True  opacity=1.00  display=Flex
-            children: 6
-            [VisualElement] .stat-card 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-            [VisualElement] .stat-card 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-            [VisualElement] .stat-card 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-            [VisualElement] .stat-card 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-            [VisualElement] .stat-card 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-            [VisualElement] .stat-card 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 2
-          [VisualElement] .group-box 
-            layout : pos=(0,0) size=(0 x 0)
-            visible: True  opacity=1.00  display=Flex
-            children: 1
-            [VisualElement] .form-row 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=1.00  display=Flex
-              children: 11
-          [VisualElement] .group-box 
+          [ScrollView] .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical.page-scroll 
             layout : pos=(0,0) size=(0 x 0)
             visible: True  opacity=1.00  display=Flex
             children: 2
-            [VisualElement] .table-header 
+            [VisualElement] .group-box 
               layout : pos=(0,0) size=(0 x 0)
+              visible: True  opacity=1.00  display=Flex
+              children: 4
+            [VisualElement] .group-box 
+              layout : pos=(0,0) size=(0 x 0)
+              visible: True  opacity=1.00  display=Flex
+              children: 4
+        [TemplateContainer] #page-results .page.page--active 
+          layout : pos=(0,0) size=(708 x 572)
+          visible: True  opacity=1.00  display=Flex
+          children: 7
+          [Label] .unity-text-element.unity-label.page-title 
+            layout : pos=(30,24) size=(646 x 32)
+            visible: True  opacity=1.00  display=Flex
+          [VisualElement] .page-divider 
+            layout : pos=(28,60) size=(652 x 0)
+            visible: True  opacity=1.00  display=Flex
+          [VisualElement] .group-box 
+            layout : pos=(28,80) size=(652 x 42)
+            visible: True  opacity=1.00  display=Flex
+            children: 6
+            [VisualElement] .stat-card 
+              layout : pos=(17,15) size=(96 x 52)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
+            [VisualElement] .stat-card 
+              layout : pos=(121,15) size=(90 x 52)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
+            [VisualElement] .stat-card 
+              layout : pos=(219,15) size=(90 x 52)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
+            [VisualElement] .stat-card 
+              layout : pos=(317,15) size=(115 x 52)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
+            [VisualElement] .stat-card 
+              layout : pos=(440,15) size=(103 x 52)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
+            [VisualElement] .stat-card 
+              layout : pos=(17,73) size=(90 x 52)
+              visible: True  opacity=1.00  display=Flex
+              children: 2
+          [VisualElement] .group-box 
+            layout : pos=(28,138) size=(652 x 30)
+            visible: True  opacity=1.00  display=Flex
+            children: 1
+            [VisualElement] .form-row 
+              layout : pos=(17,15) size=(618 x 0)
+              visible: True  opacity=1.00  display=Flex
+              children: 11
+          [VisualElement] .group-box 
+            layout : pos=(28,184) size=(652 x 338)
+            visible: True  opacity=1.00  display=Flex
+            children: 2
+            [VisualElement] .table-header 
+              layout : pos=(1,1) size=(650 x 42)
               visible: True  opacity=1.00  display=Flex
               children: 7
             [ScrollView] #results-scroll .unity-scroll-view.unity-scroll-view--scroll.unity-scroll-view--vertical 
-              layout : pos=(0,0) size=(0 x 0)
+              layout : pos=(1,43) size=(650 x 294)
               visible: True  opacity=1.00  display=Flex
               children: 2
           [VisualElement] .form-row 
-            layout : pos=(0,0) size=(0 x 0)
+            layout : pos=(28,546) size=(652 x 6)
             visible: True  opacity=1.00  display=Flex
             children: 4
-            [Button] #btn-copy-first .unity-text-element.unity-button.btn-sm.btn-accent.unity-disabled 
-              layout : pos=(0,0) size=(0 x 0)
-              visible: True  opacity=0.50  display=Flex
+            [Button] #btn-copy-first .unity-text-element.unity-button.btn-sm.btn-accent 
+              layout : pos=(4,-3) size=(91 x 12)
+              visible: True  opacity=1.00  display=Flex
             [Button] #btn-copy-all .unity-text-element.unity-button.btn-sm 
-              layout : pos=(0,0) size=(0 x 0)
+              layout : pos=(107,-3) size=(85 x 12)
               visible: True  opacity=1.00  display=Flex
             [Button] #btn-export-csv .unity-text-element.unity-button.btn-sm 
-              layout : pos=(0,0) size=(0 x 0)
+              layout : pos=(204,-3) size=(78 x 12)
               visible: True  opacity=1.00  display=Flex
             [Button] #btn-rerun .unity-text-element.unity-button.btn-sm 
-              layout : pos=(0,0) size=(0 x 0)
+              layout : pos=(294,-3) size=(75 x 12)
               visible: True  opacity=1.00  display=Flex
           [VisualElement] #hosts-preview-area .group-box 
             layout : pos=(0,0) size=(0 x 0)
@@ -445,18 +459,18 @@
           layout : pos=(78,4) size=(4 x 22)
           visible: True  opacity=1.00  display=Flex
         [Label] #sb-tested .unity-text-element.unity-label.sb-item 
-          layout : pos=(92,5) size=(42 x 21)
+          layout : pos=(92,5) size=(73 x 21)
           visible: True  opacity=1.00  display=Flex
         [Label] .unity-text-element.unity-label.sb-sep 
-          layout : pos=(146,4) size=(4 x 22)
+          layout : pos=(177,4) size=(4 x 22)
           visible: True  opacity=1.00  display=Flex
         [Label] #sb-elapsed .unity-text-element.unity-label.sb-item 
-          layout : pos=(160,5) size=(60 x 21)
+          layout : pos=(191,5) size=(62 x 21)
           visible: True  opacity=1.00  display=Flex
         [Label] .unity-text-element.unity-label.sb-sep 
-          layout : pos=(232,4) size=(4 x 22)
+          layout : pos=(265,4) size=(4 x 22)
           visible: True  opacity=1.00  display=Flex
         [Label] #sb-best .unity-text-element.unity-label.sb-item 
-          layout : pos=(246,5) size=(64 x 21)
+          layout : pos=(279,5) size=(145 x 21)
           visible: True  opacity=1.00  display=Flex
 

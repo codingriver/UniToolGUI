@@ -7,13 +7,10 @@ namespace CloudflareST.GUI
 {
     public class PageScheduleController : MonoBehaviour
     {
-        private VisualElement _root;
-        private CfstOptions   _opts;
+        private VisualElement    _root;
+        private CfstOptions      _opts;
 
-        private RadioButton   _radioNone;
-        private RadioButton   _radioInterval;
-        private RadioButton   _radioDaily;
-        private RadioButton   _radioCron;
+        private RadioButtonGroup _schedModeGroup;
 
         private VisualElement _groupInterval;
         private VisualElement _groupDaily;
@@ -32,10 +29,7 @@ namespace CloudflareST.GUI
             _root = root;
             _opts = opts;
 
-            _radioNone     = root.Q<RadioButton>("radio-sched-none");
-            _radioInterval = root.Q<RadioButton>("radio-sched-interval");
-            _radioDaily    = root.Q<RadioButton>("radio-sched-daily");
-            _radioCron     = root.Q<RadioButton>("radio-sched-cron");
+            _schedModeGroup = root.Q<RadioButtonGroup>("sched-mode-group");
 
             _groupInterval  = root.Q<VisualElement>("group-interval");
             _groupDaily     = root.Q<VisualElement>("group-daily");
@@ -64,10 +58,17 @@ namespace CloudflareST.GUI
                 });
             }
 
-            _radioNone?    .RegisterValueChangedCallback(e => { if (e.newValue) SetMode(ScheduleMode.None);     });
-            _radioInterval?.RegisterValueChangedCallback(e => { if (e.newValue) SetMode(ScheduleMode.Interval); });
-            _radioDaily?   .RegisterValueChangedCallback(e => { if (e.newValue) SetMode(ScheduleMode.Daily);    });
-            _radioCron?    .RegisterValueChangedCallback(e => { if (e.newValue) SetMode(ScheduleMode.Cron);     });
+            // RadioButtonGroup: 0=None,1=Interval,2=Daily,3=Cron
+            _schedModeGroup?.RegisterValueChangedCallback(e =>
+            {
+                switch (e.newValue)
+                {
+                    case 1: SetMode(ScheduleMode.Interval); break;
+                    case 2: SetMode(ScheduleMode.Daily);    break;
+                    case 3: SetMode(ScheduleMode.Cron);     break;
+                    default: SetMode(ScheduleMode.None);    break;
+                }
+            });
 
             _intervalField?.RegisterValueChangedCallback(e =>
             {
@@ -91,12 +92,10 @@ namespace CloudflareST.GUI
         private void SetMode(ScheduleMode mode)
         {
             _opts.ScheduleMode = mode;
-
             SetGroupVisible(_groupInterval, mode == ScheduleMode.Interval);
             SetGroupVisible(_groupDaily,    mode == ScheduleMode.Daily);
             SetGroupVisible(_groupCron,     mode == ScheduleMode.Cron);
             SetGroupVisible(_groupTimezone, mode == ScheduleMode.Daily || mode == ScheduleMode.Cron);
-
             UpdatePreview();
         }
 
