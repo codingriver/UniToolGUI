@@ -4,71 +4,40 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
 
-// ---------------------------------------------------------------------------
-// 可序列化的托盘菜单按钮配置，支持 Inspector 拖拽方法
-// ---------------------------------------------------------------------------
-
 [Serializable]
 public class TrayMenuButton
 {
     [Tooltip("菜单项显示文字")] public string Label = "操作";
-
-    [Tooltip("是否在执行前先显示主窗口")] public bool ShowWindowFirst = false;
+    [Tooltip("是否先显示主窗口")] public bool ShowWindowFirst = false;
     [Tooltip("是否为分割线")] public bool IsSeparator = false;
-
-    [Tooltip(
-        "点击时执行的方法。\n" +
-        "TrayBridge 会自动切换到 Unity 主线程执行，无需手动 Dispatcher。\n" +
-        "直接在 Inspector 中拖拽 GameObject 并选择方法即可。")]
+    [Tooltip("点击回调")]
     public UnityEvent OnClick = new UnityEvent();
 }
 
-/// <summary>
-/// 通用系统托盘桥接组件。
-/// 不依赖任何业务逻辑，可挂载到任意项目的任意 GameObject。
-/// </summary>
 public class TrayBridge : MonoBehaviour
 {
     [Header("基础配置")] [Tooltip("托盘图标悬停提示文字")]
     public string Tooltip = "Unity App";
-
     [Tooltip("最小化时自动隐藏到托盘")] public bool MinimizeToTray = true;
+    [Tooltip("在 Editor 中也启用真实托盘")] public bool SimulateInEditor = true;
 
-    [Tooltip("在 Editor 中也启用真实托盘（需要 Windows/Mac）")]
-    public bool SimulateInEditor = true;
-
-    [Header("图标（可选）")] [Tooltip("Windows：StreamingAssets 下的 .ico 文件名，留空使用系统默认图标")]
+    [Header("图标")] [Tooltip("Windows: StreamingAssets 下的 .ico 文件名")]
     public string WindowsIcoFileName = "app.ico";
+    [Tooltip("macOS: StreamingAssets 下的 .png 图标文件名")] public string MacPngFileName = "app.png";
 
-    [Tooltip("macOS：StreamingAssets 下的 .png 图标文件名（建议 18x18 px），留空使用系统默认图标")]
-    public string MacPngFileName = "app.png";
-
-    [Header("内置菜单项")] [Tooltip("自动添加 [显示主窗口] 菜单项")]
+    [Header("内置菜单项")]
     public bool AddShowWindowItem = true;
-
-    [Tooltip("自动添加 [开机自动启动] 菜单项（仅 Windows）")]
     public bool AddStartupItem = true;
+    public bool AddRestartItem = true;
+    public bool AddQuitItem = true;
 
-    [Tooltip("自动添加 [退出] 菜单项")] public bool AddQuitItem = true;
-
-    // ---------------------------------------------------------------------------
-    // 可配置自定义菜单按钮
-    // ---------------------------------------------------------------------------
-    [Header("自定义菜单按钮（Inspector 拖拽配置）")]
-    [Tooltip(
-        "在此列表中添加自定义托盘菜单按钮。\n" +
-        "每项可配置显示文字和点击回调（UnityEvent）。\n" +
-        "回调方法会自动在 Unity 主线程执行，无需手动 Dispatcher。\n" +
-        "列表顺序即菜单显示顺序，插入在内置项之后、[开机自启] 之前。")]
+    [Header("自定义菜单按鈕")]
     public TrayMenuButton[] CustomButtons = new TrayMenuButton[0];
 
-    [Header("事件 — Inspector 中拖拽连接")] [Tooltip("托盘双击图标或点击 [显示主窗口] 时触发")]
+    [Header("事件")]
     public UnityEvent OnShowMainWindow = new UnityEvent();
-
-    [Tooltip("托盘点击 [退出] 时触发，触发后默认执行 Application.Quit")]
     public UnityEvent OnTrayQuit = new UnityEvent();
-
-    [Tooltip("托盘图标初始化完成时触发")] public UnityEvent OnTrayReady = new UnityEvent();
+    public UnityEvent OnTrayReady = new UnityEvent();
 
     public static event Action ShowMainWindowRequested;
     public static event Action QuitRequested;
@@ -76,42 +45,41 @@ public class TrayBridge : MonoBehaviour
 
     public static bool IsInitialized { get; private set; }
     private bool _initialized;
-
-    // 主线程上下文，确保 Callback 安全回调
     private SynchronizationContext _mainCtx;
-
-    // 代码注册的业务菜单项（由外部调用 RegisterExtraMenuItems 设置，插在 CustomButtons 之后）
     private readonly List<TrayMenuItem> _extraItems = new List<TrayMenuItem>();
-
-    // 开机自启菜单项引用
     private TrayMenuItem _menuStartup;
 
     private void Start()
     {
         if (Application.isEditor && !SimulateInEditor)
         {
-            Debug.Log("[TrayBridge] Editor 模式下跳过托盘初始化（SimulateInEditor=false）");
+            Debug.Log("[TrayBridge] Editor 模式下跳过托盘初始化");
             return;
         }
-
         _mainCtx = SynchronizationContext.Current ?? new SynchronizationContext();
+        WindowsStartup.OnStartupChanged += OnStartupChangedExternal;
         InitTray();
     }
 
     private void OnDestroy()
     {
+        WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
         ShutdownTray();
     }
 
     private void OnApplicationQuit()
     {
+        WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
         ShutdownTray();
     }
 
-    /// <summary>
-    /// 代码注册业务菜单项，插入在 CustomButtons 之后、[开机自启] 之前。
-    /// 可在 TrayReady 后任意时机调用，会立即重建菜单。
-    /// </summary>
+    private void OnStartupChangedExternal(bool enabled)
+    {
+        if (_menuStartup == null) return;
+        _menuStartup.Checked = enabled;
+        if (_initialized) NativePlatform.Tray.RefreshMenu();
+    }
+
     public void RegisterExtraMenuItems(TrayMenuItem[] items)
     {
         _extraItems.Clear();
@@ -136,24 +104,19 @@ public class TrayBridge : MonoBehaviour
     public void SetTooltip(string tooltip)
     {
         Tooltip = tooltip;
-        if (_initialized)
-            NativePlatform.Tray.SetTooltip(tooltip);
+        if (_initialized) NativePlatform.Tray.SetTooltip(tooltip);
     }
 
     private void InitTray()
     {
         if (_initialized) return;
-
         var tray = NativePlatform.Tray;
         tray.Initialize();
         tray.SetTooltip(Tooltip);
         TrySetIcon();
-
         RebuildMenu();
-
         tray.OnTrayIconCreated += HandleTrayCreated;
         HandleTrayCreated();
-
         _initialized = true;
         IsInitialized = true;
         Debug.Log("[TrayBridge] 托盘初始化完成");
@@ -175,24 +138,11 @@ public class TrayBridge : MonoBehaviour
         TrayReady?.Invoke();
     }
 
-    /// <summary>
-    /// 重建完整菜单，顺序固定：
-    ///   [显示主窗口]
-    ///   ─────────────（若有 CustomButtons）
-    ///   [自定义按钮...]
-    ///   ─────────────（若有代码注册项）
-    ///   [代码注册项...]
-    ///   ─────────────
-    ///   [开机自动启动]（若启用）
-    ///   ─────────────
-    ///   [退出]
-    /// </summary>
     private void RebuildMenu()
     {
         NativePlatform.Tray.ClearMenuItems();
         var items = new List<TrayMenuItem>();
 
-        // 1. 显示主窗口
         if (AddShowWindowItem)
         {
             items.Add(new TrayMenuItem
@@ -207,64 +157,44 @@ public class TrayBridge : MonoBehaviour
             });
         }
 
-        // 2a. Inspector 自定义按钮（CustomButtons 列表，自动主线程调度）
         if (CustomButtons != null && CustomButtons.Length > 0)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
             foreach (var btn in CustomButtons)
             {
-                if (btn == null || string.IsNullOrEmpty(btn.Label)) continue;
-                TrayMenuButton captured = btn; // 闭包捕获
-                if (btn.IsSeparator)
-                {
-                    items.Add(new TrayMenuItem { IsSeparator = true });
-                }
-                else
+                if (btn == null) continue;
+                TrayMenuButton captured = btn;
+                if (btn.IsSeparator) { items.Add(new TrayMenuItem { IsSeparator = true }); continue; }
+                if (string.IsNullOrEmpty(btn.Label)) continue;
                 items.Add(new TrayMenuItem
                 {
                     Text = captured.Label.Trim(),
-                    Callback = () =>
+                    Callback = () => _mainCtx.Post(_ =>
                     {
-                        // 自动切换到 Unity 主线程执行
-                        _mainCtx.Post(_ =>
+                        try
                         {
-                            try
-                            {
-                                if (captured.ShowWindowFirst)
-                                    NativePlatform.Tray.ShowMainWindow();
-                                captured.OnClick?.Invoke();
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.LogWarning("[TrayBridge] 自定义按钮执行失败 '" + captured.Label + "': " + ex.Message);
-                            }
-                        }, null);
-                    }
+                            if (captured.ShowWindowFirst) NativePlatform.Tray.ShowMainWindow();
+                            captured.OnClick?.Invoke();
+                        }
+                        catch (Exception ex) { Debug.LogWarning("[TrayBridge] " + captured.Label + ": " + ex.Message); }
+                    }, null)
                 });
             }
         }
 
-        // 2b. 代码注册的业务菜单项（RegisterExtraMenuItems，如 CfstTrayManager）
         if (_extraItems.Count > 0)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
             items.AddRange(_extraItems);
         }
 
-        // 3. 开机自动启动（由 TrayBridge 统一管理）
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         if (AddStartupItem)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
             bool startupEnabled = false;
-            try
-            {
-                startupEnabled = WindowsStartup.IsStartupEnabled();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning("[TrayBridge] 检查开机自启状态失败: " + ex.Message);
-            }
+            try { startupEnabled = WindowsStartup.IsStartupEnabled(); }
+            catch (Exception ex) { Debug.LogWarning("[TrayBridge] 开机自启检查失败: " + ex.Message); }
 
             _menuStartup = new TrayMenuItem
             {
@@ -275,34 +205,70 @@ public class TrayBridge : MonoBehaviour
                 {
                     try
                     {
-                        string exePath = WindowsStartup.GetCurrentExePath();
-                        bool now;
                         if (_menuStartup.Checked)
-                        {
-                            WindowsStartup.EnableStartup(exePath);
-                            now = WindowsStartup.IsStartupEnabled();
-                        }
+                            WindowsStartup.EnableStartup(WindowsStartup.GetCurrentExePath());
                         else
-                        {
                             WindowsStartup.DisableStartup();
-                            now = false;
-                        }
-
-                        _menuStartup.Text = "开机自启";
-                        _menuStartup.Checked = now;
-                        NativePlatform.Tray.RefreshMenu();
                     }
                     catch (Exception ex)
                     {
                         Debug.LogWarning("[TrayBridge] 开机自启切换失败: " + ex.Message);
+                        _menuStartup.Checked = !_menuStartup.Checked;
+                        NativePlatform.Tray.RefreshMenu();
                     }
                 }, null)
             };
             items.Add(_menuStartup);
         }
+
+        if (AddRestartItem)
+        {
+            if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
+            bool isAdmin = false;
+            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            string level = isAdmin ? "管理员" : "普通用户";
+
+            items.Add(new TrayMenuItem
+            {
+                Text = "重启程序（" + level + "）",
+                Callback = () => _mainCtx.Post(_ =>
+                {
+                    try
+                    {
+                        var exe = WindowsStartup.GetCurrentExePath();
+                        if (!string.IsNullOrEmpty(exe))
+                            System.Diagnostics.Process.Start(
+                                new System.Diagnostics.ProcessStartInfo { FileName = exe, UseShellExecute = true });
+                        ShutdownTray();
+#if UNITY_EDITOR
+                        UnityEditor.EditorApplication.isPlaying = false;
+#else
+                        Application.Quit();
+#endif
+                    }
+                    catch (Exception ex) { Debug.LogWarning("[TrayBridge] 重启失败: " + ex.Message); }
+                }, null)
+            });
+
+            if (!isAdmin)
+            {
+                items.Add(new TrayMenuItem
+                {
+                    Text = "以管理员重启",
+                    Callback = () => _mainCtx.Post(_ =>
+                    {
+                        bool ok = false;
+                        try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
+                        if (!ok)
+                            NativePlatform.MessageBox.Warning(
+                                "提升权限失败，请手动以管理员身份运行本程序。",
+                                "权限不足");
+                    }, null)
+                });
+            }
+        }
 #endif
 
-        // 4. 退出
         if (AddQuitItem)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
@@ -318,11 +284,10 @@ public class TrayBridge : MonoBehaviour
                         OnTrayQuit?.Invoke();
                         QuitRequested?.Invoke();
                         ShutdownTray();
-
 #if UNITY_EDITOR
                         UnityEditor.EditorApplication.isPlaying = false;
 #else
-                    Application.Quit();
+                        Application.Quit();
 #endif
                     }
                 }
@@ -337,30 +302,14 @@ public class TrayBridge : MonoBehaviour
     {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         if (string.IsNullOrEmpty(WindowsIcoFileName)) return;
-        string icoPath = System.IO.Path.Combine(
-            Application.streamingAssetsPath, WindowsIcoFileName);
-        if (System.IO.File.Exists(icoPath))
-        {
-            TrayIconService.Instance.SetIcon(icoPath);
-            Debug.Log("[TrayBridge] 已加载托盘图标: " + icoPath);
-        }
-        else
-        {
-            Debug.LogWarning("[TrayBridge] 未找到图标: " + icoPath + "，使用系统默认");
-        }
+        string icoPath = System.IO.Path.Combine(Application.streamingAssetsPath, WindowsIcoFileName);
+        if (System.IO.File.Exists(icoPath)) { TrayIconService.Instance.SetIcon(icoPath); Debug.Log("[TrayBridge] 图标: " + icoPath); }
+        else Debug.LogWarning("[TrayBridge] 未找到图标: " + icoPath);
 #elif UNITY_STANDALONE_OSX
         if (string.IsNullOrEmpty(MacPngFileName)) return;
-        string pngPath = System.IO.Path.Combine(
-            Application.streamingAssetsPath, MacPngFileName);
-        if (System.IO.File.Exists(pngPath))
-        {
-            TrayIconService.Instance.SetIcon(pngPath);
-            Debug.Log("[TrayBridge] macOS 已加载托盘图标: " + pngPath);
-        }
-        else
-        {
-            Debug.LogWarning("[TrayBridge] macOS 未找到图标: " + pngPath + "，使用系统默认（NSImageNameApplicationIcon）");
-        }
+        string pngPath = System.IO.Path.Combine(Application.streamingAssetsPath, MacPngFileName);
+        if (System.IO.File.Exists(pngPath)) { TrayIconService.Instance.SetIcon(pngPath); Debug.Log("[TrayBridge] macOS 图标: " + pngPath); }
+        else Debug.LogWarning("[TrayBridge] macOS 未找到图标: " + pngPath);
 #endif
     }
 }

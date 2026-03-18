@@ -25,6 +25,15 @@
         </ui:VisualElement>
     </ui:VisualElement>
 
+    <!-- 重置默认参数 -->
+    <ui:VisualElement class="group-box" style="flex-shrink:0;">
+        <ui:Label text="数据管理" class="group-title" />
+        <ui:VisualElement style="flex-direction:row;align-items:center;justify-content:space-between;">
+            <ui:Label text="将所有选项恢复为默认值并清除持久化数据" class="form-hint" style="margin-left:0;flex-grow:1;" />
+            <ui:Button name="btn-reset-defaults" text="重置默认参数" class="btn-sm btn-accent" style="flex-shrink:0;margin-left:12px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
     <!-- 运行日志（弹性填充剩余空间） -->
     <ui:VisualElement class="group-box" style="flex-grow:1;flex-direction:column;min-height:100px;">
         <!-- 标题行 + 操作按钮 -->

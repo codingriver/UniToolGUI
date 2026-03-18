@@ -44,6 +44,9 @@ namespace CloudflareST.GUI
             _logScroll?.RegisterCallback<WheelEvent>(_ => CheckAutoScroll());
             _logScroll?.verticalScroller.RegisterCallback<ChangeEvent<float>>(_ => CheckAutoScroll());
 
+            // ── 重置默认参数 ──────────────────────────────────────
+            root.Q<Button>("btn-reset-defaults")?.RegisterCallback<ClickEvent>(_ => OnResetDefaults());
+
             // ── 开机自启 ─────────────────────────────────────────
             _startupToggle = root.Q<Toggle>("toggle-startup");
             _startupHint   = root.Q<Label>("hint-startup");
@@ -170,6 +173,34 @@ namespace CloudflareST.GUI
         {
             WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
         }
+
+        /// <summary>重置所有持久化设置为默认值，并广播事件让各页面刷新 UI</summary>
+        private void OnResetDefaults()
+        {
+            bool confirmed = WindowsMessageBox.Confirm(
+                "确定要重置所有参数为默认值吗？\n此操作将清除所有已保存的设置。",
+                "重置确认");
+            if (!confirmed) return;
+
+            SettingsStorage.ResetAll(_opts);
+            AppendLog("[INFO] 已重置所有参数为默认值");
+
+            // 刷新本页 UI
+            if (_debugToggle != null) _debugToggle.SetValueWithoutNotify(_opts.Debug);
+            if (_startupToggle != null)
+            {
+                bool startupEnabled = false;
+                try { startupEnabled = WindowsStartup.IsStartupEnabled(); } catch { }
+                _startupToggle.SetValueWithoutNotify(startupEnabled);
+                UpdateStartupHint(_startupHint, startupEnabled);
+            }
+
+            // 广播重置事件，MainWindowController 重新初始化各页面
+            OnSettingsReset?.Invoke();
+        }
+
+        /// <summary>重置完成后广播，由 MainWindowController 订阅后重新 InitPages</summary>
+        public event System.Action OnSettingsReset;
 
         /// <summary>
         /// 托盘菜单或其他地方修改了开机自启状态后，同步刷新界面 Toggle。

@@ -47,6 +47,9 @@ namespace CloudflareST.GUI
 
         private void OnEnable()
         {
+            // 启动时加载持久化设置
+            SettingsStorage.Load(Options);
+
             BindElements();
             InitPages();
             BindNav();
@@ -56,16 +59,22 @@ namespace CloudflareST.GUI
             NavigateTo(0);
             RefreshSidebar();
 
-            // 托盘由 TrayBridge 组件负责初始化（Inspector 挂载）
-            // 在此只注册业务菜单项，等 TrayBridge.TrayReady 触发后执行
+            // 订阅重置事件
+            if (PageOther != null)
+                PageOther.OnSettingsReset += OnSettingsReset;
+
             TrayBridge.TrayReady += RegisterTrayMenuItems;
-            // 若 TrayBridge 已经初始化完成（场景加载顺序问题），直接注册
             if (TrayBridge.IsInitialized)
                 RegisterTrayMenuItems();
         }
 
         private void OnDisable()
         {
+            // 退出时保存所有设置
+            SettingsStorage.Save(Options);
+
+            if (PageOther != null)
+                PageOther.OnSettingsReset -= OnSettingsReset;
             TrayBridge.TrayReady -= RegisterTrayMenuItems;
             AppState.Instance.OnChanged         -= RefreshSidebar;
             TestResult.Instance.OnResultUpdated -= RefreshBadge;
@@ -75,9 +84,16 @@ namespace CloudflareST.GUI
             _runner = null;
         }
 
+        /// <summary>重置后重新初始化所有页面控制器，使 UI 与新默认值同步</summary>
+        private void OnSettingsReset()
+        {
+            InitPages();
+        }
+
         private void OnApplicationQuit()
         {
-            // 托盘 Shutdown 由 TrayBridge.OnApplicationQuit 处理，此处无需重复
+            // 退出时保存（OnDisable 不一定在 Application.Quit 时触发）
+            SettingsStorage.Save(Options);
         }
 
         private void BindElements()
