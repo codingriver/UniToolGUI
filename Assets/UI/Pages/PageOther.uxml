@@ -5,49 +5,50 @@
     <ui:Label text="其他设置" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <!-- 调试选项（固定高度，不参与弹性） -->
-    <ui:VisualElement class="group-box" style="flex-shrink:0;">
-        <ui:Label text="调试选项" class="group-title" />
-        <ui:VisualElement class="form-row">
-            <ui:Toggle name="toggle-debug" label="调试输出 (-debug) — 打印详细内部状态，便于排查异常" class="field-toggle" />
-        </ui:VisualElement>
-    </ui:VisualElement>
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto" style="flex-grow:1;">
 
-    <!-- 系统集成（固定高度，不参与弹性） -->
-    <ui:VisualElement class="group-box" style="flex-shrink:0;">
-        <ui:Label text="系统集成" class="group-title" />
-        <ui:VisualElement class="form-row">
-            <ui:Toggle name="toggle-startup" label="开机自动启动" class="field-toggle" />
-        </ui:VisualElement>
-        <ui:Label name="hint-startup" text="" class="form-hint" style="margin-left:0;" />
-        <ui:VisualElement class="form-row" style="margin-top:4px;margin-bottom:0;">
-            <ui:Toggle name="toggle-tray-minimize" label="最小化时隐藏到系统托盘" class="field-toggle" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-
-    <!-- 重置默认参数 -->
-    <ui:VisualElement class="group-box" style="flex-shrink:0;">
-        <ui:Label text="数据管理" class="group-title" />
-        <ui:VisualElement style="flex-direction:row;align-items:center;justify-content:space-between;">
-            <ui:Label text="将所有选项恢复为默认值并清除持久化数据" class="form-hint" style="margin-left:0;flex-grow:1;" />
-            <ui:Button name="btn-reset-defaults" text="重置默认参数" class="btn-sm btn-accent" style="flex-shrink:0;margin-left:12px;" />
-        </ui:VisualElement>
-    </ui:VisualElement>
-
-    <!-- 运行日志（弹性填充剩余空间） -->
-    <ui:VisualElement class="group-box" style="flex-grow:1;flex-direction:column;min-height:100px;">
-        <!-- 标题行 + 操作按钮 -->
-        <ui:VisualElement style="flex-direction:row;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:8px;">
-            <ui:Label text="运行日志" class="group-title" style="margin-bottom:0;" />
-            <ui:VisualElement style="flex-direction:row;">
-                <ui:Button name="btn-copy-log" text="复制全部" class="btn-sm" style="margin-right:6px;" />
-                <ui:Button name="btn-clear-log" text="清空" class="btn-sm" />
+        <!-- 调试选项 -->
+        <ui:VisualElement class="group-box" style="flex-shrink:0;">
+            <ui:Label text="调试选项" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-debug" label="调试输出 (-debug) — 打印详细内部状态，便于排查异常" class="field-toggle" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <!-- 日志滚动区 -->
-        <ui:ScrollView name="log-scroll" mode="Vertical" style="flex-grow:1;">
-        </ui:ScrollView>
-    </ui:VisualElement>
 
+        <!-- 系统集成 -->
+        <ui:VisualElement class="group-box" style="flex-shrink:0;">
+            <ui:Label text="系统集成" class="group-title" />
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-startup" label="开机自动启动" class="field-toggle" />
+            </ui:VisualElement>
+            <ui:Label name="hint-startup" text="" class="form-hint" style="margin-left:0;" />
+            <ui:VisualElement class="form-row" style="margin-top:4px;margin-bottom:0;">
+                <ui:Toggle name="toggle-tray-minimize" label="最小化时隐藏到系统托盘" class="field-toggle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 重置默认参数 -->
+        <ui:VisualElement class="group-box" style="flex-shrink:0;">
+            <ui:Label text="数据管理" class="group-title" />
+            <ui:VisualElement style="flex-direction:row;align-items:center;justify-content:space-between;">
+                <ui:Label text="将所有选项恢复为默认值并清除持久化数据" class="form-hint" style="margin-left:0;flex-grow:1;" />
+                <ui:Button name="btn-reset-defaults" text="重置默认参数" class="btn-sm btn-accent" style="flex-shrink:0;margin-left:12px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 运行日志 -->
+        <ui:VisualElement class="group-box" style="flex-shrink:0;min-height:240px;">
+            <ui:VisualElement style="flex-direction:row;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:8px;">
+                <ui:Label text="运行日志" class="group-title" style="margin-bottom:0;" />
+                <ui:VisualElement style="flex-direction:row;">
+                    <ui:Button name="btn-copy-log" text="复制全部" class="btn-sm" style="margin-right:6px;" />
+                    <ui:Button name="btn-clear-log" text="清空" class="btn-sm" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:ScrollView name="log-scroll" mode="Vertical" style="flex-grow:1;min-height:180px;">
+            </ui:ScrollView>
+        </ui:VisualElement>
+
+    </ui:ScrollView>
 
 </ui:UXML>

@@ -44,11 +44,10 @@ namespace CloudflareST.GUI
                 catch { labelDll.text = "unknown"; }
             }
 
-            // 运行平台
+            // 运行平台（不显示 Unity 版本）
             var labelPlatform = root.Q<Label>("label-platform");
             if (labelPlatform != null)
-                labelPlatform.text = Application.platform.ToString()
-                    + "  Unity " + Application.unityVersion;
+                labelPlatform.text = Application.platform.ToString();
 
             // 按钮链接
             root.Q<Button>("btn-gui-repo")?.RegisterCallback<ClickEvent>(_ =>

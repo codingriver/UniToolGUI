@@ -706,3 +706,10 @@
     background-color: #252d3d;
     color: #9aa3b5;
 }
+
+/* page-scroll */
+.page-scroll {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}

@@ -42,30 +42,40 @@ namespace CloudflareST.GUI
             root.Q<Button>("btn-browse-hosts")?.RegisterCallback<ClickEvent>(_ => BrowseHostsFile());
             root.Q<Button>("btn-add-entry")   ?.RegisterCallback<ClickEvent>(_ => AddEntry("", 1));
 
-            // ── 管理员权限检测 ───────────────────────────────────
+            // ── 管理员权限检测（红/绿提示条） ───────────────────
+            bool isAdmin = false;
+            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+
+            var permRestartRow = root.Q<VisualElement>("perm-restart-row");
+            var permIcon       = root.Q<Label>("perm-icon");
             var restartAdminBtn = root.Q<Button>("btn-restart-admin");
-            if (restartAdminBtn != null)
+
+            if (isAdmin)
             {
-                bool isAdmin = WindowsAdmin.IsRunningAsAdmin();
-                // 已是管理员则隐藏重启按钮，同时将提示条改为 info 样式
-                if (isAdmin)
+                // 绿色：已是管理员
+                _permInfoBar?.RemoveFromClassList("info-bar--warning");
+                _permInfoBar?.AddToClassList("info-bar--success");
+                if (permIcon   != null) permIcon.text  = "✓";
+                if (_permText  != null) _permText.text = "当前已是管理员账户，Hosts 更新功能完整可用";
+                if (permRestartRow != null) permRestartRow.style.display = DisplayStyle.None;
+            }
+            else
+            {
+                // 红色：非管理员
+                _permInfoBar?.RemoveFromClassList("info-bar--warning");
+                _permInfoBar?.AddToClassList("info-bar--error");
+                if (permIcon   != null) permIcon.text  = "✕";
+                if (_permText  != null) _permText.text = "当前为非管理员账户，写入系统 Hosts 文件需要管理员权限";
+                if (permRestartRow != null) permRestartRow.style.display = DisplayStyle.Flex;
+                restartAdminBtn?.RegisterCallback<ClickEvent>(_ =>
                 {
-                    restartAdminBtn.style.display = DisplayStyle.None;
-                    _permInfoBar?.RemoveFromClassList("info-bar--warning");
-                    _permInfoBar?.AddToClassList("info-bar--info");
-                    if (_permText != null) _permText.text = "✓ 已以管理员身份运行，Hosts 更新功能完整可用";
-                }
-                else
-                {
-                    restartAdminBtn.RegisterCallback<ClickEvent>(_ =>
-                    {
-                        bool ok = WindowsAdmin.RestartAsAdmin();
-                        if (!ok)
-                            NativePlatform.MessageBox.Warning(
-                                "提升权限失败，请手动以管理员身份运行本程序。",
-                                "权限不足");
-                    });
-                }
+                    bool ok = false;
+                    try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
+                    if (!ok)
+                        NativePlatform.MessageBox.Warning(
+                            "提升权限失败，请手动以管理员身份运行本程序。",
+                            "权限不足");
+                });
             }
 
             UpdatePermHint();
@@ -111,15 +121,25 @@ namespace CloudflareST.GUI
         {
             var row = new VisualElement();
             row.name = "entry-row-" + idx;
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems    = Align.Center;
-            row.style.marginBottom  = 4;
+            row.style.flexDirection = FlexDirection.Column;
+            row.style.marginBottom  = 8;
+
+            // ── 参数提示（条目框内，域名标题下方） ──────────────
+            var hint = new Label("支持通配符域名（如 *.example.com）或普通域名（如 www.example.com）");
+            hint.style.fontSize    = 11;
+            hint.style.color       = new UnityEngine.UIElements.StyleColor(new UnityEngine.Color(0.35f, 0.55f, 0.65f));
+            hint.style.marginBottom = 3;
+            hint.style.whiteSpace  = WhiteSpace.Normal;
+
+            // ── 输入行 ────────────────────────────────────────
+            var inputRow = new VisualElement();
+            inputRow.style.flexDirection = FlexDirection.Row;
+            inputRow.style.alignItems    = Align.Center;
 
             var domainField = new TextField();
             domainField.value = domain;
             domainField.style.flexGrow = 1;
             domainField.AddToClassList("field-text");
-            // placeholder is set via UXML placeholder-text attribute (Unity 2022 compatible)
             domainField.RegisterValueChangedCallback(e =>
             {
                 if (idx < _entries.Count)
@@ -146,9 +166,12 @@ namespace CloudflareST.GUI
             delBtn.style.marginLeft = 4;
             delBtn.AddToClassList("btn-sm");
 
-            row.Add(domainField);
-            row.Add(rankField);
-            row.Add(delBtn);
+            inputRow.Add(domainField);
+            inputRow.Add(rankField);
+            inputRow.Add(delBtn);
+
+            row.Add(hint);
+            row.Add(inputRow);
             return row;
         }
 

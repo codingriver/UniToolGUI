@@ -5,14 +5,20 @@
     <ui:Label text="Hosts 更新" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
-
-        <!-- 权限提示条 -->
-        <ui:VisualElement name="perm-infobar" class="info-bar info-bar--warning" style="flex-shrink:0;">
-            <ui:Label text="⚠" class="info-bar__icon" />
-            <ui:Label name="perm-text" text="Windows 需以管理员身份运行；权限不足时内容输出到 hosts-pending.txt" />
-            <ui:Button name="btn-restart-admin" text="以管理员重启" class="btn-sm btn-accent" style="margin-left:auto;flex-shrink:0;" />
+    <!-- 管理员状态提示条（标题下方，红/绿，不随内容滚动） -->
+    <ui:VisualElement name="perm-infobar" class="info-bar info-bar--warning" style="flex-shrink:0;flex-direction:column;padding:8px 12px;">
+        <!-- 状态行 -->
+        <ui:VisualElement style="flex-direction:row;align-items:center;">
+            <ui:Label name="perm-icon" text="⚠" class="info-bar__icon" />
+            <ui:Label name="perm-text" text="当前为非管理员账户，Hosts 更新功能受限" style="flex-grow:1;" />
         </ui:VisualElement>
+        <!-- 重启按钮行（非管理员时显示） -->
+        <ui:VisualElement name="perm-restart-row" style="flex-direction:row;margin-top:6px;justify-content:flex-end;">
+            <ui:Button name="btn-restart-admin" text="以管理员身份重启程序" class="btn-sm btn-accent" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
 
         <!-- 启用开关 -->
         <ui:VisualElement class="group-box">
@@ -24,9 +30,18 @@
 
         <!-- 域名条目列表 -->
         <ui:VisualElement name="hosts-params" class="group-box">
-            <ui:VisualElement style="flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <ui:VisualElement style="flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <ui:Label text="域名条目" class="group-title" style="margin-bottom:0;" />
                 <ui:Button name="btn-add-entry" text="+ 添加条目" class="btn-sm btn-accent" />
+            </ui:VisualElement>
+
+            <!-- 参数说明（条目标题下方） -->
+            <ui:VisualElement class="info-bar info-bar--info" style="margin-bottom:8px;">
+                <ui:Label text="ℹ" class="info-bar__icon" />
+                <ui:VisualElement style="flex-direction:column;flex-grow:1;">
+                    <ui:Label text="每个条目对应一条 -host 参数，支持通配符域名（如 *.example.com）和普通域名（如 www.example.com）" style="font-size:12px;white-space:normal;" />
+                    <ui:Label text="cfst 只更新 hosts 中已存在的匹配行；若无匹配则在文件末尾追加新行" style="font-size:11px;color:#5a7a9a;margin-top:2px;white-space:normal;" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <!-- 列表头 -->
@@ -42,7 +57,7 @@
             <!-- 空提示 -->
             <ui:Label name="hosts-entries-empty" text="暂无条目，点击「添加条目」开始配置" class="empty-hint" style="padding:20px 0;" />
 
-            <!-- Hosts 文件路径（只读，固定为系统默认路径）-->
+            <!-- Hosts 文件路径 -->
             <ui:VisualElement style="margin-top:12px;border-top-width:1px;border-top-color:#252d3d;padding-top:12px;">
                 <ui:VisualElement class="form-col">
                     <ui:Label text="Hosts 文件路径" class="form-label" />
@@ -58,15 +73,6 @@
                     <ui:Toggle name="toggle-hostsdryrun" label="仅预览不写入 (-hosts-dry-run) — 测速完成后在结果页预览，不实际修改文件" class="field-toggle" />
                 </ui:VisualElement>
                 <ui:Label name="hint-dryrun" text="" class="form-hint" style="margin-left:0;color:#ffcc44;" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-        <!-- 说明框 -->
-        <ui:VisualElement class="info-bar info-bar--info">
-            <ui:Label text="ℹ" class="info-bar__icon" />
-            <ui:VisualElement style="flex-direction:column;flex-grow:1;">
-                <ui:Label text="每个条目对应一条 -host 参数，支持通配符 *.example.com" style="font-size:12px;" />
-                <ui:Label text="cfst 只更新 hosts 中已存在的匹配行；若无匹配则在文件末尾追加" style="font-size:11px;color:#5a7a9a;margin-top:2px;" />
             </ui:VisualElement>
         </ui:VisualElement>
 
