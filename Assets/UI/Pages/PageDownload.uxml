@@ -5,7 +5,7 @@
     <ui:Label text="下载测速" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
 
         <!-- 禁用开关 -->
         <ui:VisualElement class="group-box">

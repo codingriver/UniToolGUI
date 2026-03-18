@@ -5,27 +5,25 @@
     <ui:Label text="IP 来源" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
 
         <!-- IP 文件组 -->
         <ui:VisualElement class="group-box">
             <ui:Label text="IP 文件" class="group-title" />
 
             <!-- IPv4 -->
-            <ui:VisualElement class="form-row">
+            <ui:VisualElement class="form-col">
                 <ui:Label text="IPv4 文件 (-f)" class="form-label" />
-                <ui:TextField name="field-ipv4" value="ip.txt" class="field-text" />
-                <ui:Button name="btn-browse-ipv4" text="浏览..." class="btn-browse" />
+                <ui:Label name="field-ipv4" text="（加载中...）" class="field-path-readonly" />
             </ui:VisualElement>
-            <ui:Label name="hint-ipv4" text="" class="form-hint" />
 
             <!-- IPv6 -->
-            <ui:VisualElement class="form-row">
+            <ui:VisualElement class="form-col">
                 <ui:Label text="IPv6 文件 (-f6)" class="form-label" />
-                <ui:TextField name="field-ipv6" value="ipv6.txt" class="field-text" />
-                <ui:Button name="btn-browse-ipv6" text="浏览..." class="btn-browse" />
+                <ui:Label name="field-ipv6" text="（加载中...）" class="field-path-readonly" />
             </ui:VisualElement>
-            <ui:Label name="hint-ipv6" text="" class="form-hint" />
+
+            <ui:Label text="路径固定为 Unity 持久化目录，不可手动修改" class="form-hint" style="margin-top:4px;" />
         </ui:VisualElement>
 
         <!-- 直接指定 IP 段 -->

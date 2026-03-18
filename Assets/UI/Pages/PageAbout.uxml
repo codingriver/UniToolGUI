@@ -5,18 +5,18 @@
     <ui:Label text="关于" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
 
         <!-- 版本信息 -->
         <ui:VisualElement class="group-box">
             <ui:Label text="版本信息" class="group-title" />
             <ui:VisualElement class="form-row">
                 <ui:Label text="GUI 版本" class="form-label" />
-                <ui:Label name="label-gui-version" text="-" style="font-size:12px;color:#e8eaf0;" />
+                <ui:Label name="label-gui-version" text="1.0.0" style="font-size:12px;color:#e8eaf0;" />
             </ui:VisualElement>
             <ui:VisualElement class="form-row">
                 <ui:Label text="cfst.dll 版本" class="form-label" />
-                <ui:Label name="label-dll-version" text="-" style="font-size:12px;color:#e8eaf0;" />
+                <ui:Label name="label-dll-version" text="1.0.5" style="font-size:12px;color:#e8eaf0;" />
             </ui:VisualElement>
             <ui:VisualElement class="form-row" style="margin-bottom:0;">
                 <ui:Label text="运行平台" class="form-label" />

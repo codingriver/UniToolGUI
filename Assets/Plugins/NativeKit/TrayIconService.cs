@@ -63,7 +63,8 @@ public class TrayIconService : ITrayService
     private readonly Dictionary<uint,TrayMenuItem> _menuItemById = new Dictionary<uint,TrayMenuItem>();
     private uint   _nextId = 1000;
     private IntPtr _hwnd, _oldWndProc, _hMenu;
-    private WndProcDelegate _newWndProc;
+    // static 防止 GC 回收 delegate，导致鼠标 hover 时 WndProc 函数指针失效崩溃
+    private static WndProcDelegate _newWndProc;
     private SynchronizationContext _mainCtx;
     private bool _trayAdded;
     private IntPtr _hCustomIcon;
@@ -80,6 +81,7 @@ public class TrayIconService : ITrayService
     [DllImport("user32.dll",CharSet=CharSet.Auto)] static extern IntPtr LoadIcon(IntPtr h,IntPtr n);
     [DllImport("user32.dll",CharSet=CharSet.Auto,SetLastError=true)] static extern IntPtr LoadImage(IntPtr hInst,string name,uint type,int cx,int cy,uint fuLoad);
     [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr hIcon);
+    [DllImport("shell32.dll",CharSet=CharSet.Auto)] static extern IntPtr ExtractIcon(IntPtr hInst,string exeFileName,int nIconIndex);
     [DllImport("user32.dll")] static extern IntPtr CreatePopupMenu();
     [DllImport("user32.dll",CharSet=CharSet.Auto)] static extern bool AppendMenu(IntPtr h,uint f,uint id,string s);
     [DllImport("user32.dll")] static extern bool TrackPopupMenu(IntPtr h,uint f,int x,int y,int r,IntPtr w,IntPtr p);
@@ -116,7 +118,25 @@ public class TrayIconService : ITrayService
         _newWndProc = WndProc;
         _oldWndProc = SetWindowLongPtr(_hwnd, GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_newWndProc));
         var n=MakeNid(); n.uFlags=NIF_MSG|NIF_ICO|NIF_TIP; n.uCallbackMessage=WM_TRAYICON;
-        n.hIcon=LoadIcon(IntPtr.Zero,IDI_APP); n.szTip=_tooltip;
+        // ── 自定义/exe图标提取已暂时注释，排查托盘消失问题 ──
+        // string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
+        // IntPtr hExeIcon = IntPtr.Zero;
+        // if (!string.IsNullOrEmpty(exePath))
+        //     hExeIcon = ExtractIcon(IntPtr.Zero, exePath, 0);
+        // if (hExeIcon == IntPtr.Zero || hExeIcon == new IntPtr(1))
+        // {
+        //     hExeIcon = LoadImage(IntPtr.Zero, "#32512", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+        //     if (hExeIcon == IntPtr.Zero)
+        //         hExeIcon = LoadIcon(IntPtr.Zero, IDI_APP);
+        // }
+        // else
+        // {
+        //     if (_hCustomIcon != IntPtr.Zero) DestroyIcon(_hCustomIcon);
+        //     _hCustomIcon = hExeIcon;
+        // }
+        // 直接使用系统默认图标
+        IntPtr hExeIcon = LoadIcon(IntPtr.Zero, IDI_APP);
+        n.hIcon = hExeIcon; n.szTip=_tooltip;
         if (Shell_NotifyIcon(NIM_ADD,ref n)) { _trayAdded=true; RebuildWin(); FireCreated(); }
         else Debug.LogError("[Tray] Shell_NotifyIcon failed");
         _initialized=true;

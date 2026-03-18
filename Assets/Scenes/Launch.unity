@@ -122,7 +122,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &517777542
+--- !u!1 &152235322
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,44 +130,58 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 517777543}
-  - component: {fileID: 517777544}
+  - component: {fileID: 152235323}
+  - component: {fileID: 152235324}
   m_Layer: 0
-  m_Name: TrayIconTest
+  m_Name: TrayBridge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &517777543
+  m_IsActive: 1
+--- !u!4 &152235323
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 517777542}
+  m_GameObject: {fileID: 152235322}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1665289802}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &517777544
+--- !u!114 &152235324
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 517777542}
-  m_Enabled: 0
+  m_GameObject: {fileID: 152235322}
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ae4305fb5526f04796af4cf8defe42d, type: 3}
+  m_Script: {fileID: 11500000, guid: 95f9540d22cc4eb44b6c0139beb68cae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tooltip: "Unity \u6258\u76D8\u6D4B\u8BD5\u5DE5\u5177"
-  simulateInEditor: 1
+  Tooltip: "Cloudflare IP\u4F18\u9009\u5DE5\u5177"
+  MinimizeToTray: 1
+  SimulateInEditor: 1
+  WindowsIcoFileName: 
+  AddShowWindowItem: 1
+  AddQuitItem: 1
+  OnShowMainWindow:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTrayQuit:
+    m_PersistentCalls:
+      m_Calls: []
+  OnTrayReady:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -311,12 +325,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1665289800}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.3485208, y: 0.12238634, z: 0.012901574}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 152235323}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1665289803
 MonoBehaviour:
@@ -550,7 +564,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 963194228}
-  - {fileID: 517777543}
-  - {fileID: 1665289802}
   - {fileID: 1885131103}
   - {fileID: 1782109578}
+  - {fileID: 152235323}

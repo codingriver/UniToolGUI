@@ -40,6 +40,30 @@ namespace CloudflareST.GUI
             _logScroll?.RegisterCallback<WheelEvent>(_ => CheckAutoScroll());
             _logScroll?.verticalScroller.RegisterCallback<ChangeEvent<float>>(_ => CheckAutoScroll());
 
+            // ── 开机自启 ─────────────────────────────────────────
+            var startupToggle = root.Q<Toggle>("toggle-startup");
+            var hintStartup   = root.Q<Label>("hint-startup");
+            if (startupToggle != null)
+            {
+                startupToggle.value = WindowsStartup.IsStartupEnabled();
+                UpdateStartupHint(hintStartup, startupToggle.value);
+                startupToggle.RegisterValueChangedCallback(e =>
+                {
+                    bool ok = WindowsStartup.ToggleStartup();
+                    if (!ok) startupToggle.SetValueWithoutNotify(!e.newValue);
+                    UpdateStartupHint(hintStartup, startupToggle.value);
+                });
+            }
+
+            // ── 最小化到托盘开关 ──────────────────────────────────
+            var trayMinToggle = root.Q<Toggle>("toggle-tray-minimize");
+            if (trayMinToggle != null)
+            {
+                trayMinToggle.value = CfstTrayManager.MinimizeToTray;
+                trayMinToggle.RegisterValueChangedCallback(e =>
+                    CfstTrayManager.MinimizeToTray = e.newValue);
+            }
+
             // 启动提示
             AppendLog("[INFO] CFST 已就绪");
         }
@@ -100,6 +124,12 @@ namespace CloudflareST.GUI
             string orig = btn.text;
             btn.text = "已复制 ✓";
             _root?.schedule.Execute(() => btn.text = orig).StartingIn(1500);
+        }
+
+        private void UpdateStartupHint(Label hint, bool enabled)
+        {
+            if (hint == null) return;
+            hint.text = enabled ? "✓ 已设置开机自启" : "";
         }
     }
 }

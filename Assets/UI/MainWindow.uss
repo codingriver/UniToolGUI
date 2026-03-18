@@ -430,10 +430,8 @@
 }
 .field-toggle > .unity-toggle__input:checked > .unity-toggle__checkmark {
     background-color: #f48120;
-    background-image: resource("unity-builtin-extra/toggle-check");
+    background-image: none;
     border-color: #f48120;
-    -unity-background-image-tint-color: #ffffff;
-    background-size: contain;
 }
 .field-toggle .unity-label {
     font-size: 12px;
@@ -593,6 +591,23 @@
 .col-speed  { width: 90px; }
 .col-dc     { width: 60px; }
 .col-region { width: 90px; }
+
+/* 只读路径显示（Mobile 模式，路径由代码写入，不可编辑）*/
+.field-path-readonly {
+    flex-grow: 1;
+    font-size: 11px;
+    color: #5a6480;
+    background-color: #0a0d13;
+    border-width: 1px;
+    border-color: #1e2535;
+    border-radius: 5px;
+    padding: 5px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-align: middle-left;
+    margin-top: 4px;
+}
 
 /* 空态提示 */
 .empty-hint {

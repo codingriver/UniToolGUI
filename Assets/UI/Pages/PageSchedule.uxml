@@ -5,7 +5,7 @@
     <ui:Label text="定时调度" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="AlwaysVisible">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
 
         <!-- 调度模式 -->
         <ui:VisualElement class="group-box">

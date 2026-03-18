@@ -40,12 +40,13 @@
                     <ui:Button name="nav-hosts"    text="Hosts 更新"  class="nav-item" />
                     <ui:Button name="nav-output"   text="输出设置"    class="nav-item" />
                     <ui:Button name="nav-other"    text="其他设置"    class="nav-item" />
-                    <ui:Button name="nav-about"    text="关于"         class="nav-item" />
                     <ui:VisualElement class="nav-divider" />
                     <ui:Button name="nav-results"  class="nav-item nav-item--results">
                         <ui:Label text="测速结果" class="nav-results-label" />
                         <ui:Label name="result-badge" text="" class="result-badge result-badge--hidden" />
                     </ui:Button>
+                    <ui:VisualElement class="nav-divider" />
+                    <ui:Button name="nav-about"    text="关于"         class="nav-item" />
                 </ui:VisualElement>
             </ui:ScrollView>
             <ui:VisualElement name="sidebar-bottom" class="sidebar-bottom">
@@ -59,7 +60,6 @@
                     </ui:VisualElement>
                     <ui:Label name="progress-pct" text="0%" class="progress-pct" />
                 </ui:VisualElement>
-                <ui:Label name="status-text" text="就绪" class="status-text" />
             </ui:VisualElement>
         </ui:VisualElement>
 

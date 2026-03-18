@@ -42,6 +42,32 @@ namespace CloudflareST.GUI
             root.Q<Button>("btn-browse-hosts")?.RegisterCallback<ClickEvent>(_ => BrowseHostsFile());
             root.Q<Button>("btn-add-entry")   ?.RegisterCallback<ClickEvent>(_ => AddEntry("", 1));
 
+            // ── 管理员权限检测 ───────────────────────────────────
+            var restartAdminBtn = root.Q<Button>("btn-restart-admin");
+            if (restartAdminBtn != null)
+            {
+                bool isAdmin = WindowsAdmin.IsRunningAsAdmin();
+                // 已是管理员则隐藏重启按钮，同时将提示条改为 info 样式
+                if (isAdmin)
+                {
+                    restartAdminBtn.style.display = DisplayStyle.None;
+                    _permInfoBar?.RemoveFromClassList("info-bar--warning");
+                    _permInfoBar?.AddToClassList("info-bar--info");
+                    if (_permText != null) _permText.text = "✓ 已以管理员身份运行，Hosts 更新功能完整可用";
+                }
+                else
+                {
+                    restartAdminBtn.RegisterCallback<ClickEvent>(_ =>
+                    {
+                        bool ok = WindowsAdmin.RestartAsAdmin();
+                        if (!ok)
+                            NativePlatform.MessageBox.Warning(
+                                "提升权限失败，请手动以管理员身份运行本程序。",
+                                "权限不足");
+                    });
+                }
+            }
+
             UpdatePermHint();
 
             _enableToggle?.RegisterValueChangedCallback(e =>

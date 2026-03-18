@@ -55,16 +55,29 @@ namespace CloudflareST.GUI
             TestResult.Instance.OnResultUpdated += RefreshBadge;
             NavigateTo(0);
             RefreshSidebar();
+
+            // 托盘由 TrayBridge 组件负责初始化（Inspector 挂载）
+            // 在此只注册业务菜单项，等 TrayBridge.TrayReady 触发后执行
+            TrayBridge.TrayReady += RegisterTrayMenuItems;
+            // 若 TrayBridge 已经初始化完成（场景加载顺序问题），直接注册
+            if (TrayBridge.IsInitialized)
+                RegisterTrayMenuItems();
         }
 
         private void OnDisable()
         {
+            TrayBridge.TrayReady -= RegisterTrayMenuItems;
             AppState.Instance.OnChanged         -= RefreshSidebar;
             TestResult.Instance.OnResultUpdated -= RefreshBadge;
             if (_btnStart != null) _btnStart.clicked -= StartTest;
             if (_btnStop  != null) _btnStop.clicked  -= StopTest;
             _runner?.Dispose();
             _runner = null;
+        }
+
+        private void OnApplicationQuit()
+        {
+            // 托盘 Shutdown 由 TrayBridge.OnApplicationQuit 处理，此处无需重复
         }
 
         private void BindElements()
@@ -174,6 +187,18 @@ namespace CloudflareST.GUI
             if (_btnStop  != null) _btnStop.clicked  += StopTest;
         }
 
+        // ── 托盘业务菜单项注册 ────────────────────────────────
+        // 由 TrayBridge.TrayReady 事件触发，与 TrayBridge 解耦
+        private void RegisterTrayMenuItems()
+        {
+            CfstTrayManager.Instance.Init(
+                onStartTest: StartTest,
+                onStopTest:  StopTest,
+                isRunning:   () => AppState.Instance.IsRunning,
+                trayBridge:  GetComponent<TrayBridge>() ?? FindObjectOfType<TrayBridge>()
+            );
+        }
+
         // ── 开始测速 ─────────────────────────────────────────
         private void StartTest()
         {
@@ -275,6 +300,25 @@ namespace CloudflareST.GUI
             // 有结果时自动导航到结果页（index 8）
             if (exitCode == 0 && TestResult.Instance.IpList.Count > 0)
                 NavigateTo(PAGE_RESULTS);
+
+            // ── 托盘气泡通知 + 状态刷新 ──────────────────────
+            CfstTrayManager.Instance.OnRunningStateChanged(false);
+            if (exitCode == 0)
+            {
+                var s = AppState.Instance;
+                CfstTrayManager.Instance.ShowFinishedBalloon(
+                    TestResult.Instance.IpList.Count,
+                    s.BestLatency,
+                    s.BestSpeed);
+                // 同时发送 Toast（后台运行时也能收到）
+                NativePlatform.ShowToast(
+                    "CFST 测速完成",
+                    TestResult.Instance.IpList.Count > 0
+                        ? string.Format("有效 {0} 个 IP，最快 {1:F0} ms",
+                            TestResult.Instance.IpList.Count, s.BestLatency)
+                        : "未找到有效 IP");
+            }
+
             UnityEngine.Debug.Log("[CFST] Finished, exitCode=" + exitCode
                 + ", results=" + TestResult.Instance.IpList.Count);
         }
@@ -292,6 +336,9 @@ namespace CloudflareST.GUI
         // ── 侧边栏刷新 ───────────────────────────────────────
         private void RefreshSidebar()
         {
+            // 同步托盘菜单运行状态
+            CfstTrayManager.Instance.OnRunningStateChanged(AppState.Instance.IsRunning);
+
             var s = AppState.Instance;
             float pct = s.Progress * 100f;
             if (_progressFill != null)
