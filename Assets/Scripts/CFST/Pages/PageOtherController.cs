@@ -19,6 +19,10 @@ namespace CloudflareST.GUI
         private bool _autoScroll = true;
         private const int MAX_LOG_LINES = 300;
 
+        // 开机自启 Toggle 引用，供事件回调刷新
+        private Toggle _startupToggle;
+        private Label  _startupHint;
+
         public void Init(VisualElement root, CfstOptions opts)
         {
             _root = root;
@@ -41,8 +45,10 @@ namespace CloudflareST.GUI
             _logScroll?.verticalScroller.RegisterCallback<ChangeEvent<float>>(_ => CheckAutoScroll());
 
             // ── 开机自启 ─────────────────────────────────────────
-            var startupToggle = root.Q<Toggle>("toggle-startup");
-            var hintStartup   = root.Q<Label>("hint-startup");
+            _startupToggle = root.Q<Toggle>("toggle-startup");
+            _startupHint   = root.Q<Label>("hint-startup");
+            var startupToggle = _startupToggle;
+            var hintStartup   = _startupHint;
             if (startupToggle != null)
             {
                 bool startupEnabled = false;
@@ -56,7 +62,6 @@ namespace CloudflareST.GUI
                     bool ok = false;
                     try
                     {
-                        // 明确传入当前进程路径，避免在 Editor/某些运行时下 MainModule 为 null
                         string exePath = WindowsStartup.GetCurrentExePath();
                         ok = e.newValue
                             ? WindowsStartup.EnableStartup(exePath)
@@ -70,7 +75,6 @@ namespace CloudflareST.GUI
 
                     if (!ok)
                     {
-                        // 操作失败，回滚 UI
                         startupToggle.SetValueWithoutNotify(!e.newValue);
                         AppendLog("[WARN] 开机自启设置失败，请检查权限");
                     }
@@ -80,6 +84,9 @@ namespace CloudflareST.GUI
                     }
                     UpdateStartupHint(hintStartup, startupToggle.value);
                 });
+
+                // 订阅全局事件：托盘菜单改变开机自启时同步刷新此 Toggle
+                WindowsStartup.OnStartupChanged += OnStartupChangedExternal;
             }
 
             // ── 最小化到托盘开关 ──────────────────────────────────
@@ -157,6 +164,23 @@ namespace CloudflareST.GUI
         {
             if (hint == null) return;
             hint.text = enabled ? "✓ 已设置开机自启" : "";
+        }
+
+        private void OnDestroy()
+        {
+            WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
+        }
+
+        /// <summary>
+        /// 托盘菜单或其他地方修改了开机自启状态后，同步刷新界面 Toggle。
+        /// WindowsStartup.OnStartupChanged 在主线程触发，可直接操作 UI。
+        /// </summary>
+        private void OnStartupChangedExternal(bool enabled)
+        {
+            if (_startupToggle == null) return;
+            _startupToggle.SetValueWithoutNotify(enabled);
+            UpdateStartupHint(_startupHint, enabled);
+            AppendLog(enabled ? "[INFO] 开机自启已启用（外部变更）" : "[INFO] 开机自启已禁用（外部变更）");
         }
     }
 }

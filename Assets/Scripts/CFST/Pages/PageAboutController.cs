@@ -20,15 +20,26 @@ namespace CloudflareST.GUI
                 labelGui.text = ver != null ? ver.ToString() : "1.0.0";
             }
 
-            // cfst.dll 版本
+            // cfst.dll 版本（读取 ProductVersion，含语义版本+commit hash）
             var labelDll = root.Q<Label>("label-dll-version");
             if (labelDll != null)
             {
                 try
                 {
-                    var dllAsm = typeof(CloudflareST.CfstRunner).Assembly;
-                    var dllVer = dllAsm.GetName().Version;
-                    labelDll.text = dllVer != null ? dllVer.ToString() : "unknown";
+                    var dllPath = typeof(CloudflareST.CfstRunner).Assembly.Location;
+                    var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(dllPath);
+                    var productVer = fvi.ProductVersion;
+                    if (!string.IsNullOrEmpty(productVer))
+                    {
+                        // 截取 '+' 之前的语义版本（如 "1.0.0"），去掉 commit hash
+                        var plusIdx = productVer.IndexOf('+');
+                        labelDll.text = plusIdx > 0 ? productVer.Substring(0, plusIdx) : productVer;
+                    }
+                    else
+                    {
+                        var dllVer = typeof(CloudflareST.CfstRunner).Assembly.GetName().Version;
+                        labelDll.text = dllVer != null ? dllVer.ToString() : "unknown";
+                    }
                 }
                 catch { labelDll.text = "unknown"; }
             }

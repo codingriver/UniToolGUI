@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public static class WindowsStartup
 {
+    /// <summary>开机自启状态变化时广播（参数=新状态 true/false），在主线程触发</summary>
+    public static event Action<bool> OnStartupChanged;
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
     private const string RunKeyPath = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
 
@@ -96,6 +98,7 @@ public static class WindowsStartup
             {
                 if (key == null) return false;
                 key.SetValue(name, "\"" + exePath + "\"");
+                OnStartupChanged?.Invoke(true);
                 return true;
             }
         }
@@ -115,6 +118,7 @@ public static class WindowsStartup
             {
                 if (key == null) return false;
                 key.DeleteValue(name, false);
+                OnStartupChanged?.Invoke(false);
                 return true;
             }
         }

@@ -14,16 +14,23 @@
             <!-- IPv4 -->
             <ui:VisualElement class="form-col">
                 <ui:Label text="IPv4 文件 (-f)" class="form-label" />
-                <ui:Label name="field-ipv4" text="（加载中...）" class="field-path-readonly" />
+                <ui:VisualElement style="flex-direction:row;align-items:center;">
+                    <ui:TextField name="field-ipv4" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-browse-ipv4" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                </ui:VisualElement>
+                <ui:Label name="hint-ipv4" text="" class="form-hint" style="margin-left:0;" />
             </ui:VisualElement>
 
             <!-- IPv6 -->
             <ui:VisualElement class="form-col">
                 <ui:Label text="IPv6 文件 (-f6)" class="form-label" />
-                <ui:Label name="field-ipv6" text="（加载中...）" class="field-path-readonly" />
+                <ui:VisualElement style="flex-direction:row;align-items:center;">
+                    <ui:TextField name="field-ipv6" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-browse-ipv6" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                </ui:VisualElement>
+                <ui:Label name="hint-ipv6" text="" class="form-hint" style="margin-left:0;" />
             </ui:VisualElement>
 
-            <ui:Label text="路径固定为 Unity 持久化目录，不可手动修改" class="form-hint" style="margin-top:4px;" />
         </ui:VisualElement>
 
         <!-- 直接指定 IP 段 -->
