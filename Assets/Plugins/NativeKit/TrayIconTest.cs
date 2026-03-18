@@ -64,6 +64,8 @@ public class TrayIconTest : MonoBehaviour
         // 初始化托盘服务（真实或模拟）
         TrayIconService.Instance.Initialize();
         TrayIconService.Instance.SetTooltip(tooltip);
+        // 每次右键菜单弹出前刷新动态数据（TrackPopupMenu 阻塞主线程，协程无法运行）
+        TrayIconService.Instance.OnBeforeMenuOpen += OnBeforeMenuOpen;
         TrayIconService.Instance.RegisterMenuItems(new TrayMenuItem[]
         {
             _showWindowItem,
@@ -95,13 +97,29 @@ public class TrayIconTest : MonoBehaviour
         if (_dynamicMenuCoroutine != null)
             StopCoroutine(_dynamicMenuCoroutine);
 
+        TrayIconService.Instance.OnBeforeMenuOpen -= OnBeforeMenuOpen;
 
         if (Application.isEditor && !simulateInEditor)
             return;
 
         // 清理托盘（通常在应用退出时自动执行，这里显式调用以演示）
         TrayIconService.Instance.Shutdown();
+    }
 
+    /// <summary>
+    /// 右键菜单弹出前同步刷新动态数据。
+    /// TrackPopupMenu 阻塞 Unity 主线程，协程无法在菜单弹出期间更新文字，
+    /// 因此在弹出前主动刷新一次，确保用户每次看到的时间都是最新的。
+    /// </summary>
+    private void OnBeforeMenuOpen()
+    {
+        if (_dynamicMenuItem == null) return;
+        string newText = "当前时间: " + System.DateTime.Now.ToLongTimeString();
+        if (_dynamicMenuItem.Text != newText)
+        {
+            _dynamicMenuItem.Text = newText;
+            TrayIconService.Instance.RefreshMenu();
+        }
     }
 
     /// <summary>

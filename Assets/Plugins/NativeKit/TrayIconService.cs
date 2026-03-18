@@ -16,6 +16,8 @@ public class TrayIconService : ITrayService
     public event Action OnTrayIconCreated;
     public event Action OnTrayIconDestroyed;
     public event Action<int> OnHotkeyPressed;
+    /// <summary>右键菜单弹出前触发，订阅者可在此更新菜单文字后调用 RefreshMenu()</summary>
+    public event Action OnBeforeMenuOpen;
 
     private readonly List<TrayMenuItem> _menuItems = new List<TrayMenuItem>();
     private string _tooltip = "Unity App";
@@ -194,12 +196,14 @@ public class TrayIconService : ITrayService
             case WM_TRAYICON:
                 if((uint)lParam==WM_RBUTTONUP) {
                     if(_hMenu!=IntPtr.Zero) {
+                        // 弹出前通知订阅者刷新数据（协程被阻塞无法自动更新）
+                        OnBeforeMenuOpen?.Invoke();
                         GetCursorPos(out POINT pt);
                         SetForegroundWindow(_hwnd);
-                        _menuOpen = true;                                              // 标记菜单已弹出
-                        TrackPopupMenu(_hMenu,TPM_RB,pt.x,pt.y,0,_hwnd,IntPtr.Zero); // 阻塞直到菜单关闭
-                        _menuOpen = false;                                             // 菜单已关闭
-                        if (_rebuildPending) { _rebuildPending = false; RebuildWin(); } // 补建菜单
+                        _menuOpen = true;
+                        TrackPopupMenu(_hMenu,TPM_RB,pt.x,pt.y,0,_hwnd,IntPtr.Zero);
+                        _menuOpen = false;
+                        if (_rebuildPending) { _rebuildPending = false; RebuildWin(); }
                         PostMessage(_hwnd,WM_NULL,IntPtr.Zero,IntPtr.Zero);
                     }
                 }
