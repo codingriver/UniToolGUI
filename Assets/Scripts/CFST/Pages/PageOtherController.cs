@@ -45,12 +45,39 @@ namespace CloudflareST.GUI
             var hintStartup   = root.Q<Label>("hint-startup");
             if (startupToggle != null)
             {
-                startupToggle.value = WindowsStartup.IsStartupEnabled();
+                bool startupEnabled = false;
+                try { startupEnabled = WindowsStartup.IsStartupEnabled(); }
+                catch (System.Exception ex) { Debug.LogWarning("[Startup] IsStartupEnabled 失败: " + ex.Message); }
+                startupToggle.value = startupEnabled;
                 UpdateStartupHint(hintStartup, startupToggle.value);
+
                 startupToggle.RegisterValueChangedCallback(e =>
                 {
-                    bool ok = WindowsStartup.ToggleStartup();
-                    if (!ok) startupToggle.SetValueWithoutNotify(!e.newValue);
+                    bool ok = false;
+                    try
+                    {
+                        // 明确传入当前进程路径，避免在 Editor/某些运行时下 MainModule 为 null
+                        string exePath = WindowsStartup.GetCurrentExePath();
+                        ok = e.newValue
+                            ? WindowsStartup.EnableStartup(exePath)
+                            : WindowsStartup.DisableStartup();
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning("[Startup] 切换失败: " + ex.Message);
+                        ok = false;
+                    }
+
+                    if (!ok)
+                    {
+                        // 操作失败，回滚 UI
+                        startupToggle.SetValueWithoutNotify(!e.newValue);
+                        AppendLog("[WARN] 开机自启设置失败，请检查权限");
+                    }
+                    else
+                    {
+                        AppendLog(e.newValue ? "[INFO] 已启用开机自启" : "[INFO] 已禁用开机自启");
+                    }
                     UpdateStartupHint(hintStartup, startupToggle.value);
                 });
             }

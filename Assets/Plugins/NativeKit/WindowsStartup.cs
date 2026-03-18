@@ -15,6 +15,53 @@ public static class WindowsStartup
         return Application.productName ?? "UnityApp";
     }
 
+    /// <summary>
+    /// 安全获取当前进程的可执行文件路径。
+    /// 优先使用 Environment.GetCommandLineArgs()[0]（Unity 打包后最可靠），
+    /// 回退到 Process.MainModule，最终回退到 Application.dataPath 推算。
+    /// </summary>
+    public static string GetCurrentExePath()
+    {
+        // 1. 命令行第一个参数（最可靠，打包后即 exe 路径）
+        try
+        {
+            var args = Environment.GetCommandLineArgs();
+            if (args != null && args.Length > 0 && !string.IsNullOrEmpty(args[0]))
+            {
+                string p = args[0];
+                if (File.Exists(p)) return p;
+            }
+        }
+        catch { }
+
+        // 2. Process.MainModule（Editor 下可能抛异常）
+        try
+        {
+            string p = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (!string.IsNullOrEmpty(p) && File.Exists(p)) return p;
+        }
+        catch { }
+
+        // 3. Application.dataPath 推算（_Data 目录同级的 .exe）
+        try
+        {
+            // dataPath = "X:/Game/Game_Data" -> exe = "X:/Game/Game.exe"
+            string dataPath = Application.dataPath;
+            string dir  = Path.GetDirectoryName(dataPath);
+            string name = Path.GetFileName(dataPath); // "Game_Data"
+            if (name.EndsWith("_Data"))
+            {
+                string exeName = name.Substring(0, name.Length - 5) + ".exe";
+                string full    = Path.Combine(dir, exeName);
+                if (File.Exists(full)) return full;
+            }
+        }
+        catch { }
+
+        Debug.LogError("[WindowsStartup] 无法获取可执行文件路径");
+        return null;
+    }
+
     public static bool IsStartupEnabled()
     {
         try
@@ -38,7 +85,7 @@ public static class WindowsStartup
         try
         {
             if (string.IsNullOrEmpty(exePath))
-                exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                exePath = GetCurrentExePath();
             if (string.IsNullOrEmpty(exePath))
             {
                 Debug.LogError("[WindowsStartup] 无法获取可执行文件路径");

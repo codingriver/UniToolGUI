@@ -68,6 +68,8 @@ public class TrayIconService : ITrayService
     private SynchronizationContext _mainCtx;
     private bool _trayAdded;
     private IntPtr _hCustomIcon;
+    private bool _menuOpen;          // 右键菜单弹出期间为 true，禁止重建菜单
+    private bool _rebuildPending;    // 菜单关闭后需要重建
     const uint TRAY_ID = 100;
 
     [DllImport("user32.dll",SetLastError=true)] static extern IntPtr FindWindow(string c,string t);
@@ -173,6 +175,9 @@ public class TrayIconService : ITrayService
     }
     NOTIFYICONDATA MakeNid() { var n=new NOTIFYICONDATA(); n.cbSize=(uint)Marshal.SizeOf(n); n.hWnd=_hwnd; n.uID=TRAY_ID; return n; }
     void RebuildWin() {
+        // 菜单弹出期间不重建，避免 TrackPopupMenu 持有的旧 HMENU 变成野指针
+        // 标记 pending，菜单关闭后（TrackPopupMenu 返回）立即补建
+        if (_menuOpen) { _rebuildPending = true; return; }
         if (_hMenu!=IntPtr.Zero) DestroyMenu(_hMenu);
         _hMenu=CreatePopupMenu(); _menuItemById.Clear();
         foreach (var item in _menuItems) {
@@ -187,7 +192,17 @@ public class TrayIconService : ITrayService
             case WM_SIZE: if((uint)wParam==SIZE_MIN){ShowWindow(_hwnd,SW_HIDE);return IntPtr.Zero;} break;
             case WM_CLOSE: ShowWindow(_hwnd,SW_HIDE); return IntPtr.Zero;
             case WM_TRAYICON:
-                if((uint)lParam==WM_RBUTTONUP) { if(_hMenu!=IntPtr.Zero){GetCursorPos(out POINT pt);SetForegroundWindow(_hwnd);TrackPopupMenu(_hMenu,TPM_RB,pt.x,pt.y,0,_hwnd,IntPtr.Zero);PostMessage(_hwnd,WM_NULL,IntPtr.Zero,IntPtr.Zero);} }
+                if((uint)lParam==WM_RBUTTONUP) {
+                    if(_hMenu!=IntPtr.Zero) {
+                        GetCursorPos(out POINT pt);
+                        SetForegroundWindow(_hwnd);
+                        _menuOpen = true;                                              // 标记菜单已弹出
+                        TrackPopupMenu(_hMenu,TPM_RB,pt.x,pt.y,0,_hwnd,IntPtr.Zero); // 阻塞直到菜单关闭
+                        _menuOpen = false;                                             // 菜单已关闭
+                        if (_rebuildPending) { _rebuildPending = false; RebuildWin(); } // 补建菜单
+                        PostMessage(_hwnd,WM_NULL,IntPtr.Zero,IntPtr.Zero);
+                    }
+                }
                 else if((uint)lParam==WM_LBUTTONDBLCLK) PlatformShowMainWindow();
                 break;
             case WM_HOTKEY: FireHotkey((int)wParam); return IntPtr.Zero;

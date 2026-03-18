@@ -8,7 +8,8 @@ namespace CloudflareST.GUI
     /// </summary>
     public class AppBootstrap : MonoBehaviour
     {
-        private const string MutexName = "CFST_UniToolGUI_SingleInstance";
+        [Tooltip("托盘图标悬停提示文字")]
+        public string MutexName = "Unity_UniToolGUI_SingleInstance";
 
         private void Awake()
         {

@@ -158,7 +158,7 @@ namespace CloudflareST.GUI
                 }
             }
         }
-
+        public void NavigateToResults() => NavigateTo(PAGE_RESULTS);
         public void NavigateTo(int idx)
         {
             // UnityEngine.Debug.Log("[NAV] NavigateTo(" + idx + ")");
@@ -200,7 +200,7 @@ namespace CloudflareST.GUI
         }
 
         // ── 开始测速 ─────────────────────────────────────────
-        private void StartTest()
+        public void StartTest()
         {
             if (AppState.Instance.IsRunning) return;
 
@@ -280,7 +280,7 @@ namespace CloudflareST.GUI
         }
 
         // ── 停止测速 ─────────────────────────────────────────
-        private void StopTest()
+        public void StopTest()
         {
             UnityEngine.Debug.Log("[CFST] StopTest called");
             PageOther?.AppendLog("[INFO] 用户请求停止");

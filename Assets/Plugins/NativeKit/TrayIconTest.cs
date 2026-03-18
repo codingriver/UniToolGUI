@@ -23,6 +23,7 @@ public class TrayIconTest : MonoBehaviour
     private TrayMenuItem _exitItem;
     private TrayMenuItem _toggleAutoRefresh;
     private TrayMenuItem _addMenuDemoItem;
+    private TrayMenuItem _startupItem;
 
     // 动态菜单文本更新协程
     private Coroutine _dynamicMenuCoroutine;
@@ -73,6 +74,8 @@ public class TrayIconTest : MonoBehaviour
             new TrayMenuItem { IsSeparator = true },
             _dynamicMenuItem,                              // 动态显示文本的菜单项
             _addMenuDemoItem,
+            new TrayMenuItem { IsSeparator = true },
+            _startupItem,                                  // 开机自启
             new TrayMenuItem { IsSeparator = true },
             _exitItem
         });
@@ -188,7 +191,59 @@ public class TrayIconTest : MonoBehaviour
             }
         };
 
-        // 7. 退出
+        // 7. 开机自启
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        {
+            bool enabled = false;
+            try { enabled = WindowsStartup.IsStartupEnabled(); }
+            catch (System.Exception ex) { Debug.LogWarning("[TrayTest] 检查开机自启失败: " + ex.Message); }
+
+            _startupItem = new TrayMenuItem
+            {
+                Text     = "开机自启",
+                IsToggle = true,
+                Checked  = enabled,
+                Callback = () =>
+                {
+                    try
+                    {
+                        // WndProc 点击时已将 Checked 翻转为新值，此处直接按新值执行
+                        // Checked==true  → 用户想启用  → EnableStartup
+                        // Checked==false → 用户想禁用  → DisableStartup
+                        string exePath = WindowsStartup.GetCurrentExePath();
+                        bool now;
+                        if (_startupItem.Checked)
+                        {
+                            WindowsStartup.EnableStartup(exePath);
+                            now = WindowsStartup.IsStartupEnabled();
+                        }
+                        else
+                        {
+                            WindowsStartup.DisableStartup();
+                            now = false;
+                        }
+                        // 同步注册表实际状态（操作失败时回滚对勾）
+                        // _startupItem.Text    = now ? "[v] 开机自动启动" : "[ ] 开机自动启动";
+                        _startupItem.Checked = now;
+                        TrayIconService.Instance.RefreshMenu();
+                        Debug.Log("[TrayTest] 开机自启已" + (now ? "启用" : "禁用"));
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning("[TrayTest] 开机自启切换失败: " + ex.Message);
+                    }
+                }
+            };
+        }
+#else
+        _startupItem = new TrayMenuItem
+        {
+            Text     = "[ ] 开机自动启动（仅 Windows）",
+            Callback = () => Debug.Log("[TrayTest] 开机自启仅支持 Windows")
+        };
+#endif
+
+        // 8. 退出
         _exitItem = new TrayMenuItem
         {
             Text = "退出",
