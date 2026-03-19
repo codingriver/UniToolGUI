@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using UnityEngine;
 
@@ -55,7 +55,6 @@ namespace CloudflareST.GUI
             SetFloat ("speedmin",    (float)o.SpeedMin);
             SetString("outputfile",  o.OutputFile);
             SetInt   ("outputcount", o.OutputCount);
-            SetBool  ("silent",      o.Silent);
             SetString("onlyipfile",  o.OnlyIpFile);
             SetBool  ("debug",       o.Debug);
             SetInt   ("schedmode",   (int)o.ScheduleMode);
@@ -95,7 +94,6 @@ namespace CloudflareST.GUI
             o.SpeedMin        = GetFloat ("speedmin",    0f);
             o.OutputFile      = GetString("outputfile",  GetDefaultOutputFile());
             o.OutputCount     = GetInt   ("outputcount", 10);
-            o.Silent          = GetBool  ("silent",      false);
             o.OnlyIpFile      = GetString("onlyipfile",  GetDefaultOnlyIpFile());
             o.Debug           = GetBool  ("debug",       false);
             o.ScheduleMode    = (ScheduleMode)GetInt("schedmode", 0);
@@ -123,7 +121,7 @@ namespace CloudflareST.GUI
                 "pingmode","forceicmp","pingconc","pingcount","latmax","latmin",
                 "lossmx","httpcode","cfcolo",
                 "nodown","downurl","downport","downcount","downtimeout","speedmin",
-                "outputfile","outputcount","silent","onlyipfile","debug",
+                "outputfile","outputcount","onlyipfile","debug",
                 "schedmode","interval","dailyat","cronexpr","timezone",
                 "hostsdomains","hostsiprank","hostsfile","hostsdryrun"
             };
@@ -158,7 +156,6 @@ namespace CloudflareST.GUI
             o.SpeedMin        = 0;
             o.OutputFile      = GetDefaultOutputFile();
             o.OutputCount     = 10;
-            o.Silent          = false;
             o.OnlyIpFile      = GetDefaultOnlyIpFile();
             o.Debug           = false;
             o.ScheduleMode    = ScheduleMode.None;

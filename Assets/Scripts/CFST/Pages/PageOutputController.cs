@@ -11,7 +11,6 @@ namespace CloudflareST.GUI
         private TextField    _outputFileField;
         private Label        _hintOutputFile;
         private IntegerField _outputCountField;
-        private Toggle       _silentToggle;
         private TextField    _onlyIpFileField;
         private Label        _labelLastFile;
 
@@ -23,7 +22,6 @@ namespace CloudflareST.GUI
             _outputFileField  = root.Q<TextField>("field-outputfile");
             _hintOutputFile   = root.Q<Label>("hint-outputfile");
             _outputCountField = root.Q<IntegerField>("field-outputcount");
-            _silentToggle     = root.Q<Toggle>("toggle-silent");
             _onlyIpFileField  = root.Q<TextField>("field-onlyipfile");
             _labelLastFile    = root.Q<Label>("label-lastfile");
 
@@ -40,16 +38,7 @@ namespace CloudflareST.GUI
             _outputCountField?.RegisterValueChangedCallback(e =>
                 _opts.OutputCount = e.newValue < 1 ? 1 : e.newValue);
 
-            _silentToggle?.RegisterValueChangedCallback(e =>
-            {
-                _opts.Silent = e.newValue;
-                _onlyIpFileField?.SetEnabled(e.newValue);
-            });
-
             _onlyIpFileField?.RegisterValueChangedCallback(e => _opts.OnlyIpFile = e.newValue);
-
-            // onlyip 初始禁用
-            _onlyIpFileField?.SetEnabled(false);
 
             // ── 回填持久化值到界面 ────────────────────────────
             string defaultOutput = SettingsStorage.GetDefaultOutputFile();
@@ -58,13 +47,9 @@ namespace CloudflareST.GUI
             if (_outputFileField  != null) _outputFileField.SetValueWithoutNotify(
                 string.IsNullOrEmpty(_opts.OutputFile) ? defaultOutput : _opts.OutputFile);
             if (_outputCountField != null) _outputCountField.SetValueWithoutNotify(_opts.OutputCount);
-            if (_silentToggle     != null) _silentToggle.SetValueWithoutNotify(_opts.Silent);
             if (_onlyIpFileField  != null)
-            {
                 _onlyIpFileField.SetValueWithoutNotify(
                     string.IsNullOrEmpty(_opts.OnlyIpFile) ? defaultOnlyIp : _opts.OnlyIpFile);
-                _onlyIpFileField.SetEnabled(_opts.Silent);
-            }
 
             // 确保 opts 同步为默认值（兜底）
             if (string.IsNullOrEmpty(_opts.OutputFile)) _opts.OutputFile = defaultOutput;

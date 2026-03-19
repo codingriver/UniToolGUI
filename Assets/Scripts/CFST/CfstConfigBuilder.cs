@@ -85,7 +85,6 @@ namespace CloudflareST.GUI
             cfg.OutputFile  = o.OutputFile  ?? "result.csv";
             cfg.OutputNum   = o.OutputCount;
             cfg.OnlyIpFile  = o.OnlyIpFile  ?? "onlyip.txt";
-            cfg.Silent      = o.Silent;
             cfg.Debug       = o.Debug;
 #if UNITY_ANDROID || UNITY_IOS 
             // 移动平台：使用持久化目录（有写权限的沙盒路径）

@@ -27,13 +27,9 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- 静默模式 -->
+        <!-- onlyip 文件 -->
         <ui:VisualElement class="group-box">
-            <ui:Label text="静默模式" class="group-title" />
-
-            <ui:VisualElement class="form-row">
-                <ui:Toggle name="toggle-silent" label="静默模式 (-silent) — 只向 stdout 逐行输出IP，适合脚本/管道调用" class="field-toggle" />
-            </ui:VisualElement>
+            <ui:Label text="onlyip 文件" class="group-title" />
 
             <ui:VisualElement class="form-col">
                 <ui:Label text="onlyip 文件路径 (-onlyip)" class="form-label" />
@@ -41,6 +37,7 @@
                     <ui:TextField name="field-onlyipfile" class="field-text" style="flex-grow:1;" />
                     <ui:Button name="btn-browse-onlyip" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
                 </ui:VisualElement>
+                <ui:Label text="每次测速后将结果 IP 逐行写入此文件，始终生效" class="form-hint" style="margin-left:0;" />
             </ui:VisualElement>
         </ui:VisualElement>
 

@@ -64,7 +64,6 @@ namespace CloudflareST.GUI
         // ── 输出 ─────────────────────────────────────────────────
         public string OutputFile   { get; set; } = "result.csv";
         public int    OutputCount  { get; set; } = 10;
-        public bool   Silent       { get; set; } = false;
         public string OnlyIpFile   { get; set; } = "onlyip.txt";
 
         // ── 调试 ─────────────────────────────────────────────────

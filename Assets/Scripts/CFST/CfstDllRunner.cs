@@ -103,7 +103,6 @@ namespace CloudflareST.GUI
                         $"    OutputFile    = {config.OutputFile}\n" +
                         $"    OutputNum     = {config.OutputNum}\n" +
                         $"    OnlyIpFile    = {config.OnlyIpFile}\n" +
-                        $"    Silent        = {config.Silent}\n" +
                         $"    Debug         = {config.Debug}\n" +
                         $"    ShowProgress  = {config.ShowProgress}\n" +
                         $"  [定时调度]\n" +

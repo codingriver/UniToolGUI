@@ -82,16 +82,10 @@ namespace CloudflareST.GUI
             }
 
             // ── 输出 ─────────────────────────────────────────────
-            if (!string.IsNullOrWhiteSpace(o.OutputFile) && o.OutputFile != "result.csv")
-                Str("-o", o.OutputFile);
+            Str("-o", string.IsNullOrWhiteSpace(o.OutputFile) ? "result.csv" : o.OutputFile);
             if (o.OutputCount > 0 && o.OutputCount != 10)
                 Num("-p", o.OutputCount);
-            if (o.Silent)
-            {
-                Flag("-silent");
-                if (!string.IsNullOrWhiteSpace(o.OnlyIpFile) && o.OnlyIpFile != "onlyip.txt")
-                    Str("-onlyip", o.OnlyIpFile);
-            }
+            Str("-onlyip", string.IsNullOrWhiteSpace(o.OnlyIpFile) ? "onlyip.txt" : o.OnlyIpFile);
             if (o.Debug) Flag("-debug");
 
             // ── 定时调度 ─────────────────────────────────────────
