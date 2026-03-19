@@ -62,6 +62,19 @@ namespace CloudflareST.GUI
                         ? "⚠ 全量扫描大幅增加扫描量，耗时可能超过10分钟，建议配合IP数量上限使用"
                         : "";
             });
+
+            // ── 回填持久化值到界面 ────────────────────────────
+            if (_ipv4Field        != null) _ipv4Field.SetValueWithoutNotify(
+                string.IsNullOrEmpty(_opts.IPv4File) ? SettingsStorage.GetDefaultIpv4File() : _opts.IPv4File);
+            if (_ipv6Field        != null) _ipv6Field.SetValueWithoutNotify(
+                string.IsNullOrEmpty(_opts.IPv6File) ? SettingsStorage.GetDefaultIpv6File() : _opts.IPv6File);
+            if (_ipRangesField    != null) _ipRangesField.SetValueWithoutNotify(_opts.IpRanges ?? "");
+            if (_ipLoadLimitField != null) _ipLoadLimitField.SetValueWithoutNotify(_opts.IpLoadLimit);
+            if (_allIpToggle      != null) _allIpToggle.SetValueWithoutNotify(_opts.AllIp);
+
+            // 确保 opts 也同步为默认值（首次运行时 SettingsStorage.Load 已设，此处兜底）
+            if (string.IsNullOrEmpty(_opts.IPv4File)) _opts.IPv4File = SettingsStorage.GetDefaultIpv4File();
+            if (string.IsNullOrEmpty(_opts.IPv6File)) _opts.IPv6File = SettingsStorage.GetDefaultIpv6File();
         }
 
         private void BrowseFile(TextField target)

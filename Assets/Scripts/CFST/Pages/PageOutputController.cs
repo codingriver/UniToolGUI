@@ -51,6 +51,25 @@ namespace CloudflareST.GUI
             // onlyip 初始禁用
             _onlyIpFileField?.SetEnabled(false);
 
+            // ── 回填持久化值到界面 ────────────────────────────
+            string defaultOutput = SettingsStorage.GetDefaultOutputFile();
+            string defaultOnlyIp = SettingsStorage.GetDefaultOnlyIpFile();
+
+            if (_outputFileField  != null) _outputFileField.SetValueWithoutNotify(
+                string.IsNullOrEmpty(_opts.OutputFile) ? defaultOutput : _opts.OutputFile);
+            if (_outputCountField != null) _outputCountField.SetValueWithoutNotify(_opts.OutputCount);
+            if (_silentToggle     != null) _silentToggle.SetValueWithoutNotify(_opts.Silent);
+            if (_onlyIpFileField  != null)
+            {
+                _onlyIpFileField.SetValueWithoutNotify(
+                    string.IsNullOrEmpty(_opts.OnlyIpFile) ? defaultOnlyIp : _opts.OnlyIpFile);
+                _onlyIpFileField.SetEnabled(_opts.Silent);
+            }
+
+            // 确保 opts 同步为默认值（兜底）
+            if (string.IsNullOrEmpty(_opts.OutputFile)) _opts.OutputFile = defaultOutput;
+            if (string.IsNullOrEmpty(_opts.OnlyIpFile)) _opts.OnlyIpFile = defaultOnlyIp;
+
             // 监听结果更新，刷新上次生成文件
             TestResult.Instance.OnResultUpdated += RefreshLastFile;
         }

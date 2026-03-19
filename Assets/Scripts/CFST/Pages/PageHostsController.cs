@@ -103,6 +103,28 @@ namespace CloudflareST.GUI
             });
 
             _hostsParams?.SetEnabled(false);
+
+            // ── 回填持久化值到界面 ────────────────────────────
+            // Hosts 文件路径：空值时显示系统默认路径
+            string defaultHostsPath;
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            defaultHostsPath = @"C:\Windows\System32\drivers\etc\hosts";
+#else
+            defaultHostsPath = "/etc/hosts";
+#endif
+            if (_hostsFileField != null)
+                _hostsFileField.SetValueWithoutNotify(
+                    string.IsNullOrEmpty(_opts.HostsFile) ? defaultHostsPath : _opts.HostsFile);
+            if (_dryRunToggle != null)
+                _dryRunToggle.SetValueWithoutNotify(_opts.HostsDryRun);
+            if (_enableToggle != null)
+            {
+                bool enabled = !string.IsNullOrEmpty(_opts.HostsDomains);
+                _enableToggle.SetValueWithoutNotify(enabled);
+                _hostsParams?.SetEnabled(enabled);
+                if (enabled) RebuildEntriesFromOpts();
+            }
+
             RefreshEmptyHint();
         }
 

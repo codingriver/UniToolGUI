@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CloudflareST.GUI
-{
+
     /// <summary>
     /// 将工作线程的回调 marshal 到 Unity 主线程执行。
     /// 挂载到场景中任意常驻 GameObject 上。
@@ -41,4 +40,4 @@ namespace CloudflareST.GUI
             }
         }
     }
-}
+

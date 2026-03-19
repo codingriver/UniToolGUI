@@ -1,7 +1,7 @@
 using UnityEngine;
 
-namespace CloudflareST.GUI
-{
+
+
     /// <summary>
     /// 应用启动引导：单实例检测。
     /// 挂载到场景根 GameObject，Script Execution Order 设为最早（-100 或更小）。
@@ -35,4 +35,4 @@ namespace CloudflareST.GUI
             Debug.Log("[AppBootstrap] 单实例锁已释放");
         }
     }
-}
+

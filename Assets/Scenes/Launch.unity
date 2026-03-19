@@ -252,10 +252,12 @@ MonoBehaviour:
   MacPngFileName: app.png
   AddShowWindowItem: 1
   AddStartupItem: 1
+  AddRestartItem: 1
   AddQuitItem: 1
   CustomButtons:
-  - Label: "\t[>] \u5F00\u59CB\u6D4B\u901F"
+  - Label: "[>] \u5F00\u59CB\u6D4B\u901F"
     ShowWindowFirst: 1
+    IsSeparator: 0
     OnClick:
       m_PersistentCalls:
         m_Calls:
@@ -273,6 +275,7 @@ MonoBehaviour:
           m_CallState: 2
   - Label: "[|] \u505C\u6B62\u6D4B\u901F"
     ShowWindowFirst: 1
+    IsSeparator: 0
     OnClick:
       m_PersistentCalls:
         m_Calls:
@@ -290,6 +293,7 @@ MonoBehaviour:
           m_CallState: 2
   - Label: "\u5BFC\u822A\u5230\u7ED3\u679C\u9875"
     ShowWindowFirst: 1
+    IsSeparator: 0
     OnClick:
       m_PersistentCalls:
         m_Calls:
