@@ -713,3 +713,54 @@
     flex-shrink: 1;
     overflow: hidden;
 }
+
+/* 状态栏用户权限标签 */
+.sb-user-role {
+    font-size: 11px;
+    margin-left: 6px;
+}
+.sb-user-role--admin {
+    color: #3ddc84;
+}
+.sb-user-role--normal {
+    color: #ffcc44;
+}
+
+/* Toast 轻量提示 */
+.toast {
+    flex-direction: row;
+    align-items: center;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-top: 6px;
+    min-width: 180px;
+    max-width: 320px;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+}
+.toast--info {
+    background-color: rgba(74,179,244,0.92);
+    color: #0a0d13;
+}
+.toast--success {
+    background-color: rgba(61,220,132,0.92);
+    color: #0a0d13;
+}
+.toast--warning {
+    background-color: rgba(255,204,68,0.92);
+    color: #0a0d13;
+}
+.toast--error {
+    background-color: rgba(255,77,106,0.92);
+    color: #fff;
+}
+.toast__icon {
+    font-size: 14px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.toast__text {
+    font-size: 12px;
+    flex-grow: 1;
+    white-space: normal;
+}

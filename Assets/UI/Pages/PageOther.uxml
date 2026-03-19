@@ -22,8 +22,16 @@
                 <ui:Toggle name="toggle-startup" label="开机自动启动" class="field-toggle" />
             </ui:VisualElement>
             <ui:Label name="hint-startup" text="" class="form-hint" style="margin-left:0;" />
-            <ui:VisualElement class="form-row" style="margin-top:4px;margin-bottom:0;">
+            <ui:VisualElement class="form-row" style="margin-top:4px;">
                 <ui:Toggle name="toggle-tray-minimize" label="最小化时隐藏到系统托盘" class="field-toggle" />
+            </ui:VisualElement>
+            <ui:VisualElement class="form-row" style="margin-top:4px;">
+                <ui:Toggle name="toggle-auto-admin" label="下次启动自动请求管理员权限" class="field-toggle" />
+            </ui:VisualElement>
+            <ui:Label name="hint-auto-admin" text="" class="form-hint" style="margin-left:0;" />
+            <ui:VisualElement style="flex-direction:row;align-items:center;margin-top:8px;">
+                <ui:Label name="label-current-role" text="" class="form-hint" style="margin-left:0;flex-grow:1;" />
+                <ui:Button name="btn-switch-role" text="以管理员重启" class="btn-sm btn-accent" style="flex-shrink:0;" />
             </ui:VisualElement>
         </ui:VisualElement>
 

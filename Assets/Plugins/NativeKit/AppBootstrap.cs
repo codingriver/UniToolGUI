@@ -1,6 +1,6 @@
 using UnityEngine;
-
-
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
     /// <summary>
     /// 应用启动引导：单实例检测。
@@ -8,7 +8,7 @@ using UnityEngine;
     /// </summary>
     public class AppBootstrap : MonoBehaviour
     {
-        [Tooltip("托盘图标悬停提示文字")]
+        [Tooltip("单实例 Mutex 名称")]
         public string MutexName = "Unity_UniToolGUI_SingleInstance";
 
         private void Awake()
@@ -17,10 +17,11 @@ using UnityEngine;
             if (!NativePlatform.SingleInstance.TryAcquire(MutexName))
             {
                 Debug.LogWarning("[AppBootstrap] 检测到已有实例在运行，本次启动将退出。");
-#if !UNITY_EDITOR
-                Application.Quit();
-#else
+#if UNITY_EDITOR
                 Debug.LogWarning("[AppBootstrap] Editor 模式下跳过退出（避免关闭编辑器）");
+#else
+                // Application.Quit() 在 Awake 首帧无效，必须强制杀死进程
+                Process.GetCurrentProcess().Kill();
 #endif
                 return;
             }

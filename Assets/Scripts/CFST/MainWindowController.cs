@@ -35,6 +35,7 @@ namespace CloudflareST.GUI
         private Label         _sbTested;
         private Label         _sbElapsed;
         private Label         _sbBest;
+        private Label         _sbUserRole;
 
         public static readonly CfstOptions Options = new CfstOptions();
         private CfstDllRunner _runner;
@@ -108,6 +109,8 @@ namespace CloudflareST.GUI
             _sbTested      = _root.Q<Label>("sb-tested");
             _sbElapsed     = _root.Q<Label>("sb-elapsed");
             _sbBest        = _root.Q<Label>("sb-best");
+            _sbUserRole    = _root.Q<Label>("sb-user-role");
+            InitUserRoleLabel();
 
             // ── 导航按钮：限定在 nav-list 内查找，避免跨页面误匹配 ──
             var navList = _root.Q<VisualElement>("nav-list");
@@ -283,6 +286,7 @@ namespace CloudflareST.GUI
             {
                 _runner.Start(cfg);
                 PageOther?.AppendLog("[INFO] 测速已启动");
+                ToastManager.Info("测速已启动");
                 StartCoroutine(ElapsedTimer());
             }
             catch (Exception ex)
@@ -303,6 +307,7 @@ namespace CloudflareST.GUI
             _runner?.Stop();
             AppState.Instance.IsRunning  = false;
             AppState.Instance.StatusText = "已停止";
+            ToastManager.Warning("测速已中止");
         }
 
         // ── 完成处理 ─────────────────────────────────────────
@@ -312,6 +317,12 @@ namespace CloudflareST.GUI
             AppState.Instance.FinishTime = DateTime.Now;
             AppState.Instance.Elapsed    = DateTime.Now - AppState.Instance.StartTime;
             AppState.Instance.StatusText = exitCode == 0 ? "已完成" : (exitCode == -1 ? "已取消" : "完成 (异常)");
+            if (exitCode == 0)
+                ToastManager.Success("测速完成！共 " + TestResult.Instance.IpList.Count + " 条结果", 4f);
+            else if (exitCode == -1)
+                ToastManager.Warning("测速已取消");
+            else
+                ToastManager.Error("测速异常退出 (code=" + exitCode + ")");
             PageResults?.RefreshResults();
             // 有结果时自动导航到结果页（index 8）
             if (exitCode == 0 && TestResult.Instance.IpList.Count > 0)
@@ -400,6 +411,24 @@ namespace CloudflareST.GUI
             else
             {
                 _resultBadge.AddToClassList("result-badge--hidden");
+            }
+        }
+        private void InitUserRoleLabel()
+        {
+            if (_sbUserRole == null) return;
+            bool isAdmin = false;
+            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            if (isAdmin)
+            {
+                _sbUserRole.text = "管理员";
+                _sbUserRole.RemoveFromClassList("sb-user-role--normal");
+                _sbUserRole.AddToClassList("sb-user-role--admin");
+            }
+            else
+            {
+                _sbUserRole.text = "普通用户";
+                _sbUserRole.RemoveFromClassList("sb-user-role--admin");
+                _sbUserRole.AddToClassList("sb-user-role--normal");
             }
         }
     }

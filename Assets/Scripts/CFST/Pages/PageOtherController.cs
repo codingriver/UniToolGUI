@@ -80,10 +80,12 @@ namespace CloudflareST.GUI
                     {
                         startupToggle.SetValueWithoutNotify(!e.newValue);
                         AppendLog("[WARN] 开机自启设置失败，请检查权限");
+                        ToastManager.Error("开机自启设置失败，请检查权限");
                     }
                     else
                     {
                         AppendLog(e.newValue ? "[INFO] 已启用开机自启" : "[INFO] 已禁用开机自启");
+                        ToastManager.Success(e.newValue ? "已启用开机自启" : "已禁用开机自启");
                     }
                     UpdateStartupHint(hintStartup, startupToggle.value);
                 });
@@ -99,6 +101,74 @@ namespace CloudflareST.GUI
                 trayMinToggle.value = CfstTrayManager.MinimizeToTray;
                 trayMinToggle.RegisterValueChangedCallback(e =>
                     CfstTrayManager.MinimizeToTray = e.newValue);
+            }
+
+            // ── 自动管理员（方案A：注册表 AppCompatFlags） ────────────
+            var autoAdminToggle = root.Q<Toggle>("toggle-auto-admin");
+            var hintAutoAdmin   = root.Q<Label>("hint-auto-admin");
+            if (autoAdminToggle != null)
+            {
+                autoAdminToggle.SetValueWithoutNotify(WindowsAdminAutoElevate.IsAutoAdminEnabled());
+                UpdateAutoAdminHint(hintAutoAdmin, autoAdminToggle.value);
+                autoAdminToggle.RegisterValueChangedCallback(e =>
+                {
+                    bool ok = e.newValue
+                        ? WindowsAdminAutoElevate.EnableAutoAdmin()
+                        : WindowsAdminAutoElevate.DisableAutoAdmin();
+                    if (ok)
+                    {
+                        ToastManager.Success(e.newValue
+                            ? "已设置：下次启动将自动请求管理员权限"
+                            : "已取消：下次启动将以普通权限运行");
+                    }
+                    else
+                    {
+                        autoAdminToggle.SetValueWithoutNotify(!e.newValue);
+                        ToastManager.Error("注册表写入失败，设置未生效");
+                    }
+                    UpdateAutoAdminHint(hintAutoAdmin, autoAdminToggle.value);
+                });
+            }
+
+            // ── 管理员/普通用户切换按钮 ───────────────────────────────
+            bool isAdmin = false;
+            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            var labelRole  = root.Q<Label>("label-current-role");
+            var btnSwitch  = root.Q<Button>("btn-switch-role");
+            if (labelRole != null)
+                labelRole.text = isAdmin
+                    ? "当前以管理员身份运行"
+                    : "当前以普通用户身份运行";
+            if (btnSwitch != null)
+            {
+                btnSwitch.text = isAdmin ? "以普通用户重启" : "以管理员重启";
+                btnSwitch.RegisterCallback<ClickEvent>(_ =>
+                {
+                    if (isAdmin)
+                    {
+                        // 以普通用户重启：先禁用 RUNASADMIN，再普通重启
+                        WindowsAdminAutoElevate.DisableAutoAdmin();
+                        try
+                        {
+                            string exe = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                            if (!string.IsNullOrEmpty(exe))
+                                System.Diagnostics.Process.Start(
+                                    new System.Diagnostics.ProcessStartInfo { FileName = exe, UseShellExecute = true });
+                            System.Diagnostics.Process.GetCurrentProcess().Kill();
+                        }
+                        catch (System.Exception ex)
+                        {
+                            ToastManager.Error("重启失败：" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        // 以管理员重启
+                        bool ok = false;
+                        try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
+                        if (!ok) ToastManager.Error("提升权限失败，请手动以管理员身份运行");
+                    }
+                });
             }
 
             // 启动提示
@@ -151,16 +221,26 @@ namespace CloudflareST.GUI
             _logBuffer.Clear();
             _logLines.Clear();
             _logContainer?.Clear();
+            ToastManager.Info("日志已清空");
         }
 
         private void CopyLog()
         {
             NativePlatform.SetClipboard(_logBuffer.ToString());
+            ToastManager.Success("日志已复制到剪贴板");
             var btn = _root?.Q<Button>("btn-copy-log");
             if (btn == null) return;
             string orig = btn.text;
             btn.text = "已复制 ✓";
             _root?.schedule.Execute(() => btn.text = orig).StartingIn(1500);
+        }
+
+        private void UpdateAutoAdminHint(Label hint, bool enabled)
+        {
+            if (hint == null) return;
+            hint.text = enabled
+                ? "✓ 已启用 — 下次启动将自动弹出 UAC 提示"
+                : "";
         }
 
         private void UpdateStartupHint(Label hint, bool enabled)
@@ -184,6 +264,7 @@ namespace CloudflareST.GUI
 
             SettingsStorage.ResetAll(_opts);
             AppendLog("[INFO] 已重置所有参数为默认值");
+            ToastManager.Success("已重置所有参数为默认值");
 
             // 刷新本页 UI
             if (_debugToggle != null) _debugToggle.SetValueWithoutNotify(_opts.Debug);
