@@ -78,6 +78,13 @@ public class SystemFontFallback : MonoBehaviour
     [Header("== Debug ==")]
     public bool enableLog = true;
 
+    [Header("== Performance Debug ==")]
+    [Tooltip(
+        "开启后将打印字体纹理创建/销毁、字符渲染、字体查找等详细性能日志。\n" +
+        "日志格式: [FontFallback][Perf] {时间戳ms} | {事件}\n" +
+        "关闭时零开销，建议仅在排查性能问题时开启。")]
+    public bool enablePerformanceLog = false;
+
     public static SystemFontFallback Instance { get; private set; }
     public bool IsReady { get; private set; }
     public event System.Action OnFontsReady;
@@ -254,9 +261,36 @@ public class SystemFontFallback : MonoBehaviour
 
     private void CleanupDynamicAssets()
     {
-        if (_primary != null) { DestroyFA(_primary); _primary = null; }
-        foreach (var fa in _fallbacks) DestroyFA(fa);
+        if (_primary != null)
+        {
+            PerfLog("销毁 Primary FontAsset | name=" + _primary.name);
+            LogDestroyTextures(_primary);
+            DestroyFA(_primary); _primary = null;
+        }
+        foreach (var fa in _fallbacks)
+        {
+            if (fa != null)
+            {
+                PerfLog("销毁 Fallback FontAsset | name=" + fa.name);
+                LogDestroyTextures(fa);
+                DestroyFA(fa);
+            }
+        }
         _fallbacks.Clear(); IsReady = false;
+    }
+
+    /// <summary>销毁 FontAsset 前打印每张纹理的销毁日志</summary>
+    private void LogDestroyTextures(FontAsset fa)
+    {
+        if (!enablePerformanceLog || fa == null || fa.atlasTextures == null) return;
+        int total = fa.atlasTextures.Length;
+        for (int i = 0; i < total; i++)
+        {
+            var tex = fa.atlasTextures[i];
+            if (tex != null)
+                PerfLog(string.Format("  纹理销毁 [{0}/{1}] | fontAssetName={2} | 尺寸={3}x{4} | instanceID={5} | 销毁后剩余={6}",
+                    i, total - 1, fa.name, tex.width, tex.height, tex.GetInstanceID(), total - i - 1));
+        }
     }
 
     private static void DestroyFA(FontAsset fa)
@@ -293,32 +327,84 @@ public class SystemFontFallback : MonoBehaviour
 
     private FontAsset CreateFontAsset(string path, bool isPrimary)
     {
+        PerfLog(string.Format("CreateFontAsset 开始 | isPrimary={0} | path={1}", isPrimary, path));
+        long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+
         Font font;
         try { font = new Font(path); }
-        catch (System.Exception e) { Debug.LogWarning("[SFF] Font failed: " + path + " | " + e.Message); return null; }
-        if (font == null) return null;
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[SFF] Font failed: " + path + " | " + e.Message);
+            return null;
+        }
+        if (font == null) { PerfLog("Font 对象为 null，跳过 | path=" + path); return null; }
+
+        long tFont = System.Diagnostics.Stopwatch.GetTimestamp();
+        PerfLog(string.Format("Font 对象创建完成 | 耗时={0:F2}ms | fontName={1} | path={2}",
+            TicksToMs(tFont - t0), font.name, path));
+
         FontAsset fa;
+        int atlasW = (int)atlasSizePreset, atlasH = (int)atlasSizePreset;
+        int ptSize  = isPrimary ? samplingPointSize : Mathf.Max(8, samplingPointSize - 8);
+        int padding = isPrimary ? atlasPadding      : Mathf.Max(2, atlasPadding - 2);
+        PerfLog(string.Format("即将创建 FontAsset | fontName={0} | pointSize={1} | padding={2} | atlas={3}x{4} | renderMode={5} | multiAtlas=true",
+            font.name, ptSize, padding, atlasW, atlasH, renderModePreset));
+
+        long tFAStart = System.Diagnostics.Stopwatch.GetTimestamp();
         try
         {
             fa = FontAsset.CreateFontAsset(font,
-                samplingPointSize: isPrimary ? samplingPointSize : Mathf.Max(8, samplingPointSize - 8),
-                atlasPadding: isPrimary ? atlasPadding : Mathf.Max(2, atlasPadding - 2),
+                samplingPointSize: ptSize,
+                atlasPadding: padding,
                 renderMode: ToGlyphRenderMode(renderModePreset),
-                atlasWidth: (int)atlasSizePreset, atlasHeight: (int)atlasSizePreset,
+                atlasWidth: atlasW, atlasHeight: atlasH,
                 atlasPopulationMode: AtlasPopulationMode.Dynamic,
                 enableMultiAtlasSupport: true);
         }
-        catch (System.Exception e) { Debug.LogWarning("[SFF] CreateFA failed: " + path + " | " + e.Message); return null; }
-        if (fa == null) return null;
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[SFF] CreateFA failed: " + path + " | " + e.Message);
+            return null;
+        }
+        long tFAEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+
+        if (fa == null) { PerfLog("FontAsset.CreateFontAsset 返回 null | path=" + path); return null; }
+
         fa.name = "[SysFont]" + Path.GetFileNameWithoutExtension(path);
         if (fa.fallbackFontAssetTable == null) fa.fallbackFontAssetTable = new List<FontAsset>();
+
+        // ── 纹理创建日志 ──
+        int texCount = fa.atlasTextures != null ? fa.atlasTextures.Length : 0;
+        PerfLog(string.Format("FontAsset 创建完成 | 耗时={0:F2}ms | fontAssetName={1} | 初始纹理数量={2} | atlas={3}x{4}",
+            TicksToMs(tFAEnd - tFAStart), fa.name, texCount, atlasW, atlasH));
+        if (fa.atlasTextures != null)
+            for (int i = 0; i < fa.atlasTextures.Length; i++)
+            {
+                var tex = fa.atlasTextures[i];
+                if (tex != null)
+                    PerfLog(string.Format("  纹理[{0}] 已创建 | fontAssetName={1} | 尺寸={2}x{3} | instanceID={4}",
+                        i, fa.name, tex.width, tex.height, tex.GetInstanceID()));
+            }
+
+        PerfLog(string.Format("CreateFontAsset 完成 | 总耗时={0:F2}ms | fontAssetName={1}",
+            TicksToMs(tFAEnd - t0), fa.name));
         return fa;
     }
 
-    private static string FindFirstExisting(string[] paths)
+    private string FindFirstExisting(string[] paths)
     {
         if (paths == null) return null;
-        foreach (var p in paths) if (!string.IsNullOrEmpty(p) && File.Exists(p)) return p;
+        foreach (var p in paths)
+        {
+            if (string.IsNullOrEmpty(p)) continue;
+            bool exists = File.Exists(p);
+            // ── 字体查找日志：找到或找不到都打印 ──
+            if (exists)
+                PerfLog(string.Format("字体路径查找 | 找到 | path={0}", p));
+            else
+                PerfLog(string.Format("字体路径查找 | 未找到 | path={0}", p));
+            if (exists) return p;
+        }
         return null;
     }
 
@@ -336,6 +422,67 @@ public class SystemFontFallback : MonoBehaviour
     }
 
     private void Log(string msg) { if (enableLog) Debug.Log(msg); }
+
+    /// <summary>
+    /// 性能检查日志。仅当 enablePerformanceLog=true 时输出。
+    /// 格式: [FontFallback][Perf] {时间戳ms} | {msg}
+    /// 在 Console 中使用关键字 "[FontFallback][Perf]" 过滤所有性能日志。
+    /// </summary>
+    private void PerfLog(string msg)
+    {
+        if (!enablePerformanceLog) return;
+        // Time.realtimeSinceStartup 精度约 1ms，适合粗粒度计时
+        // 对于微秒级精度请结合 Stopwatch.GetTimestamp() 在调用处计算差值
+        Debug.Log(string.Format("[FontFallback][Perf] {0:F1}ms | {1}",
+            Time.realtimeSinceStartup * 1000f, msg));
+    }
+
+    /// <summary>将 Stopwatch ticks 转换为毫秒（double）</summary>
+    private static double TicksToMs(long ticks)
+        => (double)ticks / System.Diagnostics.Stopwatch.Frequency * 1000.0;
+
+    /// <summary>
+    /// 字体纹理渲染文字日志。
+    /// 在需要逐字符追踪渲染耗时时，从外部（或子类）调用此方法。
+    /// 例: SystemFontFallback.Instance?.LogGlyphRender('中', fa);
+    /// </summary>
+    public void LogGlyphRender(char character, FontAsset fa)
+    {
+        if (!enablePerformanceLog) return;
+        int unicode = character;
+        PerfLog(string.Format("字符渲染 | char='{0}' | unicode=U+{1:X4} | fontAsset={2}",
+            character, unicode, fa != null ? fa.name : "null"));
+    }
+
+    /// <summary>
+    /// 字体是否支持某字符的查找日志（在具有字体支持检查逻辑处调用）。
+    /// </summary>
+    public void LogGlyphSupport(char character, string fontName, bool supported)
+    {
+        if (!enablePerformanceLog) return;
+        int unicode = character;
+        if (supported)
+            PerfLog(string.Format("字体支持查找 | 找到 | char='{0}' U+{1:X4} | fontName={2}",
+                character, unicode, fontName));
+        else
+            PerfLog(string.Format("字体支持查找 | 未找到 | char='{0}' U+{1:X4} | fontName={2}",
+                character, unicode, fontName));
+    }
+
+    /// <summary>
+    /// 字体纹理动态扩充（多纹理）日志。
+    /// 当 FontAsset 动态增加新 Atlas 纹理时调用（需在自定义 FontAsset 回调中触发）。
+    /// </summary>
+    public void LogAtlasAdded(FontAsset fa, Texture2D newTex, int newIndex)
+    {
+        if (!enablePerformanceLog) return;
+        int total = fa?.atlasTextures?.Length ?? newIndex + 1;
+        PerfLog(string.Format("多纹理扩充 | 第{0}张纹理创建 | fontAssetName={1} | 当前纹理总数={2} | 尺寸={3}x{4} | instanceID={5}",
+            newIndex, fa != null ? fa.name : "null", total,
+            newTex != null ? newTex.width : 0,
+            newTex != null ? newTex.height : 0,
+            newTex != null ? newTex.GetInstanceID() : 0));
+    }
 
     [ContextMenu("Run Diagnostics")]
     public void RunDiagnostics()

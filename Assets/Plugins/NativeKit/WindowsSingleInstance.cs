@@ -31,14 +31,26 @@ public static class WindowsSingleInstance
     /// </summary>
     public static bool TryAcquire(string mutexName = null)
     {
+        string rawName = mutexName;
         mutexName = NormalizeMutexName(mutexName);
+        Debug.Log(string.Format("[SingleInstance] TryAcquire 开始 | rawName={0} | normalizedName={1}", rawName, mutexName));
         _mutexHandle = AcquireMutex(mutexName, true);
+        uint err = _lastError;
+        Debug.Log(string.Format("[SingleInstance] CreateMutex 结果 | handle=0x{0:X} | lastError={1} | ERROR_ALREADY_EXISTS={2}",
+            _mutexHandle.ToInt64(), err, ERROR_ALREADY_EXISTS));
         if (_mutexHandle == IntPtr.Zero)
         {
-            Debug.LogWarning("[SingleInstance] CreateMutex failed, error=" + GetLastError());
+            // handle 为零 = 系统级错误（权限/名称非法等），保守策略：视为已有实例
+            Debug.LogError(string.Format("[SingleInstance] CreateMutex 返回 IntPtr.Zero，Win32 错误码={0}，保守策略视为已有实例运行", err));
             return false;
         }
-        return _lastError != ERROR_ALREADY_EXISTS;
+        if (err == ERROR_ALREADY_EXISTS)
+        {
+            Debug.LogWarning("[SingleInstance] 检测到已有实例（ERROR_ALREADY_EXISTS=183），TryAcquire 返回 false");
+            return false;
+        }
+        Debug.Log("[SingleInstance] 单实例锁获取成功，当前进程为第一个实例");
+        return true;
     }
 
     /// <summary>释放单实例锁。</summary>
@@ -46,19 +58,32 @@ public static class WindowsSingleInstance
     {
         if (_mutexHandle != IntPtr.Zero)
         {
+            Debug.Log(string.Format("[SingleInstance] Release | handle=0x{0:X}", _mutexHandle.ToInt64()));
             ReleaseMutex(_mutexHandle);
             CloseHandle(_mutexHandle);
             _mutexHandle = IntPtr.Zero;
+            Debug.Log("[SingleInstance] 单实例锁已释放");
+        }
+        else
+        {
+            Debug.Log("[SingleInstance] Release 调用但 handle 已为零，忽略");
         }
     }
 
     /// <summary>仅检测是否有另一个实例，不持有锁。</summary>
     public static bool IsAnotherInstanceRunning(string mutexName = null)
     {
+        string rawName = mutexName;
         mutexName = NormalizeMutexName(mutexName);
+        Debug.Log(string.Format("[SingleInstance] IsAnotherInstanceRunning | rawName={0} | normalizedName={1}", rawName, mutexName));
         IntPtr h = AcquireMutex(mutexName, false);
-        if (h == IntPtr.Zero) return false;
+        if (h == IntPtr.Zero)
+        {
+            Debug.Log(string.Format("[SingleInstance] IsAnotherInstanceRunning: CreateMutex 返回零，lastError={0}，视为无其他实例", _lastError));
+            return false;
+        }
         bool exists = _lastError == ERROR_ALREADY_EXISTS;
+        Debug.Log(string.Format("[SingleInstance] IsAnotherInstanceRunning: handle=0x{0:X} lastError={1} exists={2}", h.ToInt64(), _lastError, exists));
         CloseHandle(h);
         return exists;
     }
@@ -81,15 +106,30 @@ public static class WindowsSingleInstance
     /// </summary>
     private static IntPtr AcquireMutex(string mutexName, bool initialOwner)
     {
+        Debug.Log(string.Format("[SingleInstance] AcquireMutex | name={0} | initialOwner={1}", mutexName, initialOwner));
         IntPtr h = CreateMutex(IntPtr.Zero, initialOwner, mutexName);
-        _lastError = GetLastError(); // capture immediately before any other call clobbers it
+        _lastError = GetLastError(); // 必须紧跟 CreateMutex，任何其他调用都会覆盖 LastError
+        Debug.Log(string.Format("[SingleInstance] CreateMutex(主名称) | handle=0x{0:X} | lastError={1}", h.ToInt64(), _lastError));
         if (h != IntPtr.Zero) return h;
-        // fallback: strip prefix and try bare name
+
+        // fallback: 去掉前缀再试一次
         string bare = mutexName;
         if (bare.StartsWith("Local\\",  StringComparison.Ordinal)) bare = bare.Substring(6);
         if (bare.StartsWith("Global\\", StringComparison.Ordinal)) bare = bare.Substring(7);
+        if (bare == mutexName)
+        {
+            // 无前缀可去，不重试，直接返回失败
+            Debug.LogWarning(string.Format("[SingleInstance] CreateMutex 失败且无前缀可 fallback | lastError={0}", _lastError));
+            return IntPtr.Zero;
+        }
+        Debug.Log(string.Format("[SingleInstance] CreateMutex fallback | bareName={0}", bare));
         h = CreateMutex(IntPtr.Zero, initialOwner, bare);
-        _lastError = GetLastError();
+        // ★ 关键修复：只在 fallback 成功时更新 _lastError，失败时保留主名称的错误码
+        uint fallbackErr = GetLastError();
+        Debug.Log(string.Format("[SingleInstance] CreateMutex(fallback) | handle=0x{0:X} | lastError={1}", h.ToInt64(), fallbackErr));
+        if (h != IntPtr.Zero)
+            _lastError = fallbackErr; // fallback 成功，用 fallback 的错误码判断
+        // h==Zero 时保留主名称的 _lastError（通常也是失败码，上层按保守策略处理）
         return h;
     }
 

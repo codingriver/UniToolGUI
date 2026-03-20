@@ -66,6 +66,22 @@ namespace CloudflareST.GUI
             SetInt   ("hostsiprank", o.HostsIpRank);
             SetString("hostsfile",   o.HostsFile);
             SetBool  ("hostsdryrun", o.HostsDryRun);
+            // ── 前钩子 ──
+            SetBool  ("pre_enabled",     o.PreHookEnabled);
+            SetBool  ("pre_isprogram",   o.PreHookIsProgram);
+            SetString("pre_script",      o.PreHookScript);
+            SetString("pre_program",     o.PreHookProgram);
+            SetString("pre_programargs", o.PreHookProgramArgs);
+            SetInt   ("pre_timeout",     o.PreHookTimeoutSec);
+            SetBool  ("pre_wait",        o.PreHookWait);
+            // ── 后钩子 ──
+            SetBool  ("post_enabled",      o.PostHookEnabled);
+            SetBool  ("post_isprogram",    o.PostHookIsProgram);
+            SetString("post_script",       o.PostHookScript);
+            SetString("post_program",      o.PostHookProgram);
+            SetString("post_programargs",  o.PostHookProgramArgs);
+            SetInt   ("post_timeout",      o.PostHookTimeoutSec);
+            SetBool  ("post_onlysuccess",  o.PostHookOnlySuccess);
             PlayerPrefs.Save();
             Debug.Log("[Settings] Saved");
         }
@@ -105,6 +121,22 @@ namespace CloudflareST.GUI
             o.HostsIpRank     = GetInt   ("hostsiprank", 1);
             o.HostsFile       = GetString("hostsfile",   null);
             o.HostsDryRun     = GetBool  ("hostsdryrun", false);
+            // ── 前钩子 ──
+            o.PreHookEnabled    = GetBool  ("pre_enabled",     false);
+            o.PreHookIsProgram  = GetBool  ("pre_isprogram",   false);
+            o.PreHookScript     = GetString("pre_script",      null);
+            o.PreHookProgram    = GetString("pre_program",     null);
+            o.PreHookProgramArgs= GetString("pre_programargs", null);
+            o.PreHookTimeoutSec = GetInt   ("pre_timeout",     30);
+            o.PreHookWait       = GetBool  ("pre_wait",        true);
+            // ── 后钩子 ──
+            o.PostHookEnabled    = GetBool  ("post_enabled",     false);
+            o.PostHookIsProgram  = GetBool  ("post_isprogram",   false);
+            o.PostHookScript     = GetString("post_script",      null);
+            o.PostHookProgram    = GetString("post_program",     null);
+            o.PostHookProgramArgs= GetString("post_programargs", null);
+            o.PostHookTimeoutSec = GetInt   ("post_timeout",     30);
+            o.PostHookOnlySuccess= GetBool  ("post_onlysuccess", false);
 #if UNITY_ANDROID || UNITY_IOS
             o.IPv4File   = GetDefaultIpv4File();
             o.IPv6File   = GetDefaultIpv6File();
@@ -123,7 +155,9 @@ namespace CloudflareST.GUI
                 "nodown","downurl","downport","downcount","downtimeout","speedmin",
                 "outputfile","outputcount","onlyipfile","debug",
                 "schedmode","interval","dailyat","cronexpr","timezone",
-                "hostsdomains","hostsiprank","hostsfile","hostsdryrun"
+                "hostsdomains","hostsiprank","hostsfile","hostsdryrun",
+                "pre_enabled","pre_isprogram","pre_script","pre_program","pre_programargs","pre_timeout","pre_wait",
+                "post_enabled","post_isprogram","post_script","post_program","post_programargs","post_timeout","post_onlysuccess"
             };
             foreach (var k in keys)
                 PlayerPrefs.DeleteKey(KEY_PREFIX + k);
@@ -167,6 +201,22 @@ namespace CloudflareST.GUI
             o.HostsIpRank     = 1;
             o.HostsFile       = null;
             o.HostsDryRun     = false;
+            // ── 前钩子 ──
+            o.PreHookEnabled    = false;
+            o.PreHookIsProgram  = false;
+            o.PreHookScript     = null;
+            o.PreHookProgram    = null;
+            o.PreHookProgramArgs= null;
+            o.PreHookTimeoutSec = 30;
+            o.PreHookWait       = true;
+            // ── 后钩子 ──
+            o.PostHookEnabled    = false;
+            o.PostHookIsProgram  = false;
+            o.PostHookScript     = null;
+            o.PostHookProgram    = null;
+            o.PostHookProgramArgs= null;
+            o.PostHookTimeoutSec = 30;
+            o.PostHookOnlySuccess= false;
         }
 
         private static void SetString(string k, string v)

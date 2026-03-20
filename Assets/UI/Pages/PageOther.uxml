@@ -44,18 +44,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- 运行日志 -->
-        <ui:VisualElement class="group-box" style="flex-shrink:0;min-height:240px;">
-            <ui:VisualElement style="flex-direction:row;justify-content:space-between;align-items:center;flex-shrink:0;margin-bottom:8px;">
-                <ui:Label text="运行日志" class="group-title" style="margin-bottom:0;" />
-                <ui:VisualElement style="flex-direction:row;">
-                    <ui:Button name="btn-copy-log" text="复制全部" class="btn-sm" style="margin-right:6px;" />
-                    <ui:Button name="btn-clear-log" text="清空" class="btn-sm" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:ScrollView name="log-scroll" mode="Vertical" style="flex-grow:1;min-height:180px;">
-            </ui:ScrollView>
-        </ui:VisualElement>
+        <!-- 运行日志已移至「日志」导航页 -->
 
     </ui:ScrollView>
 

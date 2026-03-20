@@ -81,5 +81,23 @@ namespace CloudflareST.GUI
         public int    HostsIpRank  { get; set; } = 1;
         public string HostsFile    { get; set; }
         public bool   HostsDryRun  { get; set; } = false;
+
+        // ── 运行前钩子 ───────────────────────────────────────────
+        public bool   PreHookEnabled     { get; set; } = false;
+        public bool   PreHookIsProgram   { get; set; } = false;
+        public string PreHookScript      { get; set; }
+        public string PreHookProgram     { get; set; }
+        public string PreHookProgramArgs { get; set; }
+        public int    PreHookTimeoutSec  { get; set; } = 30;
+        public bool   PreHookWait        { get; set; } = true;
+
+        // ── 运行后钩子 ───────────────────────────────────────────
+        public bool   PostHookEnabled     { get; set; } = false;
+        public bool   PostHookIsProgram   { get; set; } = false;
+        public string PostHookScript      { get; set; }
+        public string PostHookProgram     { get; set; }
+        public string PostHookProgramArgs { get; set; }
+        public int    PostHookTimeoutSec  { get; set; } = 30;
+        public bool   PostHookOnlySuccess { get; set; } = false;
     }
 }

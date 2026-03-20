@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+
+    <Style src="/Assets/UI/MainWindow.uss" />
+
+    <ui:Label text="运行日志" class="page-title" />
+    <ui:VisualElement class="page-divider" />
+
+    <!-- 工具栏 -->
+    <ui:VisualElement class="log-toolbar">
+        <ui:Label name="log-stat" text="共 0 条" class="log-stat" />
+        <ui:VisualElement style="flex-grow:1;" />
+        <ui:Button name="btn-log-copy"  text="复制全部" class="btn-sm" style="margin-right:6px;" />
+        <ui:Button name="btn-log-clear" text="清  空"   class="btn-sm" />
+    </ui:VisualElement>
+
+    <!-- 过滤栏 -->
+    <ui:VisualElement class="log-filter-bar">
+        <ui:Label text="过滤:" class="log-filter-label" />
+        <ui:Button name="btn-filter-all"   text="全部"   class="btn-sm log-filter-btn log-filter-btn--active" />
+        <ui:Button name="btn-filter-info"  text="INFO"  class="btn-sm log-filter-btn" />
+        <ui:Button name="btn-filter-warn"  text="WARN"  class="btn-sm log-filter-btn" />
+        <ui:Button name="btn-filter-error" text="ERROR" class="btn-sm log-filter-btn" />
+        <ui:Button name="btn-filter-cmd"   text="CMD"   class="btn-sm log-filter-btn" />
+        <ui:VisualElement style="flex-grow:1;" />
+        <ui:Toggle name="toggle-log-autoscroll" label="自动滚动" value="true" class="field-toggle" />
+    </ui:VisualElement>
+
+    <!-- 日志滚动区 -->
+    <ui:ScrollView name="log-scroll" mode="Vertical"
+        vertical-scroller-visibility="Auto"
+        class="log-scroll-view" style="flex-grow:1;" />
+
+</ui:UXML>

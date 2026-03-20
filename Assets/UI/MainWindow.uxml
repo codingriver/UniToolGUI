@@ -4,6 +4,8 @@
     editor-extension-mode="False">
 
     <ui:Template name="PageIpSource"   src="Pages/PageIpSource.uxml" />
+    <ui:Template name="PageLog"        src="Pages/PageLog.uxml" />
+    <ui:Template name="PageHook"       src="Pages/PageHook.uxml" />
     <ui:Template name="PageLatency"    src="Pages/PageLatency.uxml" />
     <ui:Template name="PageDownload"   src="Pages/PageDownload.uxml" />
     <ui:Template name="PageSchedule"   src="Pages/PageSchedule.uxml" />
@@ -31,7 +33,7 @@
             </ui:VisualElement>
 
             <!-- 导航菜单 -->
-            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical" vertical-scroller-visibility="Auto" mouse-wheel-scroll-size="36">
+            <ui:ScrollView name="nav-scroll" class="nav-scroll" mode="Vertical" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden" mouse-wheel-scroll-size="36" focusable="false">
                 <ui:VisualElement name="nav-list" class="nav-list">
                     <ui:Button name="nav-ip"       text="IP 来源"     class="nav-item nav-item--active" />
                     <ui:Button name="nav-latency"  text="延迟测速"    class="nav-item" />
@@ -40,6 +42,8 @@
                     <ui:Button name="nav-hosts"    text="Hosts 更新"  class="nav-item" />
                     <ui:Button name="nav-output"   text="输出设置"    class="nav-item" />
                     <ui:Button name="nav-other"    text="其他设置"    class="nav-item" />
+                    <ui:Button name="nav-hook"     text="执行钩子"    class="nav-item" />
+                    <ui:Button name="nav-log"      text="运行日志"    class="nav-item" />
                     <ui:VisualElement class="nav-divider" />
                     <ui:Button name="nav-results"  class="nav-item nav-item--results">
                         <ui:Label text="测速结果" class="nav-results-label" />
@@ -77,6 +81,8 @@
                 <ui:Instance template="PageOther"     name="page-other"    class="page" />
                 <ui:Instance template="PageAbout"     name="page-about"    class="page" />
                 <ui:Instance template="PageResults"   name="page-results"  class="page" />
+                <ui:Instance template="PageLog"       name="page-log"      class="page" />
+                <ui:Instance template="PageHook"      name="page-hook"     class="page" />
             </ui:VisualElement>
 
         </ui:VisualElement>

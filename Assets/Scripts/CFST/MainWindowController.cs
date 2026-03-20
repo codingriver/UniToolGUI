@@ -18,13 +18,17 @@ namespace CloudflareST.GUI
         public PageOtherController     PageOther;
         public PageAboutController     PageAbout;
         public PageResultsController   PageResults;
+        public PageLogController       PageLog;
+        public PageHookController      PageHook;
 
         private UIDocument    _doc;
         private VisualElement _root;
         private Button[]        _navBtns;
         private VisualElement[] _pages;
-        private const int PAGE_COUNT = 9;
+        private const int PAGE_COUNT   = 11;
         private const int PAGE_RESULTS = 8;
+        private const int PAGE_LOG     = 9;
+        private const int PAGE_HOOK    = 10;
 
         private Button        _btnStart;
         private Button        _btnStop;
@@ -119,7 +123,8 @@ namespace CloudflareST.GUI
 
             _navBtns = new Button[PAGE_COUNT];
             string[] navNames = { "nav-ip","nav-latency","nav-download","nav-schedule",
-                                  "nav-hosts","nav-output","nav-other","nav-about","nav-results" };
+                                  "nav-hosts","nav-output","nav-other","nav-about","nav-results",
+                                  "nav-log","nav-hook" };
             for (int i = 0; i < PAGE_COUNT; i++)
             {
                 _navBtns[i] = navList != null
@@ -134,7 +139,8 @@ namespace CloudflareST.GUI
 
             _pages = new VisualElement[PAGE_COUNT];
             string[] pageNames = { "page-ip","page-latency","page-download","page-schedule",
-                                   "page-hosts","page-output","page-other","page-about","page-results" };
+                                   "page-hosts","page-output","page-other","page-about","page-results",
+                                   "page-log","page-hook" };
             for (int i = 0; i < PAGE_COUNT; i++)
             {
                 _pages[i] = pageContainer != null
@@ -155,6 +161,12 @@ namespace CloudflareST.GUI
             PageOther   ?.Init(_pages[6], Options);
             PageAbout   ?.Init(_pages[7], Options);
             PageResults ?.Init(_pages[8], Options);
+            PageLog     ?.Init(_pages[9],  Options);
+            PageHook    ?.Init(_pages[10], Options);
+            // 注入日志控制器到钩子页面
+            if (PageHook  != null) PageHook.LogController  = PageLog;
+            // 注入日志控制器到其他设置页面（转发 AppendLog）
+            if (PageOther != null) PageOther.LogController = PageLog;
         }
 
         private void BindNav()
@@ -162,20 +174,19 @@ namespace CloudflareST.GUI
             for (int i = 0; i < PAGE_COUNT; i++)
             {
                 int idx = i;
-                if (_navBtns[i] != null)
-                {
-                    // Use TrickleDown to receive click before ScrollView can intercept
-                    _navBtns[i].RegisterCallback<ClickEvent>(evt =>
-                    {
-                        UnityEngine.Debug.Log("[NAV] clicked idx=" + idx);
-                        NavigateTo(idx);
-                        evt.StopPropagation();
-                    }, TrickleDown.TrickleDown);
-                }
-                else
+                if (_navBtns[i] == null)
                 {
                     UnityEngine.Debug.LogWarning("[NAV] _navBtns[" + i + "] is null, skip bind");
+                    continue;
                 }
+
+                // PointerUpEvent fires reliably even inside a ScrollView
+                _navBtns[i].RegisterCallback<PointerUpEvent>(evt =>
+                {
+                    UnityEngine.Debug.Log("[NAV] PointerUp idx=" + idx);
+                    NavigateTo(idx);
+                    evt.StopImmediatePropagation();
+                }, TrickleDown.NoTrickleDown);
             }
         }
         public void NavigateToResults() => NavigateTo(PAGE_RESULTS);
@@ -224,6 +235,10 @@ namespace CloudflareST.GUI
         {
             if (AppState.Instance.IsRunning) return;
 
+            // ── 前钩子 ───────────────────────────────────────
+            if (PageHook != null && !PageHook.RunPreHook())
+                return;  // 前钩子失败，取消测速
+
             TestResult.Instance.Clear();
             AppState.Instance.Reset();
             AppState.Instance.IsRunning  = true;
@@ -243,12 +258,14 @@ namespace CloudflareST.GUI
                 AppState.Instance.IsRunning  = false;
                 AppState.Instance.StatusText = msg;
                 PageOther?.AppendLog("[ERROR] " + msg);
+                PageLog?.AppendLog("[ERROR] " + msg);
                 return;
             }
 
             string cfgSummary = Options.ToArguments();
             UnityEngine.Debug.Log("[CFST] Config args: " + cfgSummary);
             PageOther?.AppendLog("[CMD] " + cfgSummary);
+            PageLog?.AppendLog("[CMD] " + cfgSummary);
 
             _runner?.Dispose();
             _runner = new CfstDllRunner();
@@ -257,6 +274,7 @@ namespace CloudflareST.GUI
                 UnityMainThreadDispatcher.Enqueue(() =>
                 {
                     PageOther?.AppendLog(line);
+                    PageLog?.AppendLog(line);
                     OutputParser.ParseLog(line, AppState.Instance);
                 });
 
@@ -272,8 +290,13 @@ namespace CloudflareST.GUI
                     
                     // DLL 返回的完整排序结果列表覆盖进度 JSON 中的简略结果
                     OutputParser.ApplyDllResults(dllResults, AppState.Instance, TestResult.Instance);
-                    HandleFinished(dllResults == null ? -1 : 0);
-                    PageOther?.AppendLog($"完成");
+                    int exitCode = dllResults == null ? -1 : 0;
+                    HandleFinished(exitCode);
+                    string finMsg = "完成";
+                    PageOther?.AppendLog(finMsg);
+                    PageLog?.AppendLog("[INFO] " + finMsg);
+                    // ── 后钩子 ────────────────────────────────
+                    PageHook?.RunPostHook(exitCode);
                 });
 
             _runner.OnError += ex =>
@@ -281,12 +304,14 @@ namespace CloudflareST.GUI
                 {
                     UnityEngine.Debug.LogError("[CFST] Runner error: " + ex.Message);
                     PageOther?.AppendLog("[ERROR] " + ex.Message);
+                    PageLog?.AppendLog("[ERROR] " + ex.Message);
                 });
 
             try
             {
                 _runner.Start(cfg);
                 PageOther?.AppendLog("[INFO] 测速已启动");
+                PageLog?.AppendLog("[INFO] 测速已启动");
                 ToastManager.Info("测速已启动");
                 StartCoroutine(ElapsedTimer());
             }
@@ -297,6 +322,7 @@ namespace CloudflareST.GUI
                 AppState.Instance.IsRunning  = false;
                 AppState.Instance.StatusText = msg;
                 PageOther?.AppendLog("[ERROR] " + msg);
+                PageLog?.AppendLog("[ERROR] " + msg);
             }
         }
 
@@ -305,6 +331,7 @@ namespace CloudflareST.GUI
         {
             UnityEngine.Debug.Log("[CFST] StopTest called");
             PageOther?.AppendLog("[INFO] 用户请求停止");
+            PageLog?.AppendLog("[INFO] 用户请求停止");
             _runner?.Stop();
             AppState.Instance.IsRunning  = false;
             AppState.Instance.StatusText = "已停止";

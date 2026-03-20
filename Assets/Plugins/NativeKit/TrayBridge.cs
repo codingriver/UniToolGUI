@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -224,13 +224,10 @@ public class TrayBridge : MonoBehaviour
         if (AddRestartItem)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
-            bool isAdmin = false;
-            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
-            string level = isAdmin ? "管理员" : "普通用户";
 
             items.Add(new TrayMenuItem
             {
-                Text = "重启程序（" + level + "）",
+                Text = "重启程序",
                 Callback = () => _mainCtx.Post(_ =>
                 {
                     try
@@ -249,23 +246,6 @@ public class TrayBridge : MonoBehaviour
                     catch (Exception ex) { Debug.LogWarning("[TrayBridge] 重启失败: " + ex.Message); }
                 }, null)
             });
-
-            if (!isAdmin)
-            {
-                items.Add(new TrayMenuItem
-                {
-                    Text = "以管理员重启",
-                    Callback = () => _mainCtx.Post(_ =>
-                    {
-                        bool ok = false;
-                        try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
-                        if (!ok)
-                            NativePlatform.MessageBox.Warning(
-                                "提升权限失败，请手动以管理员身份运行本程序。",
-                                "权限不足");
-                    }, null)
-                });
-            }
         }
 #endif
 
@@ -300,16 +280,103 @@ public class TrayBridge : MonoBehaviour
 
     private void TrySetIcon()
     {
+        // ════════════════════════════════════════════════════════════════════
+        // 【托盘图标加载注意事项】
+        //
+        // ★ 文件格式要求（最重要）
+        //   Windows 托盘图标必须是真正的 ICO 格式（BMP DIB 内嵌），
+        //   不能将 PNG/JPG 直接改扩展名为 .ico。
+        //   Win32 LoadImage 对格式严格校验：
+        //     - PNG 改名为 .ico → LoadImage 返回 IntPtr.Zero，错误码 0
+        //     - PNG 压缩内嵌 ICO 容器 → 部分 Windows 版本/API 调用不支持
+        //     - BMP DIB 格式内嵌 ICO → 全平台兼容，推荐
+        //
+        // ★ 生成方式
+        //   使用 D:\UniToolGUI\Assets\icon.png（2048×2048 原始图）
+        //   通过 C# + System.Drawing 生成 BMP DIB 格式 ICO：
+        //     - 包含 16×16 / 32×32 / 48×48 三个尺寸
+        //     - 每个尺寸用 GetPixel 逐像素提取，写入 BITMAPINFOHEADER
+        //     - 包含 XOR mask（32bpp BGRA）+ AND mask（1bpp 全零）
+        //   生成后文件约 15086 bytes，Win32 LoadImage 验证通过。
+        //
+        // ★ 文件放置位置
+        //   StreamingAssets/app.ico
+        //   Editor 下路径为: Application.streamingAssetsPath/app.ico
+        //   打包后路径为:    <ExeDir>/<AppName>_Data/StreamingAssets/app.ico
+        //
+        // ★ 路径格式
+        //   Win32 LoadImage 要求纯反斜杠路径。
+        //   Application.streamingAssetsPath 在 Windows Editor 下返回带
+        //   正斜杠的路径（如 D:/UniToolGUI/...），Path.Combine 拼接后
+        //   可能混用分隔符（D:/UniToolGUI/Assets/StreamingAssets\app.ico）。
+        //   TrayIconService.PlatformSetIcon 已在内部调用
+        //   iconPath.Replace('/', '\\') 统一替换，此处无需处理。
+        //
+        // ★ 错误码 0 的含义
+        //   LoadImage 返回 IntPtr.Zero 且 GetLastError()=0，
+        //   表示 Win32 系统调用本身无错误，但文件格式被拒绝。
+        //   遇到此情况首先检查文件格式，而非路径或权限。
+        //
+        // ★ Inspector 字段说明
+        //   WindowsIcoFileName: StreamingAssets 下的 .ico 文件名，默认 "app.ico"
+        //   该字段仅填写文件名（不含路径），路径由代码自动拼接。
+        // ════════════════════════════════════════════════════════════════════
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-        if (string.IsNullOrEmpty(WindowsIcoFileName)) return;
-        string icoPath = System.IO.Path.Combine(Application.streamingAssetsPath, WindowsIcoFileName);
-        if (System.IO.File.Exists(icoPath)) { TrayIconService.Instance.SetIcon(icoPath); Debug.Log("[TrayBridge] 图标: " + icoPath); }
-        else Debug.LogWarning("[TrayBridge] 未找到图标: " + icoPath);
+        // ── [Tray][Icon] 加载前日志 ──
+        string streamingPath = Application.streamingAssetsPath;
+        Debug.Log(string.Format("[TrayBridge][Icon] StreamingAssetsPath = {0}", streamingPath));
+        if (string.IsNullOrEmpty(WindowsIcoFileName))
+        {
+            Debug.LogWarning("[TrayBridge][Icon] WindowsIcoFileName 为空，跳过图标加载");
+            return;
+        }
+        string icoPath = System.IO.Path.Combine(streamingPath, WindowsIcoFileName);
+        Debug.Log(string.Format("[TrayBridge][Icon] 尝试加载 Windows 托盘图标，路径: {0}", icoPath));
+        bool exists = System.IO.File.Exists(icoPath);
+        Debug.Log(string.Format("[TrayBridge][Icon] 图标文件是否存在: {0}", exists));
+        if (!exists)
+        {
+            Debug.LogWarning(string.Format("[TrayBridge][Icon] 图标文件不存在: {0}  请将 {1} 放入 StreamingAssets 文件夹", icoPath, WindowsIcoFileName));
+            return;
+        }
+        // 打印文件大小，辅助排查文件损坏
+        try
+        {
+            long fileSize = new System.IO.FileInfo(icoPath).Length;
+            Debug.Log(string.Format("[TrayBridge][Icon] 图标文件大小: {0} 字节", fileSize));
+            if (fileSize < 64)
+                Debug.LogWarning("[TrayBridge][Icon] 警告：图标文件过小，可能不是有效的 .ico 文件");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[TrayBridge][Icon] 无法读取文件大小: " + ex.Message);
+        }
+        // ── 调用设置图标 ──
+        Debug.Log("[TrayBridge][Icon] 正在调用 SetIcon，传入 .ico 路径...");
+        TrayIconService.Instance.SetIcon(icoPath);
+        // ── [Tray][Icon] 加载后日志（成功与否由 TrayIconService 内部日志报告）──
+        Debug.Log("[TrayBridge][Icon] SetIcon 调用完成");
+
 #elif UNITY_STANDALONE_OSX
-        if (string.IsNullOrEmpty(MacPngFileName)) return;
-        string pngPath = System.IO.Path.Combine(Application.streamingAssetsPath, MacPngFileName);
-        if (System.IO.File.Exists(pngPath)) { TrayIconService.Instance.SetIcon(pngPath); Debug.Log("[TrayBridge] macOS 图标: " + pngPath); }
-        else Debug.LogWarning("[TrayBridge] macOS 未找到图标: " + pngPath);
+        string streamingPathMac = Application.streamingAssetsPath;
+        Debug.Log(string.Format("[TrayBridge][Icon] StreamingAssetsPath = {0}", streamingPathMac));
+        if (string.IsNullOrEmpty(MacPngFileName))
+        {
+            Debug.LogWarning("[TrayBridge][Icon] MacPngFileName 为空，跳过图标加载");
+            return;
+        }
+        string pngPath = System.IO.Path.Combine(streamingPathMac, MacPngFileName);
+        Debug.Log(string.Format("[TrayBridge][Icon] 尝试加载 macOS 托盘图标，路径: {0}", pngPath));
+        bool pngExists = System.IO.File.Exists(pngPath);
+        Debug.Log(string.Format("[TrayBridge][Icon] macOS 图标文件是否存在: {0}", pngExists));
+        if (!pngExists)
+        {
+            Debug.LogWarning(string.Format("[TrayBridge][Icon] macOS 图标文件不存在: {0}", pngPath));
+            return;
+        }
+        Debug.Log("[TrayBridge][Icon] 正在调用 macOS SetIcon...");
+        TrayIconService.Instance.SetIcon(pngPath);
+        Debug.Log("[TrayBridge][Icon] macOS SetIcon 调用完成");
 #endif
     }
 }

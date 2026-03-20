@@ -6,6 +6,7 @@
 /* ── 根容器 ───────────────────────────────────────────────── */
 .root {
     flex-direction: column;
+    flex-grow: 1;
     width: 100%;
     height: 100%;
     background-color: #0f1117;
@@ -16,6 +17,8 @@
 .main-area {
     flex-direction: row;
     flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -25,10 +28,12 @@
     width: 192px;
     min-width: 192px;
     flex-direction: column;
+    flex-shrink: 0;
     background-color: #161b24;
     border-right-width: 1px;
     border-right-color: #252d3d;
     padding-bottom: 0;
+    overflow: hidden;
 }
 
 /* Logo 区域 */
@@ -129,6 +134,7 @@
 /* ── 底部操作区 ───────────────────────────────────────────── */
 .sidebar-bottom {
     flex-direction: column;
+    flex-shrink: 0;
     padding: 10px 8px 12px 8px;
     border-top-width: 1px;
     border-top-color: #252d3d;
@@ -242,10 +248,13 @@
     flex-direction: row;
     align-items: center;
     height: 28px;
+    min-height: 28px;
+    flex-shrink: 0;
     background-color: #161b24;
     border-top-width: 1px;
     border-top-color: #252d3d;
     padding: 0 14px;
+    overflow: hidden;
 }
 .sb-item {
     font-size: 11px;
@@ -714,6 +723,17 @@
     overflow: hidden;
 }
 
+/* 全局隐藏水平滚动条 */
+.unity-scroll-view .unity-scroller--horizontal {
+    display: none;
+}
+.unity-scroll-view > .unity-scroll-view__content-and-vertical-scroll-container
+    > .unity-scroll-view__content-viewport
+    > .unity-scroll-view__content-container {
+    min-width: 0;
+    width: 100%;
+}
+
 /* 状态栏用户权限标签 */
 .sb-user-role {
     font-size: 11px;
@@ -763,4 +783,115 @@
     font-size: 12px;
     flex-grow: 1;
     white-space: normal;
+}
+
+/* ══════════════════════════════════════════════════════════
+   日志页面 (PageLog)
+   ══════════════════════════════════════════════════════════ */
+
+.log-toolbar {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 0 8px 0;
+    flex-shrink: 0;
+}
+.log-stat {
+    font-size: 11px;
+    color: #5a6480;
+}
+
+.log-filter-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.log-filter-label {
+    font-size: 11px;
+    color: #5a6480;
+    margin-right: 6px;
+}
+.log-filter-btn {
+    margin-right: 4px;
+    font-size: 11px;
+    padding: 3px 8px;
+    height: 24px;
+}
+.log-filter-btn--active {
+    background-color: rgba(244,129,32,0.18);
+    border-color: rgba(244,129,32,0.50);
+    color: #f48120;
+}
+
+.log-scroll-view {
+    flex-grow: 1;
+    background-color: #0a0d13;
+    border-width: 1px;
+    border-color: #252d3d;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+/* 日志行 */
+.log-line {
+    font-size: 12px;
+    color: #c8d0e0;
+    white-space: normal;
+    padding: 1px 0;
+    -unity-font-style: normal;
+}
+.log-line--info  { color: #9aa3b5; }
+.log-line--warn  { color: #ffcc44; }
+.log-line--error { color: #ff4d6a; }
+.log-line--cmd   { color: #4ab3f4; }
+.log-line--hook  { color: #3ddc84; }
+
+/* ══════════════════════════════════════════════════════════
+   执行钩子页面 (PageHook)
+   ══════════════════════════════════════════════════════════ */
+
+.hook-group-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+/* 隐藏的行（脚本/程序类型切换）*/
+.hook-row--hidden {
+    display: none;
+}
+
+/* 摘要行 */
+.hook-summary-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 6px;
+    padding: 5px 8px;
+    background-color: #0f1117;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: #1e2535;
+}
+.hook-summary-key {
+    font-size: 12px;
+    color: #5a6480;
+    min-width: 60px;
+    margin-right: 10px;
+}
+.hook-summary-val {
+    font-size: 12px;
+    color: #9aa3b5;
+    flex-grow: 1;
+}
+
+/* 执行状态标签变体 */
+.hook-status--running {
+    color: #f48120;
+}
+.hook-status--ok {
+    color: #3ddc84;
+}
+.hook-status--fail {
+    color: #ff4d6a;
 }

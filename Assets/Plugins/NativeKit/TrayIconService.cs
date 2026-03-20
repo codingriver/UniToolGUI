@@ -118,32 +118,30 @@ public class TrayIconService : ITrayService
     void PlatformInitialize() {
         _mainCtx = SynchronizationContext.Current ?? new SynchronizationContext();
         _hwnd = GetUnityHwnd();
-        if (_hwnd==IntPtr.Zero) { Debug.LogError("[Tray] no window"); return; }
+        Debug.Log(string.Format("[Tray][Init] HWND = 0x{0:X}", _hwnd.ToInt64()));
+        if (_hwnd==IntPtr.Zero) { Debug.LogError("[Tray][Init] 未找到 Unity 窗口句柄，托盘初始化失败"); return; }
         _newWndProc = WndProc;
         _oldWndProc = SetWindowLongPtr(_hwnd, GWL_WNDPROC, Marshal.GetFunctionPointerForDelegate(_newWndProc));
         var n=MakeNid(); n.uFlags=NIF_MSG|NIF_ICO|NIF_TIP; n.uCallbackMessage=WM_TRAYICON;
-        // ── 自定义/exe图标提取已暂时注释，排查托盘消失问题 ──
-        // string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
-        // IntPtr hExeIcon = IntPtr.Zero;
-        // if (!string.IsNullOrEmpty(exePath))
-        //     hExeIcon = ExtractIcon(IntPtr.Zero, exePath, 0);
-        // if (hExeIcon == IntPtr.Zero || hExeIcon == new IntPtr(1))
-        // {
-        //     hExeIcon = LoadImage(IntPtr.Zero, "#32512", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
-        //     if (hExeIcon == IntPtr.Zero)
-        //         hExeIcon = LoadIcon(IntPtr.Zero, IDI_APP);
-        // }
-        // else
-        // {
-        //     if (_hCustomIcon != IntPtr.Zero) DestroyIcon(_hCustomIcon);
-        //     _hCustomIcon = hExeIcon;
-        // }
-        // 直接使用系统默认图标
+        // 使用系统默认图标作为初始占位，TrySetIcon() 会在 Initialize() 完成后用自定义图标替换
         IntPtr hExeIcon = LoadIcon(IntPtr.Zero, IDI_APP);
+        Debug.Log(string.Format("[Tray][Init] 加载默认系统图标句柄: 0x{0:X}", hExeIcon.ToInt64()));
         n.hIcon = hExeIcon; n.szTip=_tooltip;
-        if (Shell_NotifyIcon(NIM_ADD,ref n)) { _trayAdded=true; RebuildWin(); FireCreated(); }
-        else Debug.LogError("[Tray] Shell_NotifyIcon failed");
+        bool addResult = Shell_NotifyIcon(NIM_ADD, ref n);
+        if (addResult)
+        {
+            _trayAdded=true;
+            Debug.Log("[Tray][Init] Shell_NotifyIcon(NIM_ADD) 成功，托盘图标已添加（默认系统图标）");
+            RebuildWin();
+            FireCreated();
+        }
+        else
+        {
+            int err = Marshal.GetLastWin32Error();
+            Debug.LogError(string.Format("[Tray][Init] Shell_NotifyIcon(NIM_ADD) 失败，Win32 错误码: {0}", err));
+        }
         _initialized=true;
+        Debug.Log("[Tray][Init] PlatformInitialize 完成，_initialized = true");
     }
     void PlatformShutdown() {
         if (_trayAdded) { var n=MakeNid(); Shell_NotifyIcon(NIM_DEL,ref n); _trayAdded=false; }
@@ -159,13 +157,47 @@ public class TrayIconService : ITrayService
         Shell_NotifyIcon(NIM_MOD,ref n);
     }
     void PlatformSetIcon(string iconPath) {
-        if (string.IsNullOrEmpty(iconPath)) return;
+        // ── [Tray][Icon] 加载前日志 ──
+        Debug.Log(string.Format("[Tray][Icon] PlatformSetIcon 开始，路径: {0}", iconPath));
+        if (string.IsNullOrEmpty(iconPath))
+        {
+            Debug.LogWarning("[Tray][Icon] iconPath 为空，取消设置");
+            return;
+        }
+        if (!System.IO.File.Exists(iconPath))
+        {
+            Debug.LogWarning(string.Format("[Tray][Icon] 图标文件不存在（Win32 LoadImage 前检查）: {0}", iconPath));
+            return;
+        }
+        // Win32 LoadImage 要求纯反斜杠路径，统一替换正斜杠
+        iconPath = iconPath.Replace('/', '\\');
+        Debug.Log(string.Format("[Tray][Icon] 规范化后路径: {0}", iconPath));
+        Debug.Log(string.Format("[Tray][Icon] 调用 LoadImage(LR_LOADFROMFILE|LR_DEFAULTSIZE)，路径: {0}", iconPath));
         var hNew = LoadImage(IntPtr.Zero, iconPath, IMAGE_ICON, 0, 0, LR_LOADFROMFILE|LR_DEFAULTSIZE);
-        if (hNew == IntPtr.Zero) { Debug.LogWarning("[Tray] LoadImage failed: " + iconPath); return; }
-        if (_hCustomIcon != IntPtr.Zero) DestroyIcon(_hCustomIcon);
+        // ── [Tray][Icon] 加载后日志 ──
+        if (hNew == IntPtr.Zero)
+        {
+            int err = Marshal.GetLastWin32Error();
+            Debug.LogError(string.Format("[Tray][Icon] LoadImage 失败！Win32 错误码: {0}，路径: {1}" +
+                "\n  常见原因: (1) 文件不是有效的 .ico 格式；(2) 路径含中文/空格（尝试短路径）；(3) 文件被锁定。", err, iconPath));
+            return;
+        }
+        Debug.Log(string.Format("[Tray][Icon] LoadImage 成功，HICON = 0x{0:X}", hNew.ToInt64()));
+        if (_hCustomIcon != IntPtr.Zero)
+        {
+            Debug.Log("[Tray][Icon] 释放旧的自定义图标句柄");
+            DestroyIcon(_hCustomIcon);
+        }
         _hCustomIcon = hNew;
         var n = MakeNid(); n.uFlags = NIF_ICO; n.hIcon = _hCustomIcon;
-        Shell_NotifyIcon(NIM_MOD, ref n);
+        bool modResult = Shell_NotifyIcon(NIM_MOD, ref n);
+        if (modResult)
+            Debug.Log(string.Format("[Tray][Icon] Shell_NotifyIcon(NIM_MOD) 成功，托盘图标已更新为自定义图标，路径: {0}", iconPath));
+        else
+        {
+            int err = Marshal.GetLastWin32Error();
+            Debug.LogError(string.Format("[Tray][Icon] Shell_NotifyIcon(NIM_MOD) 失败，Win32 错误码: {0}", err));
+        }
     }
     void PlatformSetIconFromData(byte[] pngData) {
         // Windows 不支持直接从内存 PNG 加载，降级为忽略（需传 .ico 文件路径）

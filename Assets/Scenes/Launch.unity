@@ -331,6 +331,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MutexName: Unity_UniToolGUI_SingleInstance
+  LogFileName: app.log
 --- !u!114 &1087511560
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -437,6 +438,8 @@ MonoBehaviour:
   PageOther: {fileID: 1665289808}
   PageAbout: {fileID: 1665289812}
   PageResults: {fileID: 1665289810}
+  PageLog: {fileID: 0}
+  PageHook: {fileID: 0}
 --- !u!114 &1665289804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -540,7 +543,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1665289800}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2cfecf7f60e27e1429556e4872f5ef3a, type: 3}
   m_Name: 

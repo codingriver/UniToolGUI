@@ -1,0 +1,129 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+
+    <Style src="/Assets/UI/MainWindow.uss" />
+
+    <ui:Label text="执行钩子" class="page-title" />
+    <ui:VisualElement class="page-divider" />
+
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
+
+        <!-- 说明 -->
+        <ui:VisualElement class="info-bar info-bar--info" style="margin-bottom:16px;">
+            <ui:Label class="info-bar__icon" text="ℹ" />
+            <ui:Label text="可在测速开始前或完成后自动执行脚本（.ps1 / .bat / .sh）或外部程序。钩子按顺序阻塞执行，超时后强制终止。" class="info-bar" style="flex-grow:1;border-width:0;background-color:transparent;padding:0;" />
+        </ui:VisualElement>
+
+        <!-- ══ 运行前钩子 ══ -->
+        <ui:VisualElement class="group-box">
+            <ui:VisualElement class="hook-group-header">
+                <ui:Label text="运行前钩子" class="group-title" style="margin-bottom:0;" />
+                <ui:Toggle name="toggle-pre-enabled" value="false" class="field-toggle" style="margin-left:12px;" />
+            </ui:VisualElement>
+            <ui:Label text="测速任务启动前执行" class="form-hint" style="margin-left:0;margin-bottom:12px;" />
+
+            <!-- 执行类型 -->
+            <ui:VisualElement class="form-row">
+                <ui:Label text="类型" class="form-label" />
+                <ui:RadioButtonGroup name="radio-pre-type" value="0" class="radio-group" choices="脚本,程序" />
+            </ui:VisualElement>
+
+            <!-- 脚本路径 -->
+            <ui:VisualElement name="pre-script-row" class="form-col">
+                <ui:Label text="脚本路径" class="form-label" />
+                <ui:VisualElement style="flex-direction:row;align-items:center;">
+                    <ui:TextField name="field-pre-script" placeholder-text=".ps1 / .bat / .sh 文件路径" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-pre-browse-script" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- 程序路径（type=程序时显示）-->
+            <ui:VisualElement name="pre-program-row" class="form-col hook-row--hidden">
+                <ui:Label text="程序路径" class="form-label" />
+                <ui:VisualElement style="flex-direction:row;align-items:center;">
+                    <ui:TextField name="field-pre-program" placeholder-text="可执行文件 (.exe) 路径" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-pre-browse-program" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                </ui:VisualElement>
+                <ui:Label text="附加参数（可选）" class="form-label" style="margin-top:8px;" />
+                <ui:TextField name="field-pre-program-args" placeholder-text="命令行参数，留空则不传参" class="field-text" />
+            </ui:VisualElement>
+
+            <!-- 超时设置 -->
+            <ui:VisualElement class="form-row">
+                <ui:Label text="超时 (秒)" class="form-label" />
+                <ui:IntegerField name="field-pre-timeout" value="30" class="field-int" />
+                <ui:Label text="0 = 不限" class="field-unit" />
+            </ui:VisualElement>
+
+            <!-- 等待完成 -->
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-pre-wait" label="等待执行完成后再启动测速" value="true" class="field-toggle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ══ 运行后钩子 ══ -->
+        <ui:VisualElement class="group-box">
+            <ui:VisualElement class="hook-group-header">
+                <ui:Label text="运行后钩子" class="group-title" style="margin-bottom:0;" />
+                <ui:Toggle name="toggle-post-enabled" value="false" class="field-toggle" style="margin-left:12px;" />
+            </ui:VisualElement>
+            <ui:Label text="测速任务完成（或中止）后执行" class="form-hint" style="margin-left:0;margin-bottom:12px;" />
+
+            <!-- 执行类型 -->
+            <ui:VisualElement class="form-row">
+                <ui:Label text="类型" class="form-label" />
+                <ui:RadioButtonGroup name="radio-post-type" value="0" class="radio-group" choices="脚本,程序" />
+            </ui:VisualElement>
+
+            <!-- 脚本路径 -->
+            <ui:VisualElement name="post-script-row" class="form-col">
+                <ui:Label text="脚本路径" class="form-label" />
+                <ui:VisualElement style="flex-direction:row;align-items:center;">
+                    <ui:TextField name="field-post-script" placeholder-text=".ps1 / .bat / .sh 文件路径" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-post-browse-script" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- 程序路径（type=程序时显示）-->
+            <ui:VisualElement name="post-program-row" class="form-col hook-row--hidden">
+                <ui:Label text="程序路径" class="form-label" />
+                <ui:VisualElement style="flex-direction:row;align-items:center;">
+                    <ui:TextField name="field-post-program" placeholder-text="可执行文件 (.exe) 路径" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-post-browse-program" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                </ui:VisualElement>
+                <ui:Label text="附加参数（可选）" class="form-label" style="margin-top:8px;" />
+                <ui:TextField name="field-post-program-args" placeholder-text="命令行参数，留空则不传参" class="field-text" />
+            </ui:VisualElement>
+
+            <!-- 超时设置 -->
+            <ui:VisualElement class="form-row">
+                <ui:Label text="超时 (秒)" class="form-label" />
+                <ui:IntegerField name="field-post-timeout" value="30" class="field-int" />
+                <ui:Label text="0 = 不限" class="field-unit" />
+            </ui:VisualElement>
+
+            <!-- 仅成功时执行 -->
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-post-only-success" label="仅测速成功时执行（忽略中止/异常）" value="false" class="field-toggle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ══ 执行状态预览 ══ -->
+        <ui:VisualElement class="group-box">
+            <ui:VisualElement style="flex-direction:row;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <ui:Label text="上次执行摘要" class="group-title" style="margin-bottom:0;" />
+                <ui:Button name="btn-hook-test-pre" text="测试前钩子" class="btn-sm btn-accent" style="margin-right:6px;" />
+                <ui:Button name="btn-hook-test-post" text="测试后钩子" class="btn-sm btn-accent" />
+            </ui:VisualElement>
+            <ui:VisualElement name="hook-summary-pre" class="hook-summary-row">
+                <ui:Label text="前钩子:" class="hook-summary-key" />
+                <ui:Label name="label-pre-status" text="未执行" class="hook-summary-val" />
+            </ui:VisualElement>
+            <ui:VisualElement name="hook-summary-post" class="hook-summary-row">
+                <ui:Label text="后钩子:" class="hook-summary-key" />
+                <ui:Label name="label-post-status" text="未执行" class="hook-summary-val" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+
+</ui:UXML>
