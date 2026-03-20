@@ -10,7 +10,7 @@
         <!-- 说明 -->
         <ui:VisualElement class="info-bar info-bar--info" style="margin-bottom:16px;">
             <ui:Label class="info-bar__icon" text="ℹ" />
-            <ui:Label text="可在测速开始前或完成后自动执行脚本（.ps1 / .bat / .sh）或外部程序。钩子按顺序阻塞执行，超时后强制终止。" class="info-bar" style="flex-grow:1;border-width:0;background-color:transparent;padding:0;" />
+            <ui:Label text="可在测速开始前或完成后自动执行外部程序。钩子按顺序阻塞执行，超时后强制终止。" class="info-bar" style="flex-grow:1;border-width:0;background-color:transparent;padding:0;" />
         </ui:VisualElement>
 
         <!-- ══ 运行前钩子 ══ -->
@@ -21,30 +21,20 @@
             </ui:VisualElement>
             <ui:Label text="测速任务启动前执行" class="form-hint" style="margin-left:0;margin-bottom:12px;" />
 
-            <!-- 执行类型 -->
-            <ui:VisualElement class="form-row">
-                <ui:Label text="类型" class="form-label" />
-                <ui:RadioButtonGroup name="radio-pre-type" value="0" class="radio-group" choices="脚本,程序" />
-            </ui:VisualElement>
-
-            <!-- 脚本路径 -->
-            <ui:VisualElement name="pre-script-row" class="form-col">
-                <ui:Label text="脚本路径" class="form-label" />
-                <ui:VisualElement style="flex-direction:row;align-items:center;">
-                    <ui:TextField name="field-pre-script" placeholder-text=".ps1 / .bat / .sh 文件路径" class="field-text" style="flex-grow:1;" />
-                    <ui:Button name="btn-pre-browse-script" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-
-            <!-- 程序路径（type=程序时显示）-->
-            <ui:VisualElement name="pre-program-row" class="form-col hook-row--hidden">
+            <!-- 程序路径 -->
+            <ui:VisualElement class="form-col">
                 <ui:Label text="程序路径" class="form-label" />
                 <ui:VisualElement style="flex-direction:row;align-items:center;">
-                    <ui:TextField name="field-pre-program" placeholder-text="可执行文件 (.exe) 路径" class="field-text" style="flex-grow:1;" />
-                    <ui:Button name="btn-pre-browse-program" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                    <ui:TextField name="field-pre-path" placeholder-text="可执行文件路径" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-pre-browse" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
                 </ui:VisualElement>
-                <ui:Label text="附加参数（可选）" class="form-label" style="margin-top:8px;" />
-                <ui:TextField name="field-pre-program-args" placeholder-text="命令行参数，留空则不传参" class="field-text" />
+                <ui:Label name="label-pre-path-hint" text="" class="form-hint" style="margin-left:0;" />
+            </ui:VisualElement>
+
+            <!-- 附加参数 -->
+            <ui:VisualElement class="form-col">
+                <ui:Label text="附加参数（可选）" class="form-label" />
+                <ui:TextField name="field-pre-args" placeholder-text="命令行参数，留空则不传参" class="field-text" />
             </ui:VisualElement>
 
             <!-- 超时设置 -->
@@ -68,30 +58,20 @@
             </ui:VisualElement>
             <ui:Label text="测速任务完成（或中止）后执行" class="form-hint" style="margin-left:0;margin-bottom:12px;" />
 
-            <!-- 执行类型 -->
-            <ui:VisualElement class="form-row">
-                <ui:Label text="类型" class="form-label" />
-                <ui:RadioButtonGroup name="radio-post-type" value="0" class="radio-group" choices="脚本,程序" />
-            </ui:VisualElement>
-
-            <!-- 脚本路径 -->
-            <ui:VisualElement name="post-script-row" class="form-col">
-                <ui:Label text="脚本路径" class="form-label" />
-                <ui:VisualElement style="flex-direction:row;align-items:center;">
-                    <ui:TextField name="field-post-script" placeholder-text=".ps1 / .bat / .sh 文件路径" class="field-text" style="flex-grow:1;" />
-                    <ui:Button name="btn-post-browse-script" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-
-            <!-- 程序路径（type=程序时显示）-->
-            <ui:VisualElement name="post-program-row" class="form-col hook-row--hidden">
+            <!-- 程序路径 -->
+            <ui:VisualElement class="form-col">
                 <ui:Label text="程序路径" class="form-label" />
                 <ui:VisualElement style="flex-direction:row;align-items:center;">
-                    <ui:TextField name="field-post-program" placeholder-text="可执行文件 (.exe) 路径" class="field-text" style="flex-grow:1;" />
-                    <ui:Button name="btn-post-browse-program" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
+                    <ui:TextField name="field-post-path" placeholder-text="可执行文件路径" class="field-text" style="flex-grow:1;" />
+                    <ui:Button name="btn-post-browse" text="浏览" class="btn-sm" style="margin-left:6px;flex-shrink:0;" />
                 </ui:VisualElement>
-                <ui:Label text="附加参数（可选）" class="form-label" style="margin-top:8px;" />
-                <ui:TextField name="field-post-program-args" placeholder-text="命令行参数，留空则不传参" class="field-text" />
+                <ui:Label name="label-post-path-hint" text="" class="form-hint" style="margin-left:0;" />
+            </ui:VisualElement>
+
+            <!-- 附加参数 -->
+            <ui:VisualElement class="form-col">
+                <ui:Label text="附加参数（可选）" class="form-label" />
+                <ui:TextField name="field-post-args" placeholder-text="命令行参数，留空则不传参" class="field-text" />
             </ui:VisualElement>
 
             <!-- 超时设置 -->
