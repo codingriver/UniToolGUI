@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UIKit;
 
 namespace CloudflareST.GUI
 {
@@ -197,9 +198,16 @@ namespace CloudflareST.GUI
             row.Add(MakeCell(ip.DataCenter,                           "col-dc"));
             row.Add(MakeCell(ip.Region,                               "col-region"));
 
-            // 右键：复制 IP
-            row.RegisterCallback<ContextClickEvent>(_ =>
-                NativePlatform.SetClipboard(ip.IP));
+            // 右键：显示上下文菜单
+            row.RegisterCallback<ContextClickEvent>(e =>
+            {
+                e.StopPropagation();
+                // 将屏幕坐标转为面板本地坐标
+                Vector2 localPos = _root != null
+                    ? _root.WorldToLocal(new Vector2(e.mousePosition.x, e.mousePosition.y))
+                    : new Vector2(e.mousePosition.x, e.mousePosition.y);
+                ShowContextMenu(row, ip, localPos);
+            });
             // 单击高亮
             row.RegisterCallback<ClickEvent>(_ =>
             {
@@ -209,6 +217,99 @@ namespace CloudflareST.GUI
             });
 
             return row;
+        }
+
+        // ── 右键菜单 ──────────────────────────────────────
+        private VisualElement _contextMenu;
+        private VisualElement _contextTarget;
+
+        private void ShowContextMenu(VisualElement anchor, IPInfo ip, Vector2 pos)
+        {
+            HideContextMenu();
+
+            _contextMenu = new VisualElement();
+            _contextMenu.style.position   = Position.Absolute;
+            _contextMenu.style.left       = pos.x;
+            _contextMenu.style.top        = pos.y;
+            _contextMenu.style.backgroundColor = new StyleColor(new UnityEngine.Color(0.13f, 0.17f, 0.24f));
+            _contextMenu.style.borderTopWidth    = 1;
+            _contextMenu.style.borderBottomWidth = 1;
+            _contextMenu.style.borderLeftWidth   = 1;
+            _contextMenu.style.borderRightWidth  = 1;
+            _contextMenu.style.borderTopColor    = new StyleColor(new UnityEngine.Color(0.18f, 0.23f, 0.33f));
+            _contextMenu.style.borderBottomColor = new StyleColor(new UnityEngine.Color(0.18f, 0.23f, 0.33f));
+            _contextMenu.style.borderLeftColor   = new StyleColor(new UnityEngine.Color(0.18f, 0.23f, 0.33f));
+            _contextMenu.style.borderRightColor  = new StyleColor(new UnityEngine.Color(0.18f, 0.23f, 0.33f));
+            _contextMenu.style.borderTopLeftRadius     = 5;
+            _contextMenu.style.borderTopRightRadius    = 5;
+            _contextMenu.style.borderBottomLeftRadius  = 5;
+            _contextMenu.style.borderBottomRightRadius = 5;
+            _contextMenu.style.paddingTop    = 4;
+            _contextMenu.style.paddingBottom = 4;
+            _contextMenu.style.minWidth = 140;
+            _contextMenu.pickingMode = PickingMode.Position;
+
+            // 菜单项：复制 IP
+            var btnCopy = new Button(() =>
+            {
+                NativePlatform.SetClipboard(ip.IP);
+                ToastManager.Success("已复制: " + ip.IP);
+                HideContextMenu();
+            });
+            btnCopy.text = "复制 IP";
+            btnCopy.style.backgroundColor = new StyleColor(UnityEngine.Color.clear);
+            btnCopy.style.borderTopWidth = btnCopy.style.borderBottomWidth =
+                btnCopy.style.borderLeftWidth = btnCopy.style.borderRightWidth = 0;
+            btnCopy.style.color    = new StyleColor(new UnityEngine.Color(0.91f, 0.91f, 0.95f));
+            btnCopy.style.fontSize = 12;
+            btnCopy.style.paddingTop = btnCopy.style.paddingBottom = 5;
+            btnCopy.style.paddingLeft = btnCopy.style.paddingRight = 12;
+            btnCopy.style.unityTextAlign = UnityEngine.TextAnchor.MiddleLeft;
+            _contextMenu.Add(btnCopy);
+
+            // 菜单项：复制 IP:端口（仅IPv4显示）
+            var btnCopyPort = new Button(() =>
+            {
+                string val = ip.IP.Contains(":") ? "[" + ip.IP + "]:443" : ip.IP + ":443";
+                NativePlatform.SetClipboard(val);
+                ToastManager.Success("已复制: " + val);
+                HideContextMenu();
+            });
+            btnCopyPort.text = "复制 IP:443";
+            btnCopyPort.style.backgroundColor = new StyleColor(UnityEngine.Color.clear);
+            btnCopyPort.style.borderTopWidth = btnCopyPort.style.borderBottomWidth =
+                btnCopyPort.style.borderLeftWidth = btnCopyPort.style.borderRightWidth = 0;
+            btnCopyPort.style.color    = new StyleColor(new UnityEngine.Color(0.91f, 0.91f, 0.95f));
+            btnCopyPort.style.fontSize = 12;
+            btnCopyPort.style.paddingTop = btnCopyPort.style.paddingBottom = 5;
+            btnCopyPort.style.paddingLeft = btnCopyPort.style.paddingRight = 12;
+            btnCopyPort.style.unityTextAlign = UnityEngine.TextAnchor.MiddleLeft;
+            _contextMenu.Add(btnCopyPort);
+
+            // 添加到根容器
+            var pageRoot = _root?.panel?.visualTree?.Q("page-results") ?? _root;
+            pageRoot?.Add(_contextMenu);
+            _contextTarget = anchor;
+
+            // 点击其他地方关闭
+            _root?.RegisterCallback<PointerDownEvent>(OnPointerDownOutside, TrickleDown.TrickleDown);
+        }
+
+        private void HideContextMenu()
+        {
+            if (_contextMenu == null) return;
+            _contextMenu.RemoveFromHierarchy();
+            _contextMenu = null;
+            _contextTarget = null;
+            _root?.UnregisterCallback<PointerDownEvent>(OnPointerDownOutside, TrickleDown.TrickleDown);
+        }
+
+        private void OnPointerDownOutside(PointerDownEvent e)
+        {
+            if (_contextMenu == null) return;
+            // 如果点击在菜单外则关闭
+            if (!_contextMenu.worldBound.Contains(e.position))
+                HideContextMenu();
         }
 
         private static Label MakeCell(string text, string colClass)
@@ -222,13 +323,17 @@ namespace CloudflareST.GUI
         private void CopyFirst()
         {
             if (_viewList.Count == 0) return;
-            NativePlatform.SetClipboard(_viewList[0].IP);
+            string ip = _viewList[0].IP;
+            NativePlatform.SetClipboard(ip);
+            ToastManager.Success("已复制: " + ip);
         }
 
         private void CopyAll()
         {
+            if (_viewList.Count == 0) return;
             var ips = string.Join("\n", _viewList.Select(x => x.IP));
             NativePlatform.SetClipboard(ips);
+            ToastManager.Success("已复制 " + _viewList.Count + " 个 IP");
         }
 
         private void ExportCsv()
@@ -238,12 +343,19 @@ namespace CloudflareST.GUI
                 System.IO.Path.GetFileNameWithoutExtension(_opts.OutputFile ?? "result"));
             if (string.IsNullOrEmpty(path)) return;
 
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("IP,丢包率,平均延迟,下载速度,地区码,地区名");
-            foreach (var ip in _viewList)
-                sb.AppendLine($"{ip.IP},{ip.PacketLoss * 100:F0}%,{ip.AvgDelay:F0},{ip.DownloadSpeed:F2},{ip.DataCenter},{ip.Region}");
-
-            System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
+            try
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("IP,丢包率,平均延迟,下载速度,地区码,地区名");
+                foreach (var ip in _viewList)
+                    sb.AppendLine($"{ip.IP},{ip.PacketLoss * 100:F0}%,{ip.AvgDelay:F0},{ip.DownloadSpeed:F2},{ip.DataCenter},{ip.Region}");
+                System.IO.File.WriteAllText(path, sb.ToString(), System.Text.Encoding.UTF8);
+                ToastManager.Success("已导出到: " + System.IO.Path.GetFileName(path));
+            }
+            catch (System.Exception ex)
+            {
+                ToastManager.Error("导出失败: " + ex.Message);
+            }
         }
 
         private void RefreshHostsPreview()

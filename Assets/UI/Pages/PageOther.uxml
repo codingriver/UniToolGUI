@@ -13,6 +13,10 @@
             <ui:VisualElement class="form-row">
                 <ui:Toggle name="toggle-debug" label="调试输出 (-debug) — 打印详细内部状态，便于排查异常" class="field-toggle" />
             </ui:VisualElement>
+            <ui:VisualElement class="form-row">
+                <ui:Toggle name="toggle-log-to-file" label="将运行日志写入文件 (cfst_log.txt)" class="field-toggle" />
+            </ui:VisualElement>
+            <ui:Label name="hint-log-to-file" text="" class="form-hint" style="margin-left:0;" />
         </ui:VisualElement>
 
         <!-- 系统集成 -->

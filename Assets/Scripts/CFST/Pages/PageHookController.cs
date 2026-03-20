@@ -1,5 +1,7 @@
-using System;
-using System.Diagnostics;
+// ============================================================
+// PageHookController.cs  —  执行钩子页面控制器
+// RunPreHook / RunPostHook 改用 ProcessMgr 统一执行。
+// ============================================================
 using System.IO;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -27,6 +29,10 @@ namespace CloudflareST.GUI
         private Label        _postPathHint;
         public PageLogController LogController { get; set; }
 
+        // ── 供 ScheduleManager 查询 ───────────────────────────
+        public bool IsPreHookEnabled  => _opts != null && _opts.PreHookEnabled;
+        public bool IsPostHookEnabled => _opts != null && _opts.PostHookEnabled;
+
         public void Init(VisualElement root, CfstOptions opts)
         {
             _root = root; _opts = opts;
@@ -45,12 +51,20 @@ namespace CloudflareST.GUI
             _postStatusLabel = root.Q<Label>("label-post-status");
             _postPathHint    = root.Q<Label>("label-post-path-hint");
             RestoreFromOptions();
-            _preEnabled?.RegisterValueChangedCallback(e => { _opts.PreHookEnabled = e.newValue; UpdatePreEnabledState(); });
+            _preEnabled?.RegisterValueChangedCallback(e => {
+                _opts.PreHookEnabled = e.newValue;
+                UpdatePreEnabledState();
+                ToastManager.Info(e.newValue ? "已启用前置钩子" : "已禁用前置钩子");
+            });
             _prePath?.RegisterValueChangedCallback(e => { _opts.PreHookPath = e.newValue; UpdatePathHint(_prePathHint, e.newValue); });
             _preArgs?.RegisterValueChangedCallback(e    => _opts.PreHookArgs       = e.newValue);
             _preTimeout?.RegisterValueChangedCallback(e => _opts.PreHookTimeoutSec = e.newValue < 0 ? 0 : e.newValue);
             _preWait?.RegisterValueChangedCallback(e    => _opts.PreHookWait       = e.newValue);
-            _postEnabled?.RegisterValueChangedCallback(e => { _opts.PostHookEnabled = e.newValue; UpdatePostEnabledState(); });
+            _postEnabled?.RegisterValueChangedCallback(e => {
+                _opts.PostHookEnabled = e.newValue;
+                UpdatePostEnabledState();
+                ToastManager.Info(e.newValue ? "已启用后置钩子" : "已禁用后置钩子");
+            });
             _postPath?.RegisterValueChangedCallback(e => { _opts.PostHookPath = e.newValue; UpdatePathHint(_postPathHint, e.newValue); });
             _postArgs?.RegisterValueChangedCallback(e        => _opts.PostHookArgs        = e.newValue);
             _postTimeout?.RegisterValueChangedCallback(e     => _opts.PostHookTimeoutSec  = e.newValue < 0 ? 0 : e.newValue);
@@ -121,6 +135,8 @@ namespace CloudflareST.GUI
             try { string d = Path.GetDirectoryName(p); return Directory.Exists(d) ? d : ""; }
             catch { return ""; }
         }
+
+        // ── 测试按钮（UI 手动测试）──────────────────────────
         private void TestHook(bool isPost)
         {
             var    lbl     = isPost ? _postStatusLabel : _preStatusLabel;
@@ -128,11 +144,14 @@ namespace CloudflareST.GUI
             string path    = isPost ? _opts.PostHookPath    : _opts.PreHookPath;
             string args    = isPost ? _opts.PostHookArgs    : _opts.PreHookArgs;
             int    timeout = isPost ? _opts.PostHookTimeoutSec : _opts.PreHookTimeoutSec;
+
             SetStatus(lbl, "Running...", "hook-status--running", "hook-status--ok", "hook-status--fail");
             LogController?.AppendLog("[HOOK] Testing " + tag + " hook: " + path);
-            int    code = RunHookSync(path, args, timeout);
-            string msg  = FormatExitMsg(code);
-            bool   ok   = code == 0;
+
+            int    code = ProcessMgr.Run(path, args, timeout, "[HOOK-TEST]");
+            string msg  = ProcessMgr.DescribeExitCode(code);
+            bool   ok   = ProcessMgr.IsSuccess(code);
+
             SetStatus(lbl, msg, ok ? "hook-status--ok" : "hook-status--fail",
                 "hook-status--running", ok ? "hook-status--fail" : "hook-status--ok");
             LogController?.AppendLog("[HOOK] " + tag + " result: " + msg);
@@ -140,64 +159,49 @@ namespace CloudflareST.GUI
             else    ToastManager.Error(tag + " hook: " + msg);
         }
 
+        // ── 供 MainWindowController / ScheduleManager 调用 ──
+
+        /// <summary>运行前钩子，返回是否应继续测速。</summary>
         public bool RunPreHook()
         {
             if (!_opts.PreHookEnabled) return true;
             LogController?.AppendLog("[HOOK] Running pre-hook: " + _opts.PreHookPath);
             SetStatus(_preStatusLabel, "Running...", "hook-status--running", "hook-status--ok", "hook-status--fail");
-            int    code = RunHookSync(_opts.PreHookPath, _opts.PreHookArgs, _opts.PreHookTimeoutSec);
-            string msg  = FormatExitMsg(code);
-            bool   ok   = code == 0;
-            SetStatus(_preStatusLabel, msg, ok ? "hook-status--ok" : "hook-status--fail",
-                "hook-status--running", ok ? "hook-status--fail" : "hook-status--ok");
+
+            int    code = ProcessMgr.Run(_opts.PreHookPath, _opts.PreHookArgs,
+                                         _opts.PreHookTimeoutSec, "[PRE-HOOK]");
+            string msg  = ProcessMgr.DescribeExitCode(code);
+            bool   ok   = ProcessMgr.IsSuccess(code);
+
+            SetStatus(_preStatusLabel, msg,
+                ok ? "hook-status--ok" : "hook-status--fail",
+                "hook-status--running",
+                ok ? "hook-status--fail" : "hook-status--ok");
             LogController?.AppendLog("[HOOK] Pre-hook done: " + msg);
+
             if (!ok && _opts.PreHookWait) { ToastManager.Warning("Pre-hook failed, cancelled"); return false; }
             return true;
         }
 
+        /// <summary>运行后钩子。</summary>
         public void RunPostHook(int testExitCode)
         {
             if (!_opts.PostHookEnabled) return;
             if (_opts.PostHookOnlySuccess && testExitCode != 0) return;
             LogController?.AppendLog("[HOOK] Running post-hook: " + _opts.PostHookPath);
             SetStatus(_postStatusLabel, "Running...", "hook-status--running", "hook-status--ok", "hook-status--fail");
-            int    code = RunHookSync(_opts.PostHookPath, _opts.PostHookArgs, _opts.PostHookTimeoutSec);
-            string msg  = FormatExitMsg(code);
-            bool   ok   = code == 0;
-            SetStatus(_postStatusLabel, msg, ok ? "hook-status--ok" : "hook-status--fail",
-                "hook-status--running", ok ? "hook-status--fail" : "hook-status--ok");
+
+            int    code = ProcessMgr.Run(_opts.PostHookPath, _opts.PostHookArgs,
+                                          _opts.PostHookTimeoutSec, "[POST-HOOK]");
+            string msg  = ProcessMgr.DescribeExitCode(code);
+            bool   ok   = ProcessMgr.IsSuccess(code);
+
+            SetStatus(_postStatusLabel, msg,
+                ok ? "hook-status--ok" : "hook-status--fail",
+                "hook-status--running",
+                ok ? "hook-status--fail" : "hook-status--ok");
             LogController?.AppendLog("[HOOK] Post-hook done: " + msg);
         }
-
-        // Direct execution: path is treated as a program, args passed as-is.
-        private static int RunHookSync(string path, string args, int timeoutSec)
-        {
-            if (string.IsNullOrWhiteSpace(path)) return -1;
-            if (!File.Exists(path)) return 99;
-            var psi = new ProcessStartInfo { FileName = path, Arguments = args ?? "",
-                UseShellExecute = false, CreateNoWindow = true };
-            try
-            {
-                using (var proc = Process.Start(psi))
-                {
-                    if (proc == null) return 98;
-                    int ms = timeoutSec > 0 ? timeoutSec * 1000 : -1;
-                    bool exited = proc.WaitForExit(ms);
-                    if (!exited) { try { proc.Kill(); } catch { } return -2; }
-                    return proc.ExitCode;
-                }
-            }
-            catch (Exception ex) { UnityEngine.Debug.LogError("[HOOK] " + ex.Message); return 97; }
-        }
-
-        private static string FormatExitMsg(int c) =>
-            c ==  0 ? "OK (exit 0)" :
-            c == -1 ? "Not configured" :
-            c == -2 ? "Timed out" :
-            c == 97 ? "Launch exception" :
-            c == 98 ? "Process start failed" :
-            c == 99 ? "File not found" :
-            "Failed (exit " + c + ")";
 
         private static void SetStatus(Label label, string text, string add, string r1 = null, string r2 = null)
         {

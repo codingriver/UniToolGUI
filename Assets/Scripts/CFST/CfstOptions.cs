@@ -16,19 +16,6 @@ namespace CloudflareST.GUI
         Httping,
     }
 
-    /// <summary>定时调度模式</summary>
-    public enum ScheduleMode
-    {
-        /// <summary>不启用调度</summary>
-        None,
-        /// <summary>间隔执行 (-interval)</summary>
-        Interval,
-        /// <summary>每日定点 (-at)</summary>
-        Daily,
-        /// <summary>Cron 表达式 (-cron)</summary>
-        Cron,
-    }
-
     /// <summary>
     /// CloudflareSpeedTest 全部命令行参数的数据结构。
     /// 对应 cfst 可执行文件支持的所有 -xxx 参数，默认值与程序一致。
@@ -67,14 +54,12 @@ namespace CloudflareST.GUI
         public string OnlyIpFile   { get; set; } = "onlyip.txt";
 
         // ── 调试 ─────────────────────────────────────────────────
-        public bool Debug { get; set; } = false;
+        public bool Debug     { get; set; } = false;
+        public bool LogToFile { get; set; } = false;  // 是否写日志到文件
 
-        // ── 定时调度 ─────────────────────────────────────────────
-        public ScheduleMode ScheduleMode    { get; set; } = ScheduleMode.None;
-        public int          IntervalMinutes { get; set; } = 0;
-        public string       DailyAt         { get; set; }
-        public string       CronExpression  { get; set; }
-        public string       TimeZone        { get; set; }
+        // ── 定时调度（Unity 侧实现，不传给 cfst 命令行）────────────────────
+        public bool   ScheduleEnabled { get; set; } = false;
+        public string CronExpression  { get; set; }
 
         // ── Hosts 更新 ───────────────────────────────────────────
         public string HostsDomains { get; set; }

@@ -88,20 +88,7 @@ namespace CloudflareST.GUI
             Str("-onlyip", string.IsNullOrWhiteSpace(o.OnlyIpFile) ? "onlyip.txt" : o.OnlyIpFile);
             if (o.Debug) Flag("-debug");
 
-            // ── 定时调度 ─────────────────────────────────────────
-            switch (o.ScheduleMode)
-            {
-                case ScheduleMode.Interval:
-                    if (o.IntervalMinutes > 0) Num("-interval", o.IntervalMinutes);
-                    break;
-                case ScheduleMode.Daily:
-                    if (!string.IsNullOrWhiteSpace(o.DailyAt)) Str("-at", o.DailyAt);
-                    break;
-                case ScheduleMode.Cron:
-                    if (!string.IsNullOrWhiteSpace(o.CronExpression)) Str("-cron", o.CronExpression);
-                    break;
-            }
-            if (!string.IsNullOrWhiteSpace(o.TimeZone)) Str("-tz", o.TimeZone);
+            // 定时调度由 Unity 侧 ScheduleManager 负责，不传给 cfst
 
             // ── Hosts 更新 ───────────────────────────────────────
             if (!string.IsNullOrWhiteSpace(o.HostsDomains))

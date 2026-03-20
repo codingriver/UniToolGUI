@@ -5,68 +5,75 @@
     <ui:Label text="定时调度" class="page-title" />
     <ui:VisualElement class="page-divider" />
 
-    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto">
+    <ui:ScrollView mode="Vertical" class="page-scroll" vertical-scroller-visibility="Auto" horizontal-scroller-visibility="Hidden">
 
-        <!-- 调度模式 -->
-        <ui:VisualElement class="group-box">
-            <ui:Label text="调度模式" class="group-title" />
-            <ui:RadioButtonGroup name="sched-mode-group" class="radio-group" value="0">
-                <ui:RadioButton name="radio-sched-none"     label="不启用"              class="radio-item" />
-                <ui:RadioButton name="radio-sched-interval" label="间隔执行 (-interval)" class="radio-item" />
-                <ui:RadioButton name="radio-sched-daily"    label="每日定点 (-at)"        class="radio-item" />
-                <ui:RadioButton name="radio-sched-cron"     label="Cron 表达式 (-cron)"  class="radio-item" />
-            </ui:RadioButtonGroup>
-        </ui:VisualElement>
+        <!-- ══ 配置卡片（启用 + Cron + 语义合并）══ -->
+        <ui:VisualElement class="group-box" style="padding:12px 16px;">
 
-        <!-- 间隔参数 -->
-        <ui:VisualElement name="group-interval" class="group-box">
-            <ui:Label text="间隔参数" class="group-title" />
-            <ui:VisualElement class="form-row">
-                <ui:Label text="间隔分钟数" class="form-label" />
-                <ui:IntegerField name="field-intervalmin" value="60" class="field-int" />
-                <ui:Label text="分钟 (1~10080)" class="field-unit" />
+            <!-- 第一行：标题 + 启用开关 -->
+            <ui:VisualElement style="flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <ui:Label text="自动定时测速" style="font-size:13px;color:#e8eaf0;-unity-font-style:bold;" />
+                <ui:Toggle name="toggle-schedule-enabled" value="false" class="field-toggle" />
+            </ui:VisualElement>
+
+            <!-- 第二行：Cron 输入框 -->
+            <ui:VisualElement style="flex-direction:row;align-items:center;margin-bottom:6px;">
+                <ui:Label text="Cron" style="font-size:11px;color:#5a6480;min-width:36px;margin-right:6px;" />
+                <ui:TextField name="field-cron" placeholder-text="0 */6 * * *" class="field-text" style="flex-grow:1;" />
+            </ui:VisualElement>
+
+            <!-- 第三行：语义 + 错误 + 5段标签 -->
+            <ui:VisualElement style="flex-direction:row;align-items:center;flex-wrap:wrap;padding:5px 8px;background-color:rgba(0,0,0,0.18);border-radius:4px;">
+                <ui:Label name="label-cron-semantic" text="未设置" style="font-size:12px;color:#94a3b8;-unity-font-style:bold;flex-grow:1;" />
+                <ui:Label name="label-cron-error" text="" style="font-size:11px;color:#f87171;" />
+                <!-- 5段只读标签 -->
+                <ui:VisualElement style="flex-direction:row;margin-left:8px;">
+                    <ui:Label name="lbl-seg-min"  text="*" style="font-size:11px;color:#f48120;background-color:rgba(244,129,32,0.10);padding:1px 5px;border-radius:3px;margin-right:3px;" />
+                    <ui:Label name="lbl-seg-hour" text="*" style="font-size:11px;color:#f48120;background-color:rgba(244,129,32,0.10);padding:1px 5px;border-radius:3px;margin-right:3px;" />
+                    <ui:Label name="lbl-seg-day"  text="*" style="font-size:11px;color:#f48120;background-color:rgba(244,129,32,0.10);padding:1px 5px;border-radius:3px;margin-right:3px;" />
+                    <ui:Label name="lbl-seg-mon"  text="*" style="font-size:11px;color:#f48120;background-color:rgba(244,129,32,0.10);padding:1px 5px;border-radius:3px;margin-right:3px;" />
+                    <ui:Label name="lbl-seg-week" text="*" style="font-size:11px;color:#f48120;background-color:rgba(244,129,32,0.10);padding:1px 5px;border-radius:3px;" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- 每日定点 -->
-        <ui:VisualElement name="group-daily" class="group-box">
-            <ui:Label text="定点参数" class="group-title" />
-            <ui:VisualElement class="form-row">
-                <ui:Label text="执行时间" class="form-label" />
-                <ui:TextField name="field-dailyat" class="field-text" placeholder-text="6:00,12:00,18:00" />
-            </ui:VisualElement>
-            <ui:Label text="逗号分隔多个时间点，格式 H:mm 或 HH:mm" class="form-hint" style="margin-left:0;" />
-        </ui:VisualElement>
-
-        <!-- Cron -->
-        <ui:VisualElement name="group-cron" class="group-box">
-            <ui:Label text="Cron 参数" class="group-title" />
-            <ui:VisualElement class="form-row">
-                <ui:Label text="Cron 表达式" class="form-label" />
-                <ui:TextField name="field-cron" class="field-text" placeholder-text="0 */6 * * *" />
-            </ui:VisualElement>
-            <ui:Label text="格式：分 时 日 月 周  示例：0 */6 * * *（每6小时整点）" class="form-hint" style="margin-left:0;" />
-        </ui:VisualElement>
-
-        <!-- 时区 -->
-        <ui:VisualElement name="group-timezone" class="group-box">
-            <ui:Label text="时区设置" class="group-title" />
-            <ui:VisualElement class="form-row">
-                <ui:Label text="时区 (-tz)" class="form-label" />
-                <ui:DropdownField name="dropdown-timezone" class="field-text" />
+        <!-- ══ 快捷模板 ══ -->
+        <ui:VisualElement class="group-box" style="padding:10px 16px;">
+            <ui:Label text="快速选择" class="group-title" style="margin-bottom:8px;" />
+            <ui:VisualElement style="flex-direction:row;flex-wrap:wrap;">
+                <ui:Button name="tpl-every30m" class="btn-tpl" text="每30分" />
+                <ui:Button name="tpl-every1h"  class="btn-tpl" text="每1时" />
+                <ui:Button name="tpl-every2h"  class="btn-tpl" text="每2时" />
+                <ui:Button name="tpl-every6h"  class="btn-tpl" text="每6时" />
+                <ui:Button name="tpl-every12h" class="btn-tpl" text="每12时" />
+                <ui:Button name="tpl-daily2am" class="btn-tpl" text="凌晨2点" />
+                <ui:Button name="tpl-daily8am" class="btn-tpl" text="早上8点" />
+                <ui:Button name="tpl-daily8pm" class="btn-tpl" text="晚上8点" />
+                <ui:Button name="tpl-weekly"   class="btn-tpl" text="周一凌晨" />
+                <ui:Button name="tpl-workday"  class="btn-tpl" text="工作日8点" />
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- 调度预览 -->
-        <ui:VisualElement class="group-box">
-            <ui:Label text="调度预览" class="group-title" />
-            <ui:VisualElement class="form-row">
-                <ui:Label text="下次执行" class="form-label" />
-                <ui:Label name="label-next1" text="-" style="color:#e8eaf0;font-size:12px;" />
+        <!-- ══ 运行状态（紧凑单行）══ -->
+        <ui:VisualElement class="group-box" style="padding:8px 16px;">
+            <ui:Label text="运行状态" class="group-title" style="margin-bottom:6px;" />
+            <ui:VisualElement style="flex-direction:row;flex-wrap:wrap;align-items:center;">
+                <ui:Label text="状态" style="font-size:11px;color:#5a6480;margin-right:4px;" />
+                <ui:Label name="label-sched-status" text="未启用" style="color:#94a3b8;font-size:11px;margin-right:14px;" />
+                <ui:Label text="触发" style="font-size:11px;color:#5a6480;margin-right:4px;" />
+                <ui:Label name="label-run-count" text="0次" style="color:#e8eaf0;font-size:11px;margin-right:14px;" />
+                <ui:Label text="下次" style="font-size:11px;color:#5a6480;margin-right:4px;" />
+                <ui:Label name="label-next1" text="-" style="color:#e8eaf0;font-size:11px;margin-right:14px;" />
+                <ui:Label text="再下次" style="font-size:11px;color:#5a6480;margin-right:4px;" />
+                <ui:Label name="label-next2" text="-" style="color:#e8eaf0;font-size:11px;" />
             </ui:VisualElement>
-            <ui:VisualElement class="form-row">
-                <ui:Label text="再下次" class="form-label" />
-                <ui:Label name="label-next2" text="-" style="color:#e8eaf0;font-size:12px;" />
+        </ui:VisualElement>
+
+        <!-- ══ 操作 ══ -->
+        <ui:VisualElement class="group-box" style="padding:8px 16px;">
+            <ui:VisualElement style="flex-direction:row;flex-wrap:wrap;">
+                <ui:Button name="btn-sched-run-now" text="立即运行" class="btn-sm btn-accent" style="margin-right:8px;" />
+                <ui:Button name="btn-sched-stop"    text="终止调度" class="btn-sm btn-danger" />
             </ui:VisualElement>
         </ui:VisualElement>
 

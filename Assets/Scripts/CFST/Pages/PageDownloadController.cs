@@ -35,6 +35,7 @@ namespace CloudflareST.GUI
             {
                 _opts.DisableDownload = e.newValue;
                 SetParamsEnabled(!e.newValue);
+                UIKit.ToastManager.Info(e.newValue ? "已禁用下载测速" : "已启用下载测速");
             });
 
             _urlField?.RegisterValueChangedCallback(e =>

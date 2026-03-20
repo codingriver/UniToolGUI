@@ -99,6 +99,8 @@
             <ui:Label class="sb-sep">|</ui:Label>
             <ui:Label name="sb-best" text="当前最快: --" class="sb-item" />
             <ui:VisualElement style="flex-grow:1;" />
+            <ui:Label name="sb-next-run" text="" class="sb-item" style="color:#f48120;" />
+            <ui:Label name="sb-next-run-sep" text="" class="sb-sep" />
             <ui:Label class="sb-sep">|</ui:Label>
             <ui:Label name="sb-user-role" text="普通用户" class="sb-item sb-user-role" />
         </ui:VisualElement>

@@ -100,6 +100,10 @@ namespace CloudflareST.GUI
                     _hintDryRun.text = e.newValue
                         ? "测速完成后仅在结果页预览待写入内容，不修改系统 hosts"
                         : "";
+                if (e.newValue)
+                    UIKit.ToastManager.Info("已启用预览模式，不会写入 Hosts");
+                else
+                    UIKit.ToastManager.Warning("预览模式已关闭，将实际写入 Hosts");
             });
 
             _hostsParams?.SetEnabled(false);

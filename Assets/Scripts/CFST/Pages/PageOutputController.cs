@@ -100,7 +100,11 @@ namespace CloudflareST.GUI
         private void OpenOutputDir()
         {
             string path = System.IO.Path.GetFullPath(_opts.OutputFile ?? "result.csv");
-            if (!System.IO.File.Exists(path)) return;
+            if (!System.IO.File.Exists(path))
+            {
+                UIKit.ToastManager.Warning("输出文件尚未生成");
+                return;
+            }
             NativePlatform.Shell.OpenFolder(
                 System.IO.Path.GetDirectoryName(path), path);
         }

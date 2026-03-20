@@ -61,6 +61,8 @@ namespace CloudflareST.GUI
                     _hintAllIp.text = e.newValue
                         ? "⚠ 全量扫描大幅增加扫描量，耗时可能超过10分钟，建议配合IP数量上限使用"
                         : "";
+                if (e.newValue)
+                    UIKit.ToastManager.Warning("已启用全量扫描，耗时可能超过10分钟");
             });
 
             // ── 回填持久化值到界面 ────────────────────────────

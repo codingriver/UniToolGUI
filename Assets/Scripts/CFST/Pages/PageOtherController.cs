@@ -25,7 +25,27 @@ namespace CloudflareST.GUI
             // 移除旧静态 log-label（如果存在）
             root.Q<Label>("log-label")?.RemoveFromHierarchy();
 
-            _debugToggle?.RegisterValueChangedCallback(e => _opts.Debug = e.newValue);
+            _debugToggle?.RegisterValueChangedCallback(e =>
+            {
+                _opts.Debug = e.newValue;
+                ToastManager.Info(e.newValue ? "已启用调试输出" : "已关闭调试输出");
+            });
+
+            // ── 日志写入文件开关 ─────────────────────────────────
+            var logToFileToggle = root.Q<Toggle>("toggle-log-to-file");
+            var logToFileHint   = root.Q<Label>("hint-log-to-file");
+            if (logToFileToggle != null)
+            {
+                logToFileToggle.SetValueWithoutNotify(_opts.LogToFile);
+                UpdateLogToFileHint(logToFileHint, _opts.LogToFile);
+                logToFileToggle.RegisterValueChangedCallback(e =>
+                {
+                    _opts.LogToFile = e.newValue;
+                    UpdateLogToFileHint(logToFileHint, e.newValue);
+                    LogController?.SetLogToFile(e.newValue);
+                    ToastManager.Info(e.newValue ? "日志将写入 cfst_log.txt" : "已停止写入日志文件");
+                });
+            }
 
             root.Q<Button>("btn-clear-log")?.RegisterCallback<ClickEvent>(_ => { /* 日志已移至日志页 */ });
             root.Q<Button>("btn-copy-log") ?.RegisterCallback<ClickEvent>(_ => { /* 日志已移至日志页 */ });
@@ -86,7 +106,10 @@ namespace CloudflareST.GUI
             {
                 trayMinToggle.value = CfstTrayManager.MinimizeToTray;
                 trayMinToggle.RegisterValueChangedCallback(e =>
-                    CfstTrayManager.MinimizeToTray = e.newValue);
+                {
+                    CfstTrayManager.MinimizeToTray = e.newValue;
+                    ToastManager.Info(e.newValue ? "已启用最小化到托盘" : "已关闭最小化到托盘");
+                });
             }
 
             // ── 自动管理员（方案A：注册表 AppCompatFlags） ────────────
@@ -167,6 +190,14 @@ namespace CloudflareST.GUI
         public void AppendLog(string line)
         {
             LogController?.AppendLog(line);
+        }
+
+        private static void UpdateLogToFileHint(Label hint, bool enabled)
+        {
+            if (hint == null) return;
+            hint.text = enabled
+                ? "✓ 日志将追加写入程序目录下的 cfst_log.txt"
+                : "";
         }
 
         private void UpdateAutoAdminHint(Label hint, bool enabled)

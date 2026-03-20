@@ -41,6 +41,8 @@ namespace CloudflareST.GUI
         private Label         _sbElapsed;
         private Label         _sbBest;
         private Label         _sbUserRole;
+        private Label         _sbNextRun;
+        private Label         _sbNextRunSep;
 
         public static readonly CfstOptions Options = new CfstOptions();
         private CfstDllRunner _runner;
@@ -84,7 +86,7 @@ namespace CloudflareST.GUI
             TrayBridge.TrayReady -= RegisterTrayMenuItems;
             AppState.Instance.OnChanged         -= RefreshSidebar;
             TestResult.Instance.OnResultUpdated -= RefreshBadge;
-            if (_btnStart != null) _btnStart.clicked -= StartTest;
+            if (_btnStart != null) _btnStart.clicked -= () => StartTest();
             if (_btnStop  != null) _btnStop.clicked  -= StopTest;
             _runner?.Dispose();
             _runner = null;
@@ -115,6 +117,8 @@ namespace CloudflareST.GUI
             _sbElapsed     = _root.Q<Label>("sb-elapsed");
             _sbBest        = _root.Q<Label>("sb-best");
             _sbUserRole    = _root.Q<Label>("sb-user-role");
+            _sbNextRun     = _root.Q<Label>("sb-next-run");
+            _sbNextRunSep  = _root.Q<Label>("sb-next-run-sep");
             InitUserRoleLabel();
 
             // ── 导航按钮：限定在 nav-list 内查找，避免跨页面误匹配 ──
@@ -167,6 +171,19 @@ namespace CloudflareST.GUI
             if (PageHook  != null) PageHook.LogController  = PageLog;
             // 注入日志控制器到其他设置页面（转发 AppendLog）
             if (PageOther != null) PageOther.LogController = PageLog;
+            // 绑定 ScheduleManager 依赖
+            BindScheduleManager();
+        }
+
+        private void BindScheduleManager()
+        {
+            var mgr = ScheduleManager.Instance;
+            if (mgr == null) return;
+            mgr.StartTestAction  = () => StartTest(fromScheduler: true);
+            mgr.HookController   = PageHook;
+            mgr.LogController    = PageLog;
+            // 调度状态变更时刷新状态栏
+            mgr.OnStateChanged  += RefreshSidebar;
         }
 
         private void BindNav()
@@ -214,7 +231,7 @@ namespace CloudflareST.GUI
 
         private void BindButtons()
         {
-            if (_btnStart != null) _btnStart.clicked += StartTest;
+            if (_btnStart != null) _btnStart.clicked += () => StartTest();
             if (_btnStop  != null) _btnStop.clicked  += StopTest;
         }
 
@@ -223,21 +240,26 @@ namespace CloudflareST.GUI
         private void RegisterTrayMenuItems()
         {
             CfstTrayManager.Instance.Init(
-                onStartTest: StartTest,
+                onStartTest: () => StartTest(),
                 onStopTest:  StopTest,
                 isRunning:   () => AppState.Instance.IsRunning,
                 trayBridge:  GetComponent<TrayBridge>() ?? FindObjectOfType<TrayBridge>()
             );
         }
 
+        private bool _startedByScheduler;
+
         // ── 开始测速 ─────────────────────────────────────────
-        public void StartTest()
+        /// <param name="fromScheduler">true 时跳过前/后钩子（ScheduleManager 已在 RunOnce 中调用）</param>
+        public void StartTest(bool fromScheduler = false)
         {
             if (AppState.Instance.IsRunning) return;
 
-            // ── 前钩子 ───────────────────────────────────────
-            if (PageHook != null && !PageHook.RunPreHook())
+            // ── 前钩子（非调度器调用时执行）─────────────────
+            if (!fromScheduler && PageHook != null && !PageHook.RunPreHook())
                 return;  // 前钩子失败，取消测速
+
+            _startedByScheduler = fromScheduler;
 
             TestResult.Instance.Clear();
             AppState.Instance.Reset();
@@ -295,8 +317,9 @@ namespace CloudflareST.GUI
                     string finMsg = "完成";
                     PageOther?.AppendLog(finMsg);
                     PageLog?.AppendLog("[INFO] " + finMsg);
-                    // ── 后钩子 ────────────────────────────────
-                    PageHook?.RunPostHook(exitCode);
+                    // ── 后钩子（非调度器调用时执行，调度器在 RunOnce 中自行调用）
+                    if (!_startedByScheduler)
+                        PageHook?.RunPostHook(exitCode);
                 });
 
             _runner.OnError += ex =>
@@ -341,6 +364,8 @@ namespace CloudflareST.GUI
         // ── 完成处理 ─────────────────────────────────────────
         private void HandleFinished(int exitCode)
         {
+            // 通知 ScheduleManager 本次测速已结束（供协程等待信号）
+            ScheduleManager.Instance?.NotifyTestFinished?.Invoke(exitCode);
             AppState.Instance.IsRunning  = false;
             AppState.Instance.FinishTime = DateTime.Now;
             AppState.Instance.Elapsed    = DateTime.Now - AppState.Instance.StartTime;
@@ -425,6 +450,16 @@ namespace CloudflareST.GUI
                     : "当前最快: --";
                 _sbBest.text = best;
             }
+
+            // ── 状态栏：下次运行时间 ──────────────────────────
+            var mgr = ScheduleManager.Instance;
+            bool schedEnabled = mgr != null && mgr.IsEnabled && mgr.NextRunAt.HasValue;
+            if (_sbNextRun != null)
+                _sbNextRun.text = schedEnabled
+                    ? "⏰ 下次: " + mgr.NextRunAt.Value.ToString("MM-dd HH:mm:ss")
+                    : "";
+            if (_sbNextRunSep != null)
+                _sbNextRunSep.text = schedEnabled ? "|" : "";
         }
 
         private void RefreshBadge()

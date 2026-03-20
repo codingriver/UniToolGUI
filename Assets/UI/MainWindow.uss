@@ -1,9 +1,6 @@
-/* ══════════════════════════════════════════════════════════
-   MainWindow.uss  — Cloudflare Speed Test GUI
-   主题：深色控制台风格 + 橙色 Cloudflare 强调色
-   ══════════════════════════════════════════════════════════ */
+/* MainWindow.uss ?Cloudflare Speed Test GUI + Cloudflare ? */
 
-/* ── 根容器 ───────────────────────────────────────────────── */
+/* ? */
 .root {
     flex-direction: column;
     flex-grow: 1;
@@ -13,7 +10,7 @@
     color: #e8eaf0;
 }
 
-/* ── 左右分栏区域（不含状态栏）──────────────────────────────── */
+/* */
 .main-area {
     flex-direction: row;
     flex-grow: 1;
@@ -21,9 +18,7 @@
     overflow: hidden;
 }
 
-/* ══════════════════════════════════════════════════════════
-   左侧导航栏
-   ══════════════════════════════════════════════════════════ */
+/* ? */
 .sidebar {
     width: 192px;
     min-width: 192px;
@@ -36,7 +31,7 @@
     overflow: hidden;
 }
 
-/* Logo 区域 */
+/* Logo */
 .logo-area {
     flex-direction: row;
     align-items: center;
@@ -58,7 +53,7 @@
     letter-spacing: 2px;
 }
 
-/* 导航滚动容器 */
+/* */
 .nav-scroll {
     flex-grow: 1;
     padding: 0;
@@ -67,13 +62,13 @@
     padding: 0;
 }
 
-/* 导航列表 */
+/* */
 .nav-list {
     flex-direction: column;
     padding: 4px 8px;
 }
 
-/* 导航菜单项（Button）*/
+/* Navigation menu items */
 .nav-item {
     background-color: transparent;
     border-width: 0;
@@ -99,15 +94,13 @@
 .nav-item--active:hover {
     background-color: rgba(244, 129, 32, 0.20);
 }
-
-/* 分隔线 */
 .nav-divider {
     height: 1px;
     background-color: #252d3d;
     margin: 6px 4px;
 }
 
-/* 结果页菜单项（含角标）*/
+/* Results nav item */
 .nav-item--results {
     flex-direction: row;
     align-items: center;
@@ -130,8 +123,6 @@
 .result-badge--hidden {
     display: none;
 }
-
-/* ── 底部操作区 ───────────────────────────────────────────── */
 .sidebar-bottom {
     flex-direction: column;
     flex-shrink: 0;
@@ -179,7 +170,7 @@
     cursor: arrow;
 }
 
-/* 进度条 */
+/* ?*/
 .progress-area {
     flex-direction: row;
     align-items: center;
@@ -215,9 +206,7 @@
     text-overflow: ellipsis;
 }
 
-/* ══════════════════════════════════════════════════════════
-   右侧内容区
-   ══════════════════════════════════════════════════════════ */
+/* ? */
 .content-area {
     flex-grow: 1;
     flex-direction: column;
@@ -229,7 +218,7 @@
     position: relative;
 }
 
-/* 页面：默认隐藏，激活时显示 */
+/* */
 .page {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -243,7 +232,7 @@
     align-items: stretch;
 }
 
-/* ── 底部状态栏 ───────────────────────────────────────────── */
+/* */
 .statusbar {
     flex-direction: row;
     align-items: center;
@@ -269,11 +258,9 @@
     margin: 0 8px;
 }
 
-/* ══════════════════════════════════════════════════════════
-   公共页面组件样式（复用于所有页面）
-   ══════════════════════════════════════════════════════════ */
+/* */
 
-/* 页面标题 */
+/* */
 .page-title {
     font-size: 18px;
     color: #e8eaf0;
@@ -286,7 +273,7 @@
     margin-bottom: 20px;
 }
 
-/* 表单行 */
+/* ?*/
 .form-row {
     flex-direction: row;
     align-items: center;
@@ -313,7 +300,7 @@
     margin-left: 130px;
 }
 
-/* 分组框 */
+/* ?*/
 .group-box {
     border-width: 1px;
     border-color: #252d3d;
@@ -365,7 +352,7 @@
     white-space: normal;
 }
 
-/* 浏览按钮 */
+/* */
 .btn-browse {
     background-color: #1e2535;
     border-width: 1px;
@@ -486,7 +473,7 @@
     color: #e8eaf0;
 }
 
-/* 通用小按钮 */
+/* ?*/
 .btn-sm {
     background-color: #1e2535;
     border-width: 1px;
@@ -509,7 +496,7 @@
     background-color: rgba(244, 129, 32, 0.22);
 }
 
-/* Info/Warning/Error 提示条 */
+/* Info/Warning/Error ?*/
 .info-bar {
     flex-direction: row;
     align-items: center;
@@ -547,7 +534,7 @@
     margin-right: 8px;
 }
 
-/* 日志控制台 */
+/* ?*/
 .log-console {
     flex-grow: 1;
     background-color: #0a0d13;
@@ -560,7 +547,7 @@
     white-space: normal;
 }
 
-/* 数据表格行 */
+/* ?*/
 .table-header {
     flex-direction: row;
     background-color: #161b24;
@@ -601,7 +588,7 @@
 .col-dc     { width: 60px; }
 .col-region { width: 90px; }
 
-/* 只读路径显示（Mobile 模式，路径由代码写入，不可编辑）*/
+/* obile */
 .field-path-readonly {
     flex-grow: 1;
     font-size: 11px;
@@ -618,7 +605,7 @@
     margin-top: 4px;
 }
 
-/* 空态提示 */
+/* ?*/
 .empty-hint {
     font-size: 13px;
     color: #5a6480;
@@ -627,7 +614,7 @@
     flex-grow: 1;
 }
 
-/* 统计卡片（结果页概况区） */
+/* */
 .stat-card {
     flex-direction: column;
     align-items: center;
@@ -647,10 +634,7 @@
     margin-bottom: 4px;
 }
 
-/* ======================================================
-   ScrollView Scrollbar styles
-   Matches dark console theme.
-   ====================================================== */
+/* ====================================================== ScrollView Scrollbar styles Matches dark console theme. ====================================================== */
 
 /* vertical scroller container */
 .unity-scroll-view .unity-scroller--vertical {
@@ -723,7 +707,7 @@
     overflow: hidden;
 }
 
-/* 全局隐藏水平滚动条 */
+/* ?*/
 .unity-scroll-view .unity-scroller--horizontal {
     display: none;
 }
@@ -734,7 +718,7 @@
     width: 100%;
 }
 
-/* 状态栏用户权限标签 */
+/* */
 .sb-user-role {
     font-size: 11px;
     margin-left: 6px;
@@ -746,7 +730,7 @@
     color: #ffcc44;
 }
 
-/* Toast 轻量提示 */
+/* Toast */
 .toast {
     flex-direction: row;
     align-items: center;
@@ -785,9 +769,7 @@
     white-space: normal;
 }
 
-/* ══════════════════════════════════════════════════════════
-   日志页面 (PageLog)
-   ══════════════════════════════════════════════════════════ */
+/* (PageLog) */
 
 .log-toolbar {
     flex-direction: row;
@@ -833,7 +815,7 @@
     padding: 6px 10px;
 }
 
-/* 日志行 */
+/* ?*/
 .log-line {
     font-size: 12px;
     color: #c8d0e0;
@@ -847,9 +829,7 @@
 .log-line--cmd   { color: #4ab3f4; }
 .log-line--hook  { color: #3ddc84; }
 
-/* ══════════════════════════════════════════════════════════
-   执行钩子页面 (PageHook)
-   ══════════════════════════════════════════════════════════ */
+/* (PageHook) */
 
 .hook-group-header {
     flex-direction: row;
@@ -857,12 +837,7 @@
     margin-bottom: 6px;
 }
 
-/* 隐藏的行（脚本/程序类型切换）*/
-.hook-row--hidden {
-    display: none;
-}
-
-/* 摘要行 */
+.hook-row--hidden { display: none; }
 .hook-summary-row {
     flex-direction: row;
     align-items: center;
@@ -885,7 +860,7 @@
     flex-grow: 1;
 }
 
-/* 执行状态标签变体 */
+/* ?*/
 .hook-status--running {
     color: #f48120;
 }
@@ -894,4 +869,104 @@
 }
 .hook-status--fail {
     color: #ff4d6a;
+}
+
+/* */
+.btn-danger {
+    background-color: rgba(192, 51, 74, 0.15);
+    border-width: 1px;
+    border-color: rgba(192, 51, 74, 0.50);
+    border-radius: 5px;
+    color: #f87171;
+    font-size: 12px;
+    padding: 5px 12px;
+}
+.btn-danger:hover {
+    background-color: rgba(192, 51, 74, 0.30);
+    color: #fca5a5;
+}
+
+/* ?*/
+.btn-tpl {
+    background-color: #1e2535;
+    border-width: 1px;
+    border-color: #303a50;
+    border-radius: 6px;
+    color: #c8d0e0;
+    font-size: 12px;
+    padding: 7px 14px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    min-width: 90px;
+    -unity-text-align: middle-center;
+}
+.btn-tpl:hover {
+    background-color: rgba(244,129,32,0.12);
+    border-color: rgba(244,129,32,0.40);
+    color: #f48120;
+}
+.btn-tpl--active {
+    background-color: rgba(244,129,32,0.18);
+    border-color: #f48120;
+    color: #f48120;
+    -unity-font-style: bold;
+}
+
+/* Toast */
+#toast-container {
+    position: absolute;
+    bottom: 48px;
+    right: 16px;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.toast {
+    flex-direction: row;
+    align-items: center;
+    min-width: 180px;
+    max-width: 360px;
+    padding: 9px 14px;
+    margin-top: 6px;
+    border-radius: 7px;
+    border-width: 1px;
+    background-color: #1a2235;
+    border-color: #2a3550;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+}
+
+.toast--info {
+    border-color: #3b82f6;
+    background-color: #1a2740;
+}
+.toast--success {
+    border-color: #22c55e;
+    background-color: #132a1e;
+}
+.toast--warning {
+    border-color: #f59e0b;
+    background-color: #2a2010;
+}
+.toast--error {
+    border-color: #ef4444;
+    background-color: #2a1010;
+}
+
+.toast__icon {
+    font-size: 14px;
+    margin-right: 8px;
+    -unity-font-style: bold;
+}
+.toast--info    .toast__icon { color: #60a5fa; }
+.toast--success .toast__icon { color: #4ade80; }
+.toast--warning .toast__icon { color: #fbbf24; }
+.toast--error   .toast__icon { color: #f87171; }
+
+.toast__text {
+    font-size: 12px;
+    color: #e2e8f0;
+    flex-grow: 1;
+    white-space: normal;
 }
