@@ -379,6 +379,8 @@ GameObject:
   - component: {fileID: 1665289805}
   - component: {fileID: 1665289804}
   - component: {fileID: 1665289812}
+  - component: {fileID: 1665289814}
+  - component: {fileID: 1665289813}
   m_Layer: 0
   m_Name: CFST
   m_TagString: Untagged
@@ -438,8 +440,8 @@ MonoBehaviour:
   PageOther: {fileID: 1665289808}
   PageAbout: {fileID: 1665289812}
   PageResults: {fileID: 1665289810}
-  PageLog: {fileID: 0}
-  PageHook: {fileID: 0}
+  PageLog: {fileID: 1665289814}
+  PageHook: {fileID: 1665289813}
 --- !u!114 &1665289804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -548,6 +550,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cfecf7f60e27e1429556e4872f5ef3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1665289813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665289800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe1488141e6b8284d9ce003a8e930a02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1665289814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1665289800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73e6e8036f2d31a4ab10827cd1b97553, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1782109576
 GameObject:
   m_ObjectHideFlags: 0
@@ -602,6 +628,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d3e25df7860298248b5a7ce4b5a2d5ef, type: 2}
   targetDocuments: []
   enableLog: 1
+  enablePerformanceLog: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

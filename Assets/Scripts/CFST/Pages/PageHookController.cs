@@ -134,7 +134,7 @@ namespace CloudflareST.GUI
             if (t == null) return;
             string filter = NativePlatform.FileDialog.CreateFilter(
                 "Script files (*.ps1;*.bat;*.sh)", "*.ps1;*.bat;*.sh",
-                "All files (*.*)", "*.*");
+                "所有文件(*.*)", "*.*");
             string initDir = GetInitDir(t.value);
             string path = NativePlatform.FileDialog.OpenFilePanel("Select script file", filter, null);
             if (!string.IsNullOrEmpty(path))
@@ -146,7 +146,7 @@ namespace CloudflareST.GUI
         {
             if (t == null) return;
             string filter = NativePlatform.FileDialog.CreateFilter(
-                "Executable files (*.exe)", "*.exe", "*.*");
+                "Executable files (*.exe)", "*.exe", "所有文件(*.*)", "*.*");
             string initDir = GetInitDir(t.value);
             string path = NativePlatform.FileDialog.OpenFilePanel("Select program", filter, "exe", initDir);
             if (!string.IsNullOrEmpty(path))
