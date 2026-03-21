@@ -188,7 +188,7 @@ public class TrayBridge : MonoBehaviour
             items.AddRange(_extraItems);
         }
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX
         if (AddStartupItem)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
@@ -206,9 +206,20 @@ public class TrayBridge : MonoBehaviour
                     try
                     {
                         if (_menuStartup.Checked)
+                        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
                             WindowsStartup.EnableStartup(WindowsStartup.GetCurrentExePath());
+#elif UNITY_STANDALONE_OSX
+                            var exePath = WindowsStartup.GetCurrentExePath();
+                            if (string.IsNullOrEmpty(exePath))
+                                throw new InvalidOperationException("无法获取 macOS 可执行文件路径");
+                            WindowsStartup.EnableStartup(exePath);
+#endif
+                        }
                         else
+                        {
                             WindowsStartup.DisableStartup();
+                        }
                     }
                     catch (Exception ex)
                     {
