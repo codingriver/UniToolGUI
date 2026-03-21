@@ -68,9 +68,9 @@ namespace CloudflareST.GUI
             SetBool  ("schedenabled", o.ScheduleEnabled);
             SetString("cronexpr",    o.CronExpression);
             SetBool  ("logtofile",   o.LogToFile);
-            SetString("hostsdomains",o.HostsDomains);
-            SetInt   ("hostsiprank", o.HostsIpRank);
-            SetString("hostsentriesjson", o.HostsEntriesJson);
+            SetString("hostsdomains", SerializeHostsDomains(o.HostsDomains));
+            PlayerPrefs.DeleteKey(KEY_PREFIX + "hostsiprank");
+            PlayerPrefs.DeleteKey(KEY_PREFIX + "hostsentriesjson");
             SetString("hostsfile",   o.HostsFile);
             SetBool  ("hostsdryrun", o.HostsDryRun);
             // ── 前钩子 ──
@@ -118,9 +118,7 @@ namespace CloudflareST.GUI
             o.ScheduleEnabled = GetBool  ("schedenabled", false);
             o.CronExpression  = GetString("cronexpr",    null);
             o.LogToFile       = GetBool  ("logtofile",   false);
-            o.HostsDomains    = GetString("hostsdomains",null);
-            o.HostsIpRank     = GetInt   ("hostsiprank", 1);
-            o.HostsEntriesJson= GetString("hostsentriesjson", null);
+            o.HostsDomains    = LoadHostsDomains();
             o.HostsFile       = GetString("hostsfile",   null);
             o.HostsDryRun     = GetBool  ("hostsdryrun", false);
             // ── 前钩子 —— 向后兼容：旧存档迁移 pre_script/pre_program -> pre_path ──
@@ -199,9 +197,7 @@ namespace CloudflareST.GUI
             o.ScheduleEnabled = false;
             o.CronExpression  = null;
             o.LogToFile       = false;
-            o.HostsDomains    = null;
-            o.HostsIpRank     = 1;
-            o.HostsEntriesJson= null;
+            o.HostsDomains    = new List<HostDomainEntry>();
             o.HostsFile       = null;
             o.HostsDryRun     = false;
             // ── 前钩子 ──
@@ -227,40 +223,104 @@ namespace CloudflareST.GUI
         private static void SetBool (string k, bool v)  => PlayerPrefs.SetInt  (KEY_PREFIX + k, v ? 1 : 0);
         private static void SetFloat(string k, float v) => PlayerPrefs.SetFloat(KEY_PREFIX + k, v);
 
-        public static string SerializeHostsEntries(List<(string domain, int rank)> entries)
+        private static string SerializeHostsDomains(List<HostDomainEntry> entries)
         {
             if (entries == null || entries.Count == 0) return null;
+
             var list = new List<HostsEntryDto>();
             foreach (var entry in entries)
             {
-                var domain = entry.domain;
-                var rank = entry.rank;
-                if (string.IsNullOrWhiteSpace(domain)) continue;
-                list.Add(new HostsEntryDto { domain = domain.Trim(), rank = rank < 1 ? 1 : rank });
+                if (entry == null || string.IsNullOrWhiteSpace(entry.Domain)) continue;
+                list.Add(new HostsEntryDto
+                {
+                    domain = entry.Domain.Trim(),
+                    rank = entry.IpRank < 1 ? 1 : entry.IpRank
+                });
             }
 
             if (list.Count == 0) return null;
             var wrapper = new HostsEntriesWrapper { items = list.ToArray() };
-            var wrappedJson = JsonUtility.ToJson(wrapper);
-            return UnwrapJsonArray(wrappedJson);
+            return JsonUtility.ToJson(wrapper);
         }
 
-        public static List<(string domain, int rank)> DeserializeHostsEntries(string json)
+        private static List<HostDomainEntry> DeserializeHostsDomains(string json)
         {
-            var list = new List<(string domain, int rank)>();
+            var list = new List<HostDomainEntry>();
             if (string.IsNullOrWhiteSpace(json)) return list;
+
             try
             {
-                var wrapper = JsonUtility.FromJson<HostsEntriesWrapper>(WrapJsonArray(json));
+                var wrapper = JsonUtility.FromJson<HostsEntriesWrapper>(json);
                 var items = wrapper?.items;
                 if (items == null) return list;
+
                 foreach (var item in items)
                 {
                     if (item == null || string.IsNullOrWhiteSpace(item.domain)) continue;
-                    list.Add((item.domain.Trim(), item.rank < 1 ? 1 : item.rank));
+                    list.Add(new HostDomainEntry
+                    {
+                        Domain = item.domain.Trim(),
+                        IpRank = item.rank < 1 ? 1 : item.rank
+                    });
                 }
             }
             catch { }
+
+            return list;
+        }
+
+        private static List<HostDomainEntry> LoadHostsDomains()
+        {
+            var storedJson = GetString("hostsdomains", null);
+            var hostsDomains = DeserializeHostsDomains(storedJson);
+            if (hostsDomains.Count > 0)
+                return hostsDomains;
+
+            var legacyEntries = DeserializeLegacyHostsEntries(GetString("hostsentriesjson", null));
+            if (legacyEntries.Count > 0)
+                return legacyEntries;
+
+            if (!string.IsNullOrWhiteSpace(storedJson) && !storedJson.TrimStart().StartsWith("{"))
+            {
+                var legacyRank = GetInt("hostsiprank", 1);
+                foreach (var domain in storedJson.Split(','))
+                {
+                    var trimmed = domain.Trim();
+                    if (string.IsNullOrEmpty(trimmed)) continue;
+                    hostsDomains.Add(new HostDomainEntry
+                    {
+                        Domain = trimmed,
+                        IpRank = legacyRank < 1 ? 1 : legacyRank
+                    });
+                }
+            }
+
+            return hostsDomains;
+        }
+
+        private static List<HostDomainEntry> DeserializeLegacyHostsEntries(string json)
+        {
+            var list = new List<HostDomainEntry>();
+            if (string.IsNullOrWhiteSpace(json)) return list;
+
+            try
+            {
+                var wrapper = JsonUtility.FromJson<HostsEntriesWrapper>(WrapLegacyJsonArray(json));
+                var items = wrapper?.items;
+                if (items == null) return list;
+
+                foreach (var item in items)
+                {
+                    if (item == null || string.IsNullOrWhiteSpace(item.domain)) continue;
+                    list.Add(new HostDomainEntry
+                    {
+                        Domain = item.domain.Trim(),
+                        IpRank = item.rank < 1 ? 1 : item.rank
+                    });
+                }
+            }
+            catch { }
+
             return list;
         }
 
@@ -270,24 +330,9 @@ namespace CloudflareST.GUI
             public HostsEntryDto[] items;
         }
 
-        private static string WrapJsonArray(string json)
+        private static string WrapLegacyJsonArray(string json)
         {
             return "{\"items\":" + json + "}";
-        }
-
-        private static string UnwrapJsonArray(string wrappedJson)
-        {
-            if (string.IsNullOrEmpty(wrappedJson)) return null;
-
-            const string prefix = "{\"items\":";
-            const string suffix = "}";
-            if (!wrappedJson.StartsWith(prefix, StringComparison.Ordinal) ||
-                !wrappedJson.EndsWith(suffix, StringComparison.Ordinal))
-            {
-                return wrappedJson;
-            }
-
-            return wrappedJson.Substring(prefix.Length, wrappedJson.Length - prefix.Length - suffix.Length);
         }
 
         private static string GetString(string k, string def) =>

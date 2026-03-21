@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIKit;
@@ -348,9 +349,11 @@ namespace CloudflareST.GUI
             PageLog?.AppendLog("[CMD] " + cfgSummary);
 
             // Hosts 参数详细日志（避免只看到数量）
-            if (!string.IsNullOrWhiteSpace(Options.HostsDomains))
+            if (Options.HostsDomains != null && Options.HostsDomains.Count > 0)
             {
-                string hostDomains = Options.HostsDomains.Trim();
+                string hostDomains = string.Join(", ", Options.HostsDomains
+                    .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Domain))
+                    .Select(x => $"{x.Domain.Trim()}(rank={Mathf.Max(1, x.IpRank)})"));
                 string hostFile = string.IsNullOrWhiteSpace(Options.HostsFile)
                     ? "(default system hosts)"
                     : Options.HostsFile.Trim();

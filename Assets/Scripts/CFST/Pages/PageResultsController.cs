@@ -361,7 +361,7 @@ namespace CloudflareST.GUI
         private void RefreshHostsPreview()
         {
             var r = TestResult.Instance;
-            bool hostsEnabled = !string.IsNullOrEmpty(_opts.HostsDomains);
+            bool hostsEnabled = _opts.HostsDomains != null && _opts.HostsDomains.Count > 0;
 
             if (_hostsPreviewArea == null) return;
             _hostsPreviewArea.style.display = hostsEnabled ? DisplayStyle.Flex : DisplayStyle.None;

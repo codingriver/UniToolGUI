@@ -2,6 +2,7 @@
 // CfstOptions.cs  —  CloudflareSpeedTest 命令行参数数据结构
 // ============================================================
 using System;
+using System.Collections.Generic;
 
 namespace CloudflareST.GUI
 {
@@ -14,6 +15,13 @@ namespace CloudflareST.GUI
         TcPing,
         /// <summary>HTTPing (-httping)</summary>
         Httping,
+    }
+
+    [Serializable]
+    public class HostDomainEntry
+    {
+        public string Domain { get; set; }
+        public int IpRank { get; set; } = 1;
     }
 
     /// <summary>
@@ -62,9 +70,7 @@ namespace CloudflareST.GUI
         public string CronExpression  { get; set; }
 
         // ── Hosts 更新 ───────────────────────────────────────────
-        public string HostsDomains { get; set; }
-        public int    HostsIpRank  { get; set; } = 1;
-        public string HostsEntriesJson { get; set; }
+        public List<HostDomainEntry> HostsDomains { get; set; } = new List<HostDomainEntry>();
         public string HostsFile    { get; set; }
         public bool   HostsDryRun  { get; set; } = false;
 

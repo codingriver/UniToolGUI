@@ -20,8 +20,7 @@ namespace CloudflareST.GUI
         private Toggle        _dryRunToggle;
         private Label         _hintDryRun;
 
-        // (domain, ipRank) pairs bound to CfstOptions.HostEntries via CfstConfigBuilder
-        private readonly List<(string domain, int rank)> _entries = new List<(string, int)>();
+        private readonly List<HostDomainEntry> _entries = new List<HostDomainEntry>();
 
         public void Init(VisualElement root, CfstOptions opts)
         {
@@ -42,7 +41,6 @@ namespace CloudflareST.GUI
             root.Q<Button>("btn-browse-hosts")?.RegisterCallback<ClickEvent>(_ => BrowseHostsFile());
             root.Q<Button>("btn-add-entry")   ?.RegisterCallback<ClickEvent>(_ => AddEntry("", 1));
 
-            // ── 管理员权限检测（红/绿提示条） ───────────────────
             bool isAdmin = false;
             try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
 
@@ -52,7 +50,6 @@ namespace CloudflareST.GUI
 
             if (isAdmin)
             {
-                // 绿色：已是管理员
                 _permInfoBar?.RemoveFromClassList("info-bar--warning");
                 _permInfoBar?.AddToClassList("info-bar--success");
                 if (permIcon   != null) permIcon.text  = "✓";
@@ -61,7 +58,6 @@ namespace CloudflareST.GUI
             }
             else
             {
-                // 红色：非管理员
                 _permInfoBar?.RemoveFromClassList("info-bar--warning");
                 _permInfoBar?.AddToClassList("info-bar--error");
                 if (permIcon   != null) permIcon.text  = "✕";
@@ -83,8 +79,16 @@ namespace CloudflareST.GUI
             _enableToggle?.RegisterValueChangedCallback(e =>
             {
                 _hostsParams?.SetEnabled(e.newValue);
-                if (!e.newValue) _entries.Clear();
-                RebuildEntriesFromOpts();
+                if (!e.newValue)
+                {
+                    _entries.Clear();
+                    FlushToOpts();
+                    RebuildRows();
+                }
+                else
+                {
+                    RebuildEntriesFromOpts();
+                }
             });
 
             _hostsFileField?.RegisterValueChangedCallback(e =>
@@ -108,8 +112,6 @@ namespace CloudflareST.GUI
 
             _hostsParams?.SetEnabled(false);
 
-            // ── 回填持久化值到界面 ────────────────────────────
-            // Hosts 文件路径：空值时显示系统默认路径
             string defaultHostsPath;
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             defaultHostsPath = @"C:\Windows\System32\drivers\etc\hosts";
@@ -123,7 +125,7 @@ namespace CloudflareST.GUI
                 _dryRunToggle.SetValueWithoutNotify(_opts.HostsDryRun);
             if (_enableToggle != null)
             {
-                bool enabled = !string.IsNullOrEmpty(_opts.HostsDomains);
+                bool enabled = _opts.HostsDomains != null && _opts.HostsDomains.Count > 0;
                 _enableToggle.SetValueWithoutNotify(enabled);
                 _hostsParams?.SetEnabled(enabled);
                 if (enabled) RebuildEntriesFromOpts();
@@ -132,10 +134,13 @@ namespace CloudflareST.GUI
             RefreshEmptyHint();
         }
 
-        // ── 添加一条条目 ──────────────────────────────────────
         private void AddEntry(string domain, int rank)
         {
-            _entries.Add((domain, rank));
+            _entries.Add(new HostDomainEntry
+            {
+                Domain = domain,
+                IpRank = rank < 1 ? 1 : rank
+            });
             int idx = _entries.Count - 1;
             var row = BuildEntryRow(idx, domain, rank);
             _entriesList?.Add(row);
@@ -150,14 +155,12 @@ namespace CloudflareST.GUI
             row.style.flexDirection = FlexDirection.Column;
             row.style.marginBottom  = 8;
 
-            // ── 参数提示（条目框内，域名标题下方） ──────────────
             var hint = new Label("支持通配符域名（如 *.example.com）或普通域名（如 www.example.com）");
             hint.style.fontSize    = 11;
             hint.style.color       = new UnityEngine.UIElements.StyleColor(new UnityEngine.Color(0.35f, 0.55f, 0.65f));
             hint.style.marginBottom = 3;
             hint.style.whiteSpace  = WhiteSpace.Normal;
 
-            // ── 输入行 ────────────────────────────────────────
             var inputRow = new VisualElement();
             inputRow.style.flexDirection = FlexDirection.Row;
             inputRow.style.alignItems    = Align.Center;
@@ -169,7 +172,7 @@ namespace CloudflareST.GUI
             domainField.RegisterValueChangedCallback(e =>
             {
                 if (idx < _entries.Count)
-                    _entries[idx] = (e.newValue.Trim(), _entries[idx].rank);
+                    _entries[idx].Domain = e.newValue.Trim();
                 FlushToOpts();
             });
 
@@ -181,7 +184,7 @@ namespace CloudflareST.GUI
             rankField.RegisterValueChangedCallback(e =>
             {
                 if (idx < _entries.Count)
-                    _entries[idx] = (_entries[idx].domain, e.newValue < 1 ? 1 : e.newValue);
+                    _entries[idx].IpRank = e.newValue < 1 ? 1 : e.newValue;
                 FlushToOpts();
             });
 
@@ -206,7 +209,6 @@ namespace CloudflareST.GUI
             if (idx < _entries.Count)
                 _entries.RemoveAt(idx);
             row.RemoveFromHierarchy();
-            // Rebuild remaining rows so indices stay correct
             RebuildRows();
             RefreshEmptyHint();
             FlushToOpts();
@@ -217,8 +219,8 @@ namespace CloudflareST.GUI
             _entriesList?.Clear();
             for (int i = 0; i < _entries.Count; i++)
             {
-                var (domain, rank) = _entries[i];
-                _entriesList?.Add(BuildEntryRow(i, domain, rank));
+                var entry = _entries[i];
+                _entriesList?.Add(BuildEntryRow(i, entry.Domain, entry.IpRank));
             }
         }
 
@@ -227,23 +229,12 @@ namespace CloudflareST.GUI
             _entries.Clear();
             _entriesList?.Clear();
 
-            var restored = SettingsStorage.DeserializeHostsEntries(_opts.HostsEntriesJson);
-            if (restored.Count > 0)
+            if (_opts.HostsDomains != null)
             {
-                foreach (var (domain, rank) in restored)
-                    AddEntry(domain, rank);
-                RefreshEmptyHint();
-                return;
-            }
-
-            // Fallback: parse existing HostsDomains back into entries (comma-separated domains, single rank)
-            if (!string.IsNullOrWhiteSpace(_opts.HostsDomains))
-            {
-                foreach (var d in _opts.HostsDomains.Split(','))
+                foreach (var entry in _opts.HostsDomains)
                 {
-                    var trimmed = d.Trim();
-                    if (!string.IsNullOrEmpty(trimmed))
-                        AddEntry(trimmed, _opts.HostsIpRank);
+                    if (entry == null || string.IsNullOrWhiteSpace(entry.Domain)) continue;
+                    AddEntry(entry.Domain, entry.IpRank);
                 }
             }
             RefreshEmptyHint();
@@ -251,17 +242,17 @@ namespace CloudflareST.GUI
 
         private void FlushToOpts()
         {
-            // Build HostsDomains as comma-separated list
-            var domains = new System.Collections.Generic.List<string>();
-            foreach (var (domain, _) in _entries)
-                if (!string.IsNullOrWhiteSpace(domain))
-                    domains.Add(domain);
-            _opts.HostsDomains = domains.Count > 0
-                ? string.Join(",", domains)
-                : null;
-
-            _opts.HostsEntriesJson = SettingsStorage.SerializeHostsEntries(_entries);
-            _opts.HostsIpRank = _entries.Count > 0 ? (_entries[0].rank < 1 ? 1 : _entries[0].rank) : 1;
+            var entries = new List<HostDomainEntry>();
+            foreach (var entry in _entries)
+            {
+                if (entry == null || string.IsNullOrWhiteSpace(entry.Domain)) continue;
+                entries.Add(new HostDomainEntry
+                {
+                    Domain = entry.Domain.Trim(),
+                    IpRank = entry.IpRank < 1 ? 1 : entry.IpRank
+                });
+            }
+            _opts.HostsDomains = entries;
         }
 
         private void RefreshEmptyHint()
@@ -271,7 +262,6 @@ namespace CloudflareST.GUI
                 (_entries.Count == 0) ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        // ── 浏览 / 验证 ───────────────────────────────────────
         private void BrowseHostsFile()
         {
             string filter = NativePlatform.FileDialog.CreateFilter("所有文件(*.*)", "*.*");

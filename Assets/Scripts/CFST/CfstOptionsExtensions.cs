@@ -2,6 +2,7 @@
 // CfstOptionsExtensions.cs  —  CfstOptions 转命令行参数
 // ============================================================
 using System;
+using System.Linq;
 using System.Text;
 
 namespace CloudflareST.GUI
@@ -91,9 +92,13 @@ namespace CloudflareST.GUI
             // 定时调度由 Unity 侧 ScheduleManager 负责，不传给 cfst
 
             // ── Hosts 更新 ───────────────────────────────────────
-            if (!string.IsNullOrWhiteSpace(o.HostsDomains))
+            var hostDomains = o.HostsDomains?
+                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Domain))
+                .Select(x => x.Domain.Trim())
+                .ToArray();
+            if (hostDomains != null && hostDomains.Length > 0)
             {
-                Str("-host", o.HostsDomains);
+                Str("-host", string.Join(",", hostDomains));
                 if (!string.IsNullOrWhiteSpace(o.HostsFile))     Str("-hosts-file", o.HostsFile);
                 if (o.HostsDryRun)                               Flag("-hosts-dry-run");
             }
