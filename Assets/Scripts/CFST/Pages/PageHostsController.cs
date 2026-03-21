@@ -226,7 +226,17 @@ namespace CloudflareST.GUI
         {
             _entries.Clear();
             _entriesList?.Clear();
-            // Parse existing HostsDomains back into entries (comma-separated domains, single rank)
+
+            var restored = SettingsStorage.DeserializeHostsEntries(_opts.HostsEntriesJson);
+            if (restored.Count > 0)
+            {
+                foreach (var (domain, rank) in restored)
+                    AddEntry(domain, rank);
+                RefreshEmptyHint();
+                return;
+            }
+
+            // Fallback: parse existing HostsDomains back into entries (comma-separated domains, single rank)
             if (!string.IsNullOrWhiteSpace(_opts.HostsDomains))
             {
                 foreach (var d in _opts.HostsDomains.Split(','))
@@ -249,8 +259,9 @@ namespace CloudflareST.GUI
             _opts.HostsDomains = domains.Count > 0
                 ? string.Join(",", domains)
                 : null;
-            // Use rank from first entry for backward compat; CfstConfigBuilder handles per-entry
-            _opts.HostsIpRank = _entries.Count > 0 ? _entries[0].rank : 1;
+
+            _opts.HostsEntriesJson = SettingsStorage.SerializeHostsEntries(_entries);
+            _opts.HostsIpRank = _entries.Count > 0 ? (_entries[0].rank < 1 ? 1 : _entries[0].rank) : 1;
         }
 
         private void RefreshEmptyHint()

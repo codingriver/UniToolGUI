@@ -32,6 +32,7 @@ namespace CloudflareST.GUI
 
         private Button        _btnStart;
         private Button        _btnStop;
+        private readonly Action[] _navClickHandlers = new Action[PAGE_COUNT];
         private VisualElement _progressFill;
         private Label         _progressPct;
         private Label         _sidebarStatus;
@@ -43,6 +44,10 @@ namespace CloudflareST.GUI
         private Label         _sbUserRole;
         private Label         _sbNextRun;
         private Label         _sbNextRunSep;
+
+        private bool _navBound;
+        private bool _buttonsBound;
+        private bool _scheduleManagerBound;
 
         public static readonly CfstOptions Options = new CfstOptions();
         private CfstDllRunner _runner;
@@ -69,6 +74,8 @@ namespace CloudflareST.GUI
 
             // 订阅重置事件
             if (PageOther != null)
+                PageOther.OnSettingsReset -= OnSettingsReset;
+            if (PageOther != null)
                 PageOther.OnSettingsReset += OnSettingsReset;
 
             TrayBridge.TrayReady += RegisterTrayMenuItems;
@@ -86,8 +93,9 @@ namespace CloudflareST.GUI
             TrayBridge.TrayReady -= RegisterTrayMenuItems;
             AppState.Instance.OnChanged         -= RefreshSidebar;
             TestResult.Instance.OnResultUpdated -= RefreshBadge;
-            if (_btnStart != null) _btnStart.clicked -= () => StartTest();
-            if (_btnStop  != null) _btnStop.clicked  -= StopTest;
+            UnbindButtons();
+            UnbindNav();
+            UnbindScheduleManager();
             _runner?.Dispose();
             _runner = null;
         }
@@ -179,15 +187,31 @@ namespace CloudflareST.GUI
         {
             var mgr = ScheduleManager.Instance;
             if (mgr == null) return;
+            if (_scheduleManagerBound)
+            {
+                mgr.OnStateChanged -= RefreshSidebar;
+            }
             mgr.StartTestAction  = () => StartTest(fromScheduler: true);
             mgr.HookController   = PageHook;
             mgr.LogController    = PageLog;
             // 调度状态变更时刷新状态栏
             mgr.OnStateChanged  += RefreshSidebar;
+            _scheduleManagerBound = true;
+        }
+
+        private void UnbindScheduleManager()
+        {
+            var mgr = ScheduleManager.Instance;
+            if (mgr != null)
+            {
+                mgr.OnStateChanged -= RefreshSidebar;
+            }
+            _scheduleManagerBound = false;
         }
 
         private void BindNav()
         {
+            if (_navBound) return;
             for (int i = 0; i < PAGE_COUNT; i++)
             {
                 int idx = i;
@@ -197,14 +221,22 @@ namespace CloudflareST.GUI
                     continue;
                 }
 
-                // PointerUpEvent fires reliably even inside a ScrollView
-                _navBtns[i].RegisterCallback<PointerUpEvent>(evt =>
-                {
-                    UnityEngine.Debug.Log("[NAV] PointerUp idx=" + idx);
-                    NavigateTo(idx);
-                    evt.StopImmediatePropagation();
-                }, TrickleDown.NoTrickleDown);
+                _navClickHandlers[i] = () => OnNavClicked(idx);
+                _navBtns[i].clicked += _navClickHandlers[i];
             }
+            _navBound = true;
+        }
+
+        private void UnbindNav()
+        {
+            if (!_navBound || _navBtns == null) return;
+            for (int i = 0; i < PAGE_COUNT; i++)
+            {
+                if (_navBtns[i] == null || _navClickHandlers[i] == null) continue;
+                _navBtns[i].clicked -= _navClickHandlers[i];
+                _navClickHandlers[i] = null;
+            }
+            _navBound = false;
         }
         public void NavigateToResults() => NavigateTo(PAGE_RESULTS);
         public void NavigateTo(int idx)
@@ -231,8 +263,34 @@ namespace CloudflareST.GUI
 
         private void BindButtons()
         {
-            if (_btnStart != null) _btnStart.clicked += () => StartTest();
-            if (_btnStop  != null) _btnStop.clicked  += StopTest;
+            if (_buttonsBound) return;
+            if (_btnStart != null) _btnStart.clicked += OnStartClicked;
+            if (_btnStop  != null) _btnStop.clicked  += OnStopClicked;
+            _buttonsBound = true;
+        }
+
+        private void UnbindButtons()
+        {
+            if (!_buttonsBound) return;
+            if (_btnStart != null) _btnStart.clicked -= OnStartClicked;
+            if (_btnStop  != null) _btnStop.clicked  -= OnStopClicked;
+            _buttonsBound = false;
+        }
+
+        private void OnStartClicked()
+        {
+            StartTest();
+        }
+
+        private void OnStopClicked()
+        {
+            StopTest();
+        }
+
+        private void OnNavClicked(int idx)
+        {
+            UnityEngine.Debug.Log("[NAV] Click idx=" + idx);
+            NavigateTo(idx);
         }
 
         // ── 托盘业务菜单项注册 ────────────────────────────────

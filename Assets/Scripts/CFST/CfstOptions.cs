@@ -64,6 +64,7 @@ namespace CloudflareST.GUI
         // ── Hosts 更新 ───────────────────────────────────────────
         public string HostsDomains { get; set; }
         public int    HostsIpRank  { get; set; } = 1;
+        public string HostsEntriesJson { get; set; }
         public string HostsFile    { get; set; }
         public bool   HostsDryRun  { get; set; } = false;
 

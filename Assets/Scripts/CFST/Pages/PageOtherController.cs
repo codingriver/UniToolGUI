@@ -10,174 +10,108 @@ namespace CloudflareST.GUI
         private CfstOptions   _opts;
 
         private Toggle        _debugToggle;
+        private Toggle        _logToFileToggle;
+        private Label         _logToFileHint;
+        private Toggle        _trayMinToggle;
+        private Toggle        _autoAdminToggle;
+        private Label         _autoAdminHint;
+        private Button        _btnClearLog;
+        private Button        _btnCopyLog;
+        private Button        _btnResetDefaults;
+        private Button        _btnSwitchRole;
 
         // 开机自启 Toggle 引用，供事件回调刷新
         private Toggle _startupToggle;
         private Label  _startupHint;
+        private bool   _isAdmin;
+
+        private bool _eventsBound;
 
         public void Init(VisualElement root, CfstOptions opts)
         {
             _root = root;
             _opts = opts;
 
-            _debugToggle  = root.Q<Toggle>("toggle-debug");
+            _debugToggle   = root.Q<Toggle>("toggle-debug");
+            _logToFileToggle = root.Q<Toggle>("toggle-log-to-file");
+            _logToFileHint   = root.Q<Label>("hint-log-to-file");
+            _btnClearLog     = root.Q<Button>("btn-clear-log");
+            _btnCopyLog      = root.Q<Button>("btn-copy-log");
+            _btnResetDefaults = root.Q<Button>("btn-reset-defaults");
+            _startupToggle   = root.Q<Toggle>("toggle-startup");
+            _startupHint     = root.Q<Label>("hint-startup");
+            _trayMinToggle   = root.Q<Toggle>("toggle-tray-minimize");
+            _autoAdminToggle = root.Q<Toggle>("toggle-auto-admin");
+            _autoAdminHint   = root.Q<Label>("hint-auto-admin");
+            _btnSwitchRole   = root.Q<Button>("btn-switch-role");
 
             // 移除旧静态 log-label（如果存在）
             root.Q<Label>("log-label")?.RemoveFromHierarchy();
 
-            _debugToggle?.RegisterValueChangedCallback(e =>
-            {
-                _opts.Debug = e.newValue;
-                ToastManager.Info(e.newValue ? "已启用调试输出" : "已关闭调试输出");
-            });
+            // 重置后会再次 Init；先解绑旧事件，避免重复注册导致多次触发
+            UnbindEvents();
+
+            _debugToggle?.RegisterValueChangedCallback(OnDebugToggleChanged);
 
             // ── 日志写入文件开关 ─────────────────────────────────
-            var logToFileToggle = root.Q<Toggle>("toggle-log-to-file");
-            var logToFileHint   = root.Q<Label>("hint-log-to-file");
-            if (logToFileToggle != null)
+            if (_logToFileToggle != null)
             {
-                logToFileToggle.SetValueWithoutNotify(_opts.LogToFile);
-                UpdateLogToFileHint(logToFileHint, _opts.LogToFile);
-                logToFileToggle.RegisterValueChangedCallback(e =>
-                {
-                    _opts.LogToFile = e.newValue;
-                    UpdateLogToFileHint(logToFileHint, e.newValue);
-                    LogController?.SetLogToFile(e.newValue);
-                    ToastManager.Info(e.newValue ? "日志将写入 cfst_log.txt" : "已停止写入日志文件");
-                });
+                _logToFileToggle.SetValueWithoutNotify(_opts.LogToFile);
+                UpdateLogToFileHint(_logToFileHint, _opts.LogToFile);
+                _logToFileToggle.RegisterValueChangedCallback(OnLogToFileToggleChanged);
             }
 
-            root.Q<Button>("btn-clear-log")?.RegisterCallback<ClickEvent>(_ => { /* 日志已移至日志页 */ });
-            root.Q<Button>("btn-copy-log") ?.RegisterCallback<ClickEvent>(_ => { /* 日志已移至日志页 */ });
+            _btnClearLog?.RegisterCallback<ClickEvent>(OnClearLogClicked);
+            _btnCopyLog ?.RegisterCallback<ClickEvent>(OnCopyLogClicked);
 
             // ── 重置默认参数 ──────────────────────────────────────
-            root.Q<Button>("btn-reset-defaults")?.RegisterCallback<ClickEvent>(_ => OnResetDefaults());
+            _btnResetDefaults?.RegisterCallback<ClickEvent>(OnResetDefaultsClicked);
 
             // ── 开机自启 ─────────────────────────────────────────
-            _startupToggle = root.Q<Toggle>("toggle-startup");
-            _startupHint   = root.Q<Label>("hint-startup");
-            var startupToggle = _startupToggle;
-            var hintStartup   = _startupHint;
-            if (startupToggle != null)
+            if (_startupToggle != null)
             {
                 bool startupEnabled = false;
                 try { startupEnabled = WindowsStartup.IsStartupEnabled(); }
                 catch (System.Exception ex) { Debug.LogWarning("[Startup] IsStartupEnabled 失败: " + ex.Message); }
-                startupToggle.value = startupEnabled;
-                UpdateStartupHint(hintStartup, startupToggle.value);
+                _startupToggle.SetValueWithoutNotify(startupEnabled);
+                UpdateStartupHint(_startupHint, _startupToggle.value);
 
-                startupToggle.RegisterValueChangedCallback(e =>
-                {
-                    bool ok = false;
-                    try
-                    {
-                        string exePath = WindowsStartup.GetCurrentExePath();
-                        ok = e.newValue
-                            ? WindowsStartup.EnableStartup(exePath)
-                            : WindowsStartup.DisableStartup();
-                    }
-                    catch (System.Exception ex)
-                    {
-                        Debug.LogWarning("[Startup] 切换失败: " + ex.Message);
-                        ok = false;
-                    }
-
-                    if (!ok)
-                    {
-                        startupToggle.SetValueWithoutNotify(!e.newValue);
-                        AppendLog("[WARN] 开机自启设置失败，请检查权限");
-                        ToastManager.Error("开机自启设置失败，请检查权限");
-                    }
-                    else
-                    {
-                        AppendLog(e.newValue ? "[INFO] 已启用开机自启" : "[INFO] 已禁用开机自启");
-                        ToastManager.Success(e.newValue ? "已启用开机自启" : "已禁用开机自启");
-                    }
-                    UpdateStartupHint(hintStartup, startupToggle.value);
-                });
+                _startupToggle.RegisterValueChangedCallback(OnStartupToggleChanged);
 
                 // 订阅全局事件：托盘菜单改变开机自启时同步刷新此 Toggle
+                WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
                 WindowsStartup.OnStartupChanged += OnStartupChangedExternal;
             }
 
             // ── 最小化到托盘开关 ──────────────────────────────────
-            var trayMinToggle = root.Q<Toggle>("toggle-tray-minimize");
-            if (trayMinToggle != null)
+            if (_trayMinToggle != null)
             {
-                trayMinToggle.value = CfstTrayManager.MinimizeToTray;
-                trayMinToggle.RegisterValueChangedCallback(e =>
-                {
-                    CfstTrayManager.MinimizeToTray = e.newValue;
-                    ToastManager.Info(e.newValue ? "已启用最小化到托盘" : "已关闭最小化到托盘");
-                });
+                _trayMinToggle.SetValueWithoutNotify(CfstTrayManager.MinimizeToTray);
+                _trayMinToggle.RegisterValueChangedCallback(OnTrayMinToggleChanged);
             }
 
             // ── 自动管理员（方案A：注册表 AppCompatFlags） ────────────
-            var autoAdminToggle = root.Q<Toggle>("toggle-auto-admin");
-            var hintAutoAdmin   = root.Q<Label>("hint-auto-admin");
-            if (autoAdminToggle != null)
+            if (_autoAdminToggle != null)
             {
-                autoAdminToggle.SetValueWithoutNotify(WindowsAdminAutoElevate.IsAutoAdminEnabled());
-                UpdateAutoAdminHint(hintAutoAdmin, autoAdminToggle.value);
-                autoAdminToggle.RegisterValueChangedCallback(e =>
-                {
-                    bool ok = e.newValue
-                        ? WindowsAdminAutoElevate.EnableAutoAdmin()
-                        : WindowsAdminAutoElevate.DisableAutoAdmin();
-                    if (ok)
-                    {
-                        ToastManager.Success(e.newValue
-                            ? "已设置：下次启动将自动请求管理员权限"
-                            : "已取消：下次启动将以普通权限运行");
-                    }
-                    else
-                    {
-                        autoAdminToggle.SetValueWithoutNotify(!e.newValue);
-                        ToastManager.Error("注册表写入失败，设置未生效");
-                    }
-                    UpdateAutoAdminHint(hintAutoAdmin, autoAdminToggle.value);
-                });
+                _autoAdminToggle.SetValueWithoutNotify(WindowsAdminAutoElevate.IsAutoAdminEnabled());
+                UpdateAutoAdminHint(_autoAdminHint, _autoAdminToggle.value);
+                _autoAdminToggle.RegisterValueChangedCallback(OnAutoAdminToggleChanged);
             }
 
+            _eventsBound = true;
+
             // ── 管理员/普通用户切换按钮 ───────────────────────────────
-            bool isAdmin = false;
-            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
-            var labelRole  = root.Q<Label>("label-current-role");
-            var btnSwitch  = root.Q<Button>("btn-switch-role");
+            _isAdmin = false;
+            try { _isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            var labelRole = root.Q<Label>("label-current-role");
             if (labelRole != null)
-                labelRole.text = isAdmin
+                labelRole.text = _isAdmin
                     ? "当前以管理员身份运行"
                     : "当前以普通用户身份运行";
-            if (btnSwitch != null)
+            if (_btnSwitchRole != null)
             {
-                btnSwitch.text = isAdmin ? "以普通用户重启" : "以管理员重启";
-                btnSwitch.RegisterCallback<ClickEvent>(_ =>
-                {
-                    if (isAdmin)
-                    {
-                        // 以普通用户重启：先禁用 RUNASADMIN，再普通重启
-                        WindowsAdminAutoElevate.DisableAutoAdmin();
-                        try
-                        {
-                            string exe = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-                            if (!string.IsNullOrEmpty(exe))
-                                System.Diagnostics.Process.Start(
-                                    new System.Diagnostics.ProcessStartInfo { FileName = exe, UseShellExecute = true });
-                            System.Diagnostics.Process.GetCurrentProcess().Kill();
-                        }
-                        catch (System.Exception ex)
-                        {
-                            ToastManager.Error("重启失败：" + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        // 以管理员重启
-                        bool ok = false;
-                        try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
-                        if (!ok) ToastManager.Error("提升权限失败，请手动以管理员身份运行");
-                    }
-                });
+                _btnSwitchRole.text = _isAdmin ? "以普通用户重启" : "以管理员重启";
+                _btnSwitchRole.RegisterCallback<ClickEvent>(OnSwitchRoleClicked);
             }
 
             // 启动提示 — 转发到日志页
@@ -216,7 +150,136 @@ namespace CloudflareST.GUI
 
         private void OnDestroy()
         {
+            UnbindEvents();
             WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
+        }
+
+        private void UnbindEvents()
+        {
+            if (!_eventsBound) return;
+
+            _debugToggle?.UnregisterValueChangedCallback(OnDebugToggleChanged);
+            _logToFileToggle?.UnregisterValueChangedCallback(OnLogToFileToggleChanged);
+            _btnClearLog?.UnregisterCallback<ClickEvent>(OnClearLogClicked);
+            _btnCopyLog?.UnregisterCallback<ClickEvent>(OnCopyLogClicked);
+            _btnResetDefaults?.UnregisterCallback<ClickEvent>(OnResetDefaultsClicked);
+            _startupToggle?.UnregisterValueChangedCallback(OnStartupToggleChanged);
+            _trayMinToggle?.UnregisterValueChangedCallback(OnTrayMinToggleChanged);
+            _autoAdminToggle?.UnregisterValueChangedCallback(OnAutoAdminToggleChanged);
+            _btnSwitchRole?.UnregisterCallback<ClickEvent>(OnSwitchRoleClicked);
+            WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
+
+            _eventsBound = false;
+        }
+
+        private void OnDebugToggleChanged(ChangeEvent<bool> e)
+        {
+            _opts.Debug = e.newValue;
+            ToastManager.Info(e.newValue ? "已启用调试输出" : "已关闭调试输出");
+        }
+
+        private void OnLogToFileToggleChanged(ChangeEvent<bool> e)
+        {
+            _opts.LogToFile = e.newValue;
+            UpdateLogToFileHint(_logToFileHint, e.newValue);
+            LogController?.SetLogToFile(e.newValue);
+            ToastManager.Info(e.newValue ? "日志将写入 cfst_log.txt" : "已停止写入日志文件");
+        }
+
+        private void OnClearLogClicked(ClickEvent evt)
+        {
+            // 日志已移至日志页
+        }
+
+        private void OnCopyLogClicked(ClickEvent evt)
+        {
+            // 日志已移至日志页
+        }
+
+        private void OnResetDefaultsClicked(ClickEvent evt)
+        {
+            OnResetDefaults();
+        }
+
+        private void OnStartupToggleChanged(ChangeEvent<bool> e)
+        {
+            bool ok = false;
+            try
+            {
+                string exePath = WindowsStartup.GetCurrentExePath();
+                ok = e.newValue
+                    ? WindowsStartup.EnableStartup(exePath)
+                    : WindowsStartup.DisableStartup();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("[Startup] 切换失败: " + ex.Message);
+                ok = false;
+            }
+
+            if (!ok)
+            {
+                _startupToggle?.SetValueWithoutNotify(!e.newValue);
+                AppendLog("[WARN] 开机自启设置失败，请检查权限");
+                ToastManager.Error("开机自启设置失败，请检查权限");
+            }
+            else
+            {
+                AppendLog(e.newValue ? "[INFO] 已启用开机自启" : "[INFO] 已禁用开机自启");
+                ToastManager.Success(e.newValue ? "已启用开机自启" : "已禁用开机自启");
+            }
+            UpdateStartupHint(_startupHint, _startupToggle != null && _startupToggle.value);
+        }
+
+        private void OnTrayMinToggleChanged(ChangeEvent<bool> e)
+        {
+            CfstTrayManager.MinimizeToTray = e.newValue;
+            ToastManager.Info(e.newValue ? "已启用最小化到托盘" : "已关闭最小化到托盘");
+        }
+
+        private void OnAutoAdminToggleChanged(ChangeEvent<bool> e)
+        {
+            bool ok = e.newValue
+                ? WindowsAdminAutoElevate.EnableAutoAdmin()
+                : WindowsAdminAutoElevate.DisableAutoAdmin();
+            if (ok)
+            {
+                ToastManager.Success(e.newValue
+                    ? "已设置：下次启动将自动请求管理员权限"
+                    : "已取消：下次启动将以普通权限运行");
+            }
+            else
+            {
+                _autoAdminToggle?.SetValueWithoutNotify(!e.newValue);
+                ToastManager.Error("注册表写入失败，设置未生效");
+            }
+            UpdateAutoAdminHint(_autoAdminHint, _autoAdminToggle != null && _autoAdminToggle.value);
+        }
+
+        private void OnSwitchRoleClicked(ClickEvent evt)
+        {
+            if (_isAdmin)
+            {
+                WindowsAdminAutoElevate.DisableAutoAdmin();
+                try
+                {
+                    string exe = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                    if (!string.IsNullOrEmpty(exe))
+                        System.Diagnostics.Process.Start(
+                            new System.Diagnostics.ProcessStartInfo { FileName = exe, UseShellExecute = true });
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                }
+                catch (System.Exception ex)
+                {
+                    ToastManager.Error("重启失败：" + ex.Message);
+                }
+            }
+            else
+            {
+                bool ok = false;
+                try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
+                if (!ok) ToastManager.Error("提升权限失败，请手动以管理员身份运行");
+            }
         }
 
         /// <summary>重置所有持久化设置为默认值，并广播事件让各页面刷新 UI</summary>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CloudflareST.GUI
@@ -7,6 +8,13 @@ namespace CloudflareST.GUI
     public static class SettingsStorage
     {
         private const string KEY_PREFIX = "cfst_";
+
+        [Serializable]
+        private class HostsEntryDto
+        {
+            public string domain;
+            public int rank;
+        }
 
         public static string GetDefaultBaseDir()
         {
@@ -62,6 +70,7 @@ namespace CloudflareST.GUI
             SetBool  ("logtofile",   o.LogToFile);
             SetString("hostsdomains",o.HostsDomains);
             SetInt   ("hostsiprank", o.HostsIpRank);
+            SetString("hostsentriesjson", o.HostsEntriesJson);
             SetString("hostsfile",   o.HostsFile);
             SetBool  ("hostsdryrun", o.HostsDryRun);
             // ── 前钩子 ──
@@ -111,6 +120,7 @@ namespace CloudflareST.GUI
             o.LogToFile       = GetBool  ("logtofile",   false);
             o.HostsDomains    = GetString("hostsdomains",null);
             o.HostsIpRank     = GetInt   ("hostsiprank", 1);
+            o.HostsEntriesJson= GetString("hostsentriesjson", null);
             o.HostsFile       = GetString("hostsfile",   null);
             o.HostsDryRun     = GetBool  ("hostsdryrun", false);
             // ── 前钩子 —— 向后兼容：旧存档迁移 pre_script/pre_program -> pre_path ──
@@ -149,7 +159,7 @@ namespace CloudflareST.GUI
                 "nodown","downurl","downport","downcount","downtimeout","speedmin",
                 "outputfile","outputcount","onlyipfile","debug",
                 "schedmode","interval","dailyat","cronexpr","timezone",
-                "hostsdomains","hostsiprank","hostsfile","hostsdryrun",
+                "hostsdomains","hostsiprank","hostsentriesjson","hostsfile","hostsdryrun",
                 "pre_enabled","pre_path","pre_args","pre_timeout","pre_wait",
                 "post_enabled","post_path","post_args","post_timeout","post_onlysuccess"
             };
@@ -191,6 +201,7 @@ namespace CloudflareST.GUI
             o.LogToFile       = false;
             o.HostsDomains    = null;
             o.HostsIpRank     = 1;
+            o.HostsEntriesJson= null;
             o.HostsFile       = null;
             o.HostsDryRun     = false;
             // ── 前钩子 ──
@@ -215,6 +226,69 @@ namespace CloudflareST.GUI
         private static void SetInt  (string k, int v)   => PlayerPrefs.SetInt  (KEY_PREFIX + k, v);
         private static void SetBool (string k, bool v)  => PlayerPrefs.SetInt  (KEY_PREFIX + k, v ? 1 : 0);
         private static void SetFloat(string k, float v) => PlayerPrefs.SetFloat(KEY_PREFIX + k, v);
+
+        public static string SerializeHostsEntries(List<(string domain, int rank)> entries)
+        {
+            if (entries == null || entries.Count == 0) return null;
+            var list = new List<HostsEntryDto>();
+            foreach (var entry in entries)
+            {
+                var domain = entry.domain;
+                var rank = entry.rank;
+                if (string.IsNullOrWhiteSpace(domain)) continue;
+                list.Add(new HostsEntryDto { domain = domain.Trim(), rank = rank < 1 ? 1 : rank });
+            }
+
+            if (list.Count == 0) return null;
+            var wrapper = new HostsEntriesWrapper { items = list.ToArray() };
+            var wrappedJson = JsonUtility.ToJson(wrapper);
+            return UnwrapJsonArray(wrappedJson);
+        }
+
+        public static List<(string domain, int rank)> DeserializeHostsEntries(string json)
+        {
+            var list = new List<(string domain, int rank)>();
+            if (string.IsNullOrWhiteSpace(json)) return list;
+            try
+            {
+                var wrapper = JsonUtility.FromJson<HostsEntriesWrapper>(WrapJsonArray(json));
+                var items = wrapper?.items;
+                if (items == null) return list;
+                foreach (var item in items)
+                {
+                    if (item == null || string.IsNullOrWhiteSpace(item.domain)) continue;
+                    list.Add((item.domain.Trim(), item.rank < 1 ? 1 : item.rank));
+                }
+            }
+            catch { }
+            return list;
+        }
+
+        [Serializable]
+        private class HostsEntriesWrapper
+        {
+            public HostsEntryDto[] items;
+        }
+
+        private static string WrapJsonArray(string json)
+        {
+            return "{\"items\":" + json + "}";
+        }
+
+        private static string UnwrapJsonArray(string wrappedJson)
+        {
+            if (string.IsNullOrEmpty(wrappedJson)) return null;
+
+            const string prefix = "{\"items\":";
+            const string suffix = "}";
+            if (!wrappedJson.StartsWith(prefix, StringComparison.Ordinal) ||
+                !wrappedJson.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                return wrappedJson;
+            }
+
+            return wrappedJson.Substring(prefix.Length, wrappedJson.Length - prefix.Length - suffix.Length);
+        }
 
         private static string GetString(string k, string def) =>
             PlayerPrefs.HasKey(KEY_PREFIX + k) ? PlayerPrefs.GetString(KEY_PREFIX + k) : def;

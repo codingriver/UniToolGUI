@@ -12,6 +12,13 @@ namespace CloudflareST.GUI
 {
     public static class CfstConfigBuilder
     {
+        [Serializable]
+        private class HostsEntryDto
+        {
+            public string domain { get; set; }
+            public int rank { get; set; }
+        }
+
         /// <summary>
         /// 将 CfstOptions（GUI 数据结构）转换为 CloudflareST.Config（dll 内部配置）。
         /// </summary>
@@ -102,10 +109,24 @@ namespace CloudflareST.GUI
             return cfg;
         }
 
-        //TODO 有bug，没有读取用户输入的 host指定的index，而是全部一样了，需要分析原因；
         private static List<CloudflareST.HostEntry> BuildHostEntries(CfstOptions o)
         {
             var list = new List<CloudflareST.HostEntry>();
+
+            var perEntry = ParseHostsEntries(o);
+            if (perEntry.Count > 0)
+            {
+                foreach (var (domain, rank) in perEntry)
+                {
+                    list.Add(new CloudflareST.HostEntry
+                    {
+                        Domain = domain,
+                        IpIndex = rank < 1 ? 1 : rank
+                    });
+                }
+                return list;
+            }
+
             if (string.IsNullOrWhiteSpace(o.HostsDomains)) return list;
 
             foreach (var domain in o.HostsDomains.Split(','))
@@ -119,6 +140,39 @@ namespace CloudflareST.GUI
                 });
             }
             return list;
+        }
+
+        private static List<(string domain, int rank)> ParseHostsEntries(CfstOptions o)
+        {
+            var list = new List<(string domain, int rank)>();
+            if (string.IsNullOrWhiteSpace(o.HostsEntriesJson)) return list;
+
+            try
+            {
+                var wrapper = JsonUtility.FromJson<HostsEntriesWrapper>(WrapJsonArray(o.HostsEntriesJson));
+                var items = wrapper?.items;
+                if (items == null) return list;
+
+                foreach (var item in items)
+                {
+                    if (item == null || string.IsNullOrWhiteSpace(item.domain)) continue;
+                    list.Add((item.domain.Trim(), item.rank < 1 ? 1 : item.rank));
+                }
+            }
+            catch { }
+
+            return list;
+        }
+
+        [Serializable]
+        private class HostsEntriesWrapper
+        {
+            public HostsEntryDto[] items;
+        }
+
+        private static string WrapJsonArray(string json)
+        {
+            return "{\"items\":" + json + "}";
         }
     }
 }
