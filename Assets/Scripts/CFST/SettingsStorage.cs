@@ -13,7 +13,7 @@ namespace CloudflareST.GUI
 #if UNITY_ANDROID || UNITY_IOS
             return Application.persistentDataPath;
 #else
-            return AppDomain.CurrentDomain.BaseDirectory;
+            return Environment.CurrentDirectory;
 #endif
         }
 

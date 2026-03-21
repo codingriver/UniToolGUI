@@ -34,7 +34,7 @@ namespace CloudflareST.GUI
                 if (!string.IsNullOrWhiteSpace(o.IPv4File) && o.IPv4File != "ip.txt")
                     Str("-f", o.IPv4File);
                 if (!string.IsNullOrWhiteSpace(o.IPv6File) && o.IPv6File != "ipv6.txt")
-                    Str("-f6", o.IPv6File);
+                    Str("-f", o.IPv6File);
             }
             if (o.IpLoadLimit > 0)  Num("-ipn", o.IpLoadLimit);
             if (o.AllIp)             Flag("-allip");
@@ -93,8 +93,7 @@ namespace CloudflareST.GUI
             // ── Hosts 更新 ───────────────────────────────────────
             if (!string.IsNullOrWhiteSpace(o.HostsDomains))
             {
-                Str("-hosts", o.HostsDomains);
-                if (o.HostsIpRank != 1)                          Num("-hosts-ip",   o.HostsIpRank);
+                Str("-host", o.HostsDomains);
                 if (!string.IsNullOrWhiteSpace(o.HostsFile))     Str("-hosts-file", o.HostsFile);
                 if (o.HostsDryRun)                               Flag("-hosts-dry-run");
             }

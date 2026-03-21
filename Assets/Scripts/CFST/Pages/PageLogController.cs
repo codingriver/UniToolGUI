@@ -60,7 +60,7 @@ namespace CloudflareST.GUI
             _autoScrollToggle = root.Q<Toggle>("toggle-log-autoscroll");
 
             _logFilePath = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory, "cfst_log.txt");
+                Environment.CurrentDirectory, "cfst_log.txt");
 
             if (_autoScrollToggle != null)
             {

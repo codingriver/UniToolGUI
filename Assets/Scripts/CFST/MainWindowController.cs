@@ -289,6 +289,24 @@ namespace CloudflareST.GUI
             PageOther?.AppendLog("[CMD] " + cfgSummary);
             PageLog?.AppendLog("[CMD] " + cfgSummary);
 
+            // Hosts 参数详细日志（避免只看到数量）
+            if (!string.IsNullOrWhiteSpace(Options.HostsDomains))
+            {
+                string hostDomains = Options.HostsDomains.Trim();
+                string hostFile = string.IsNullOrWhiteSpace(Options.HostsFile)
+                    ? "(default system hosts)"
+                    : Options.HostsFile.Trim();
+                string hostDryRun = Options.HostsDryRun ? "true" : "false";
+
+                PageOther?.AppendLog("[HOST] domains=" + hostDomains);
+                PageOther?.AppendLog("[HOST] file=" + hostFile);
+                PageOther?.AppendLog("[HOST] dry-run=" + hostDryRun);
+
+                PageLog?.AppendLog("[HOST] domains=" + hostDomains);
+                PageLog?.AppendLog("[HOST] file=" + hostFile);
+                PageLog?.AppendLog("[HOST] dry-run=" + hostDryRun);
+            }
+
             _runner?.Dispose();
             _runner = new CfstDllRunner();
 

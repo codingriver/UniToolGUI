@@ -74,6 +74,15 @@ namespace CloudflareST.GUI
                 IReadOnlyList<CloudflareST.IPInfo> results = null;
                 try
                 {
+                    string hostInfo = string.Empty;
+                    if(config.HostEntries!=null && config.HostEntries.Count>0)
+                    {
+                        int i=0;
+                        foreach(var he in config.HostEntries)
+                        {
+                            hostInfo+= $"      [{i++}] {he.Domain} => {he.IpIndex}\n";
+                        }
+                    }
                     // ── 打印 Config 所有参数（含默认值）──────────────────
                     string arg=@"[CFST][Config] ====== RunSpeedTestAsync 参数一览 ======\n" +
                         $"  [IP来源]\n" +
@@ -112,6 +121,7 @@ namespace CloudflareST.GUI
                         $"    TimeZoneId      = {(string.IsNullOrEmpty(config.TimeZoneId) ? "(系统默认)" : config.TimeZoneId)}\n" +
                         $"  [Hosts更新]\n" +
                         $"    HostEntries   = {(config.HostEntries == null || config.HostEntries.Count == 0 ? "(未启用)" : config.HostEntries.Count + " 条")}\n" +
+                        hostInfo +
                         $"    HostsFilePath = {(string.IsNullOrEmpty(config.HostsFilePath) ? "(系统默认)" : config.HostsFilePath)}\n" +
                         $"    HostsDryRun   = {config.HostsDryRun}\n" +
                         "  ===========================================";

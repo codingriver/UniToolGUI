@@ -2,6 +2,8 @@
 // CfstConfigBuilder.cs  —  将 GUI 的 CfstOptions 映射到
 //                          cfst.dll 的 CloudflareST.Config
 // ============================================================
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -18,7 +20,7 @@ namespace CloudflareST.GUI
 #if UNITY_ANDROID || UNITY_IOS
             string baseDir = Application.persistentDataPath;
 #else
-            string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
+            string baseDir = Environment.CurrentDirectory;
 #endif
             var cfg = new CloudflareST.Config();
 
@@ -100,6 +102,7 @@ namespace CloudflareST.GUI
             return cfg;
         }
 
+        //TODO 有bug，没有读取用户输入的 host指定的index，而是全部一样了，需要分析原因；
         private static List<CloudflareST.HostEntry> BuildHostEntries(CfstOptions o)
         {
             var list = new List<CloudflareST.HostEntry>();

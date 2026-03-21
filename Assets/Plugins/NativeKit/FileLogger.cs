@@ -43,7 +43,7 @@ namespace NativeKit
 #if UNITY_ANDROID || UNITY_IOS
                 logDir = Path.Combine(Application.persistentDataPath, "logs");
 #else
-                logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                logDir = Path.Combine(Environment.CurrentDirectory, "logs");
 #endif
                 Directory.CreateDirectory(logDir);
                 _logPath = Path.Combine(logDir, fileName);
