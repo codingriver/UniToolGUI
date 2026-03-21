@@ -220,7 +220,9 @@ public class TrayBridge : MonoBehaviour
             };
             items.Add(_menuStartup);
         }
+#endif
 
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX
         if (AddRestartItem)
         {
             if (items.Count > 0) items.Add(new TrayMenuItem { IsSeparator = true });
@@ -232,10 +234,25 @@ public class TrayBridge : MonoBehaviour
                 {
                     try
                     {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
                         var exe = WindowsStartup.GetCurrentExePath();
                         if (!string.IsNullOrEmpty(exe))
                             System.Diagnostics.Process.Start(
                                 new System.Diagnostics.ProcessStartInfo { FileName = exe, UseShellExecute = true });
+#elif UNITY_STANDALONE_OSX
+                        var appPath = GetMacAppBundlePath();
+                        if (!string.IsNullOrEmpty(appPath))
+                            System.Diagnostics.Process.Start(
+                                new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = "open",
+                                    Arguments = "-n " + ProcessHelper.Quote(appPath),
+                                    UseShellExecute = false,
+                                    CreateNoWindow = true,
+                                });
+                        else
+                            Debug.LogWarning("[TrayBridge] 未找到 .app 包路径，无法重启 macOS 应用");
+#endif
                         ShutdownTray();
 #if UNITY_EDITOR
                         UnityEditor.EditorApplication.isPlaying = false;
@@ -276,6 +293,30 @@ public class TrayBridge : MonoBehaviour
 
         if (items.Count > 0)
             NativePlatform.Tray.RegisterMenuItems(items);
+    }
+
+    private string GetMacAppBundlePath()
+    {
+#if UNITY_STANDALONE_OSX
+        try
+        {
+            var dataPath = Application.dataPath;
+            if (string.IsNullOrEmpty(dataPath)) return null;
+            var contentsDir = System.IO.Path.GetDirectoryName(dataPath);
+            if (string.IsNullOrEmpty(contentsDir)) return null;
+            var appDir = System.IO.Path.GetDirectoryName(contentsDir);
+            return !string.IsNullOrEmpty(appDir) && appDir.EndsWith(".app", StringComparison.OrdinalIgnoreCase)
+                ? appDir
+                : null;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[TrayBridge] 获取 macOS .app 路径失败: " + ex.Message);
+            return null;
+        }
+#else
+        return null;
+#endif
     }
 
     private void TrySetIcon()

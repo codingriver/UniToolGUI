@@ -72,7 +72,7 @@ public static class NativePlatform
 
     private static IFileDialog CreateFileDialog()
     {
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
         return NativeFileDialog.Instance;
 #else
         Debug.LogWarning("[NativePlatform] FileDialog: 当前平台不支持原生对话框，使用空实现");
@@ -91,7 +91,7 @@ public static class NativePlatform
 
     private static IToastService CreateToast()
     {
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
         return NativeToastService.Instance;
 #else
         return NullToastService.Instance;
@@ -100,7 +100,7 @@ public static class NativePlatform
 
     private static IMessageBox CreateMessageBox()
     {
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
         return NativeMessageBox.Instance;
 #else
         return NullMessageBox.Instance;
@@ -118,7 +118,7 @@ public static class NativePlatform
 
     private static ISingleInstance CreateSingleInstance()
     {
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
         return NativeSingleInstance.Instance;
 #else
         return NullSingleInstance.Instance;

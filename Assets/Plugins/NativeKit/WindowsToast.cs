@@ -3,6 +3,8 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using Process = System.Diagnostics.Process;
+using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
 
 /// <summary>
 /// 系统 Toast 通知（Win/Mac/Linux）。
@@ -44,8 +46,6 @@ public static class WindowsToast
         }
         xml.Append("</binding></visual></toast>");
 
-        // 将 XML 内嵌到 -Command 参数中，避免写临时 .ps1 文件
-        // 单引号包裹内容，内部单引号用 '' 转义（PowerShell 单引号字符串规则）
         var xmlEscaped = xml.ToString().Replace("'", "''");
         var appIdEscaped = AppId.Replace("'", "''");
 
@@ -57,15 +57,63 @@ public static class WindowsToast
             $"$toast = [Windows.UI.Notifications.ToastNotification]::new($xml); " +
             $"[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{appIdEscaped}').Show($toast)";
 
-        int code = ProcessHelper.Run(
-            "powershell",
-            $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{psCommand}\"",
-            8000);
+        int code = RunPowerShell(psCommand, 8000);
 
         if (code != 0)
             Debug.LogWarning($"[WindowsToast] 显示失败，powershell 返回码: {code}");
 
         return code == 0;
+    }
+
+    private static int RunPowerShell(string script, int timeoutMs)
+    {
+        try
+        {
+            using (var process = new Process())
+            {
+                process.StartInfo = new ProcessStartInfo
+                {
+                    FileName = "powershell",
+                    Arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " + EncodePowerShell(script),
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+
+                process.Start();
+                string stdout = process.StandardOutput.ReadToEnd();
+                string stderr = process.StandardError.ReadToEnd();
+
+                bool exited = process.WaitForExit(timeoutMs);
+                if (!exited)
+                {
+                    try { process.Kill(); } catch { }
+                    Debug.LogWarning("[WindowsToast] PowerShell 执行超时");
+                    return -1;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    if (!string.IsNullOrWhiteSpace(stdout))
+                        Debug.LogWarning("[WindowsToast] stdout: " + stdout.Trim());
+                    if (!string.IsNullOrWhiteSpace(stderr))
+                        Debug.LogWarning("[WindowsToast] stderr: " + stderr.Trim());
+                }
+
+                return process.ExitCode;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[WindowsToast] 启动 powershell 失败: " + ex.Message);
+            return -1;
+        }
+    }
+
+    private static string EncodePowerShell(string script)
+    {
+        return Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
     }
 
     private static string EscapeXml(string s)
@@ -89,14 +137,70 @@ public static class WindowsToast
 
         var t = EscAS(title);
         var m = EscAS(message);
-        // 使用 -e 内联执行，无需临时文件
         var script = $"display notification \"{m}\" with title \"{t}\"";
-        int code = ProcessHelper.Run("osascript", $"-e '{script}'", 5000);
+        int code = RunOsascriptInline(script, 5000);
         return code == 0;
     }
 
+    private static int RunOsascriptInline(string script, int timeoutMs)
+    {
+        try
+        {
+            using (var process = new Process())
+            {
+                process.StartInfo = new ProcessStartInfo
+                {
+                    FileName = "osascript",
+                    Arguments = "-",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardInputEncoding = Encoding.UTF8,
+                    StandardOutputEncoding = Encoding.UTF8,
+                };
+
+                process.Start();
+                process.StandardInput.Write(script);
+                process.StandardInput.Close();
+
+                string stdout = process.StandardOutput.ReadToEnd();
+                string stderr = process.StandardError.ReadToEnd();
+
+                bool exited = process.WaitForExit(timeoutMs);
+                if (!exited)
+                {
+                    try { process.Kill(); } catch { }
+                    Debug.LogWarning("[WindowsToast] osascript 执行超时");
+                    return -1;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    if (!string.IsNullOrWhiteSpace(stdout))
+                        Debug.LogWarning("[WindowsToast] stdout: " + stdout.Trim());
+                    if (!string.IsNullOrWhiteSpace(stderr))
+                        Debug.LogWarning("[WindowsToast] stderr: " + stderr.Trim());
+                }
+
+                return process.ExitCode;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[WindowsToast] 启动 osascript 失败: " + ex.Message);
+            return -1;
+        }
+    }
+
     private static string EscAS(string s)
-        => (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
+        => (s ?? "")
+            .Replace("\\", "\\\\")
+            .Replace("\r\n", "\\n")
+            .Replace("\r", "\\n")
+            .Replace("\n", "\\n")
+            .Replace("\"", "\\\"");
 
 #elif UNITY_STANDALONE_LINUX
     /// <summary>

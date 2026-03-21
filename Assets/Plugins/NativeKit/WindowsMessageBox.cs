@@ -58,59 +58,58 @@ public static class WindowsMessageBox
     private static string EscapeAppleScript(string s)
     {
         if (string.IsNullOrEmpty(s)) return "";
-        return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n");
+        return s.Replace("\\", "\\\\")
+                .Replace("\r\n", "\\n")
+                .Replace("\r", "\\n")
+                .Replace("\n", "\\n")
+                .Replace("\"", "\\\"");
     }
 
     private static int RunOsascript(string script)
     {
-        try
-        {
-            var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "msgbox_" + Guid.NewGuid().ToString("N") + ".scpt");
-            System.IO.File.WriteAllText(tempFile, script);
-            try
-            {
-                var p = Process.Start(new ProcessStartInfo
-                {
-                    FileName = "osascript",
-                    Arguments = tempFile,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true
-                });
-                p?.WaitForExit(30000);
-                return p?.ExitCode == 0 ? 1 : 2;
-            }
-            finally
-            {
-                try { System.IO.File.Delete(tempFile); } catch { }
-            }
-        }
-        catch (Exception ex) { Debug.LogWarning($"[MessageBox] {ex.Message}"); return 2; }
+        return RunOsascriptWithResult(script) != null ? 1 : 2;
     }
 
     private static string RunOsascriptGetButton(string script)
     {
+        return RunOsascriptWithResult(script);
+    }
+
+    private static string RunOsascriptWithResult(string script)
+    {
         try
         {
-            var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "msgbox_" + Guid.NewGuid().ToString("N") + ".scpt");
-            System.IO.File.WriteAllText(tempFile, script);
-            try
+            var psi = new ProcessStartInfo
             {
-                var p = Process.Start(new ProcessStartInfo
+                FileName = "osascript",
+                Arguments = "-",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardInputEncoding = System.Text.Encoding.UTF8,
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+            };
+
+            using (var p = new Process { StartInfo = psi })
+            {
+                p.Start();
+                p.StandardInput.Write(script);
+                p.StandardInput.Close();
+
+                var output = p.StandardOutput.ReadToEnd().Trim();
+                var error = p.StandardError.ReadToEnd().Trim();
+                p.WaitForExit(30000);
+
+                if (p.ExitCode != 0)
                 {
-                    FileName = "osascript",
-                    Arguments = tempFile,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true
-                });
-                var output = p?.StandardOutput?.ReadToEnd()?.Trim();
-                p?.WaitForExit(30000);
-                return p?.ExitCode == 0 ? output : null;
-            }
-            finally
-            {
-                try { System.IO.File.Delete(tempFile); } catch { }
+                    if (!string.IsNullOrEmpty(error))
+                        Debug.LogWarning($"[MessageBox] {error}");
+                    return null;
+                }
+
+                return string.IsNullOrEmpty(output) ? string.Empty : output;
             }
         }
         catch (Exception ex) { Debug.LogWarning($"[MessageBox] {ex.Message}"); return null; }

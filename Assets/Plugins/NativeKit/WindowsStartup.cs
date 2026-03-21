@@ -143,19 +143,62 @@ public static class WindowsStartup
 
     public static bool IsStartupEnabled() => File.Exists(GetPlistPath());
 
+    public static string GetCurrentExePath()
+    {
+        try
+        {
+            var args = Environment.GetCommandLineArgs();
+            if (args != null && args.Length > 0 && !string.IsNullOrEmpty(args[0]) && File.Exists(args[0]))
+                return args[0];
+        }
+        catch { }
+
+        try
+        {
+            var mainModule = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (!string.IsNullOrEmpty(mainModule) && File.Exists(mainModule))
+                return mainModule;
+        }
+        catch { }
+
+        try
+        {
+            var dataPath = Application.dataPath;
+            if (!string.IsNullOrEmpty(dataPath))
+            {
+                var contentsDir = Path.GetDirectoryName(dataPath);
+                if (!string.IsNullOrEmpty(contentsDir))
+                {
+                    var macOsDir = Path.Combine(contentsDir, "MacOS");
+                    var exeName = Application.productName ?? "UnityApp";
+                    var candidate = Path.Combine(macOsDir, exeName);
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+            }
+        }
+        catch { }
+
+        Debug.LogError("[Startup] 无法获取 macOS 可执行文件路径");
+        return null;
+    }
+
     public static bool EnableStartup(string exePath = null, string keyName = null)
     {
         try
         {
             if (string.IsNullOrEmpty(exePath))
-                exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+                exePath = GetCurrentExePath();
             if (string.IsNullOrEmpty(exePath)) return false;
             var label = "com.unity." + (keyName ?? Application.productName ?? "UnityApp").Replace(" ", "");
             var escaped = exePath.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;");
             var plist = "<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>Label</key><string>" + label + "</string><key>ProgramArguments</key><array><string>" + escaped + "</string></array><key>RunAtLoad</key><true/></dict></plist>";
-            var dir = Path.GetDirectoryName(GetPlistPath());
+            var plistPath = GetPlistPath();
+            var dir = Path.GetDirectoryName(plistPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(GetPlistPath(), plist);
+            File.WriteAllText(plistPath, plist);
+            TryLaunchCtl("bootstrap", plistPath, label);
+            OnStartupChanged?.Invoke(true);
             return true;
         }
         catch (Exception ex) { Debug.LogError($"[Startup] {ex.Message}"); return false; }
@@ -166,13 +209,59 @@ public static class WindowsStartup
         try
         {
             var path = GetPlistPath();
-            if (File.Exists(path)) { File.Delete(path); return true; }
+            var label = "com.unity." + (keyName ?? Application.productName ?? "UnityApp").Replace(" ", "");
+            TryLaunchCtl("bootout", path, label);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                OnStartupChanged?.Invoke(false);
+                return true;
+            }
+            OnStartupChanged?.Invoke(false);
             return false;
         }
         catch (Exception ex) { Debug.LogWarning($"[Startup] Mac DisableStartup 失败: {ex.Message}"); return false; }
     }
 
     public static bool ToggleStartup(string exePath = null) => IsStartupEnabled() ? DisableStartup() : EnableStartup(exePath);
+
+    private static void TryLaunchCtl(string action, string plistPath, string label)
+    {
+        try
+        {
+            if (string.Equals(action, "bootstrap", StringComparison.OrdinalIgnoreCase))
+            {
+                int code = ProcessHelper.Run("launchctl", "bootstrap gui/" + GetUserId() + " " + ProcessHelper.Quote(plistPath), 5000);
+                if (code != 0)
+                    ProcessHelper.Run("launchctl", "load -w " + ProcessHelper.Quote(plistPath), 5000);
+                return;
+            }
+
+            if (string.Equals(action, "bootout", StringComparison.OrdinalIgnoreCase))
+            {
+                int code = ProcessHelper.Run("launchctl", "bootout gui/" + GetUserId() + "/" + label, 5000);
+                if (code != 0)
+                    ProcessHelper.Run("launchctl", "unload -w " + ProcessHelper.Quote(plistPath), 5000);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[Startup] launchctl 调用失败: " + ex.Message);
+        }
+    }
+
+    private static string GetUserId()
+    {
+        try
+        {
+            var uid = ProcessHelper.RunAndRead("id", "-u", 3000);
+            return string.IsNullOrWhiteSpace(uid) ? "501" : uid.Trim();
+        }
+        catch
+        {
+            return "501";
+        }
+    }
 
 #elif UNITY_STANDALONE_LINUX
     private static string GetDesktopPath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "autostart", (Application.productName ?? "UnityApp").Replace(" ", "") + ".desktop");
@@ -194,6 +283,7 @@ public static class WindowsStartup
             var quotedExe = exePath.Contains(" ") ? "\"" + exePath + "\"" : exePath;
             var desktop = "[Desktop Entry]\nType=Application\nName=" + appName + "\nExec=" + quotedExe + "\nX-GNOME-Autostart-enabled=true\n";
             File.WriteAllText(GetDesktopPath(), desktop);
+            OnStartupChanged?.Invoke(true);
             return true;
         }
         catch (Exception ex) { Debug.LogError($"[Startup] {ex.Message}"); return false; }
@@ -204,7 +294,13 @@ public static class WindowsStartup
         try
         {
             var path = GetDesktopPath();
-            if (File.Exists(path)) { File.Delete(path); return true; }
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                OnStartupChanged?.Invoke(false);
+                return true;
+            }
+            OnStartupChanged?.Invoke(false);
             return false;
         }
         catch (Exception ex) { Debug.LogWarning($"[Startup] Linux DisableStartup 失败: {ex.Message}"); return false; }
