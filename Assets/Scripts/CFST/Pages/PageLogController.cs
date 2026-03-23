@@ -53,6 +53,12 @@ namespace CloudflareST.GUI
 
         public void Init(VisualElement root, CfstOptions opts)
         {
+            if (root == null)
+            {
+                Debug.LogError("[UI] PageLogController.Init root is null");
+                return;
+            }
+
             _root         = root;
             _logScroll    = root.Q<ScrollView>("log-scroll");
             _logContainer = _logScroll?.contentContainer;

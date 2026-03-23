@@ -41,6 +41,12 @@ namespace CloudflareST.GUI
 
         public void Init(VisualElement root, CfstOptions opts)
         {
+            if (root == null)
+            {
+                Debug.LogError("[UI] PageResultsController.Init root is null");
+                return;
+            }
+
             _root = root;
             _opts = opts;
 

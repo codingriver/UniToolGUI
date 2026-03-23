@@ -35,6 +35,12 @@ namespace CloudflareST.GUI
 
         public void Init(VisualElement root, CfstOptions opts)
         {
+            if (root == null)
+            {
+                Debug.LogError("[UI] PageHookController.Init root is null");
+                return;
+            }
+
             _root = root; _opts = opts;
             _preEnabled     = root.Q<Toggle>("toggle-pre-enabled");
             _prePath        = root.Q<TextField>("field-pre-path");

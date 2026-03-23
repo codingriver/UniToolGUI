@@ -1,0 +1,98 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+
+    <ui:Template name="PageIpSource"   src="Pages/PageIpSource.uxml" />
+    <ui:Template name="PageLog"        src="Pages/PageLog.uxml" />
+    <ui:Template name="PageHook"       src="Pages/PageHook.uxml" />
+    <ui:Template name="PageLatency"    src="Pages/PageLatency.uxml" />
+    <ui:Template name="PageDownload"   src="Pages/PageDownload.uxml" />
+    <ui:Template name="PageSchedule"   src="Pages/PageSchedule.uxml" />
+    <ui:Template name="PageHosts"      src="Pages/PageHosts.uxml" />
+    <ui:Template name="PageOutput"     src="Pages/PageOutput.uxml" />
+    <ui:Template name="PageOther"      src="Pages/PageOther.uxml" />
+    <ui:Template name="PageAbout"      src="Pages/PageAbout.uxml" />
+    <ui:Template name="PageResults"    src="Pages/PageResults.uxml" />
+
+    <Style src="/Assets/UI/MainWindow.uss" />
+    <Style src="/Assets/UI/MainWindow.Mobile.uss" />
+
+    <ui:VisualElement name="safe-area" class="safe-area">
+        <ui:VisualElement name="root" class="root mobile-root">
+            <ui:VisualElement name="mobile-shell" class="mobile-shell">
+                <ui:VisualElement name="mobile-topbar" class="mobile-topbar">
+                    <ui:VisualElement class="mobile-brand">
+                        <ui:Label name="logo-icon" text="☁" class="logo-icon" />
+                        <ui:Label name="logo-text" text="CFST" class="logo-text" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mobile-topbar-actions">
+                        <ui:Label name="progress-pct" text="0%" class="mobile-progress-pct" />
+                        <ui:Label name="result-badge" text="" class="result-badge result-badge--hidden" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="mobile-status-card" class="mobile-status-card">
+                    <ui:Label name="sb-status" text="@ 就绪" class="mobile-status-title" />
+                    <ui:VisualElement class="mobile-status-metrics">
+                        <ui:Label name="sb-tested" text="已测: --" class="mobile-status-pill" />
+                        <ui:Label name="sb-elapsed" text="耗时: --" class="mobile-status-pill" />
+                        <ui:Label name="sb-best" text="当前最快: --" class="mobile-status-pill" />
+                        <ui:Label name="sb-next-run" text="" class="mobile-status-pill mobile-status-pill--accent" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mobile-progress-area">
+                        <ui:VisualElement class="progress-track">
+                            <ui:VisualElement name="progress-fill" class="progress-fill" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label name="sb-user-role" text="普通用户" class="mobile-role-label" />
+                    <ui:Label name="sb-next-run-sep" text="" class="mobile-hidden" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="content-area" class="content-area mobile-content-area">
+                    <ui:VisualElement name="page-container" class="page-container mobile-page-container">
+                        <ui:Instance template="PageIpSource"  name="page-ip"       class="page page--active" />
+                        <ui:Instance template="PageLatency"   name="page-latency"  class="page" />
+                        <ui:Instance template="PageDownload"  name="page-download" class="page" />
+                        <ui:Instance template="PageSchedule"  name="page-schedule" class="page" />
+                        <ui:Instance template="PageHosts"     name="page-hosts"    class="page" />
+                        <ui:Instance template="PageOutput"    name="page-output"   class="page" />
+                        <ui:Instance template="PageOther"     name="page-other"    class="page" />
+                        <ui:Instance template="PageAbout"     name="page-about"    class="page" />
+                        <ui:Instance template="PageResults"   name="page-results"  class="page" />
+                        <ui:Instance template="PageLog"       name="page-log"      class="page" />
+                        <ui:Instance template="PageHook"      name="page-hook"     class="page" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="mobile-bottom-actions" class="mobile-bottom-actions">
+                    <ui:Button name="btn-start" text="▶ 开始测速" class="btn-start mobile-primary-button" />
+                    <ui:Button name="btn-stop" text="■ 停止" class="btn-stop btn-stop--disabled mobile-secondary-button" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="mobile-tabbar" class="mobile-tabbar">
+                    <ui:Button name="nav-ip" text="来源" class="nav-item nav-item--active mobile-tab" />
+                    <ui:Button name="nav-latency" text="延迟" class="nav-item mobile-tab" />
+                    <ui:Button name="nav-download" text="下载" class="nav-item mobile-tab" />
+                    <ui:Button name="nav-results" class="nav-item mobile-tab mobile-tab--results">
+                        <ui:Label text="结果" class="mobile-tab-label" />
+                    </ui:Button>
+                    <ui:Button name="nav-log" text="日志" class="nav-item mobile-tab" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="mobile-more-nav" class="mobile-more-nav">
+                    <ui:ScrollView name="nav-scroll" class="nav-scroll mobile-more-scroll" mode="Horizontal" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden">
+                        <ui:VisualElement name="nav-list" class="nav-list mobile-more-list">
+                            <ui:Button name="nav-ip-hidden" text="IP 来源" class="mobile-hidden-nav" />
+                            <ui:Button name="nav-latency-hidden" text="延迟测速" class="mobile-hidden-nav" />
+                            <ui:Button name="nav-download-hidden" text="下载测速" class="mobile-hidden-nav" />
+                            <ui:Button name="nav-schedule" text="调度" class="nav-item mobile-chip" />
+                            <ui:Button name="nav-hosts" text="Hosts" class="nav-item mobile-chip" />
+                            <ui:Button name="nav-output" text="输出" class="nav-item mobile-chip" />
+                            <ui:Button name="nav-other" text="其他" class="nav-item mobile-chip" />
+                            <ui:Button name="nav-about" text="关于" class="nav-item mobile-chip" />
+                            <ui:Button name="nav-hook" text="钩子" class="nav-item mobile-chip" />
+                        </ui:VisualElement>
+                    </ui:ScrollView>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

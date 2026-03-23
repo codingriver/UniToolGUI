@@ -9,6 +9,12 @@ namespace CloudflareST.GUI
 
         public void Init(VisualElement root, CfstOptions opts)
         {
+            if (root == null)
+            {
+                Debug.LogError("[UI] PageAboutController.Init root is null");
+                return;
+            }
+
             _root = root;
 
             // GUI 版本

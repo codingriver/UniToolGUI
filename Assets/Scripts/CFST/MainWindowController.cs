@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -10,17 +11,17 @@ namespace CloudflareST.GUI
     public class MainWindowController : MonoBehaviour
     {
         [Header("Page Controllers")]
-        public PageIpSourceController  PageIpSource;
-        public PageLatencyController   PageLatency;
-        public PageDownloadController  PageDownload;
-        public PageScheduleController  PageSchedule;
-        public PageHostsController     PageHosts;
-        public PageOutputController    PageOutput;
-        public PageOtherController     PageOther;
-        public PageAboutController     PageAbout;
-        public PageResultsController   PageResults;
-        public PageLogController       PageLog;
-        public PageHookController      PageHook;
+        [SerializeField] private PageIpSourceController  PageIpSource;
+        [SerializeField] private PageLatencyController   PageLatency;
+        [SerializeField] private PageDownloadController  PageDownload;
+        [SerializeField] private PageScheduleController  PageSchedule;
+        [SerializeField] private PageHostsController     PageHosts;
+        [SerializeField] private PageOutputController    PageOutput;
+        [SerializeField] private PageOtherController     PageOther;
+        [SerializeField] private PageAboutController     PageAbout;
+        [SerializeField] private PageResultsController   PageResults;
+        [SerializeField] private PageLogController       PageLog;
+        [SerializeField] private PageHookController      PageHook;
 
         private UIDocument    _doc;
         private VisualElement _root;
@@ -45,10 +46,14 @@ namespace CloudflareST.GUI
         private Label         _sbUserRole;
         private Label         _sbNextRun;
         private Label         _sbNextRunSep;
+        private MainWindowLayoutBootstrap _layoutBootstrap;
+        private bool _isMobileStructure;
 
         private bool _navBound;
         private bool _buttonsBound;
         private bool _scheduleManagerBound;
+        private bool _initialized;
+        private Coroutine _deferredInitCoroutine;
 
         public static readonly CfstOptions Options = new CfstOptions();
         private CfstDllRunner _runner;
@@ -56,38 +61,28 @@ namespace CloudflareST.GUI
         private void Awake()
         {
             _doc  = GetComponent<UIDocument>();
-            _root = _doc.rootVisualElement;
+            _layoutBootstrap = GetComponent<MainWindowLayoutBootstrap>();
+            EnsurePageControllers();
         }
 
         private void OnEnable()
         {
-            // 启动时加载持久化设置
             SettingsStorage.Load(Options);
-
-            BindElements();
-            InitPages();
-            BindNav();
-            BindButtons();
-            AppState.Instance.OnChanged         += RefreshSidebar;
-            TestResult.Instance.OnResultUpdated += RefreshBadge;
-            NavigateTo(0);
-            RefreshSidebar();
-
-            // 订阅重置事件
-            if (PageOther != null)
-                PageOther.OnSettingsReset -= OnSettingsReset;
-            if (PageOther != null)
-                PageOther.OnSettingsReset += OnSettingsReset;
-
-            TrayBridge.TrayReady += RegisterTrayMenuItems;
-            if (TrayBridge.IsInitialized)
-                RegisterTrayMenuItems();
+            _initialized = false;
+            if (_deferredInitCoroutine != null)
+                StopCoroutine(_deferredInitCoroutine);
+            _deferredInitCoroutine = StartCoroutine(DeferredInitialize());
         }
 
         private void OnDisable()
         {
-            // 退出时保存所有设置
             SettingsStorage.Save(Options);
+
+            if (_deferredInitCoroutine != null)
+            {
+                StopCoroutine(_deferredInitCoroutine);
+                _deferredInitCoroutine = null;
+            }
 
             if (PageOther != null)
                 PageOther.OnSettingsReset -= OnSettingsReset;
@@ -99,11 +94,14 @@ namespace CloudflareST.GUI
             UnbindScheduleManager();
             _runner?.Dispose();
             _runner = null;
+            _initialized = false;
         }
 
         /// <summary>重置后重新初始化所有页面控制器，使 UI 与新默认值同步</summary>
         private void OnSettingsReset()
         {
+            if (!_initialized)
+                return;
             InitPages();
         }
 
@@ -113,8 +111,100 @@ namespace CloudflareST.GUI
             SettingsStorage.Save(Options);
         }
 
+        private IEnumerator DeferredInitialize()
+        {
+            yield return null;
+            yield return null;
+            TryInitializeUI();
+            _deferredInitCoroutine = null;
+        }
+
+        private void TryInitializeUI()
+        {
+            _layoutBootstrap = GetComponent<MainWindowLayoutBootstrap>();
+            _isMobileStructure = _layoutBootstrap != null && _layoutBootstrap.IsMobileStructure;
+
+            BindElements();
+            LogVisualTreeDiagnostics();
+
+            bool hasAllPages = _pages != null && _pages.All(page => page != null);
+            if (!hasAllPages)
+            {
+                UnityEngine.Debug.LogWarning("[UI] initialization deferred: page roots are not ready");
+                return;
+            }
+
+            InitPages();
+            BindNav();
+            BindButtons();
+
+            AppState.Instance.OnChanged         -= RefreshSidebar;
+            AppState.Instance.OnChanged         += RefreshSidebar;
+            TestResult.Instance.OnResultUpdated -= RefreshBadge;
+            TestResult.Instance.OnResultUpdated += RefreshBadge;
+
+            NavigateTo(0);
+            RefreshSidebar();
+
+            if (PageOther != null)
+                PageOther.OnSettingsReset -= OnSettingsReset;
+            if (PageOther != null)
+                PageOther.OnSettingsReset += OnSettingsReset;
+
+            TrayBridge.TrayReady -= RegisterTrayMenuItems;
+            TrayBridge.TrayReady += RegisterTrayMenuItems;
+            if (!_isMobileStructure && TrayBridge.IsInitialized)
+                RegisterTrayMenuItems();
+
+            _initialized = true;
+        }
+
+        private void LogVisualTreeDiagnostics()
+        {
+            string assetName = _doc != null && _doc.visualTreeAsset != null ? _doc.visualTreeAsset.name : "<null>";
+            string rootName = _root != null ? (_root.name ?? "<unnamed>") : "<null>";
+            int rootChildCount = _root != null ? _root.childCount : -1;
+            var pageContainer = _root != null ? _root.Q<VisualElement>("page-container") : null;
+            int pageContainerChildren = pageContainer != null ? pageContainer.childCount : -1;
+            UnityEngine.Debug.Log($"[UI] asset={assetName}, root={rootName}, rootChildren={rootChildCount}, pageContainer={(pageContainer != null)}, pageContainerChildren={pageContainerChildren}, mobile={_isMobileStructure}");
+        }
+
+        private void EnsurePageControllers()
+        {
+            PageIpSource = EnsureController(PageIpSource);
+            PageLatency  = EnsureController(PageLatency);
+            PageDownload = EnsureController(PageDownload);
+            PageSchedule = EnsureController(PageSchedule);
+            PageHosts    = EnsureController(PageHosts);
+            PageOutput   = EnsureController(PageOutput);
+            PageOther    = EnsureController(PageOther);
+            PageAbout    = EnsureController(PageAbout);
+            PageResults  = EnsureController(PageResults);
+            PageLog      = EnsureController(PageLog);
+            PageHook     = EnsureController(PageHook);
+        }
+
+        private T EnsureController<T>(T existing) where T : Component
+        {
+            if (existing != null)
+                return existing;
+
+            var found = GetComponent<T>();
+            if (found != null)
+                return found;
+
+            return gameObject.AddComponent<T>();
+        }
+
         private void BindElements()
         {
+            _root = _doc != null ? _doc.rootVisualElement : null;
+            if (_root == null)
+            {
+                UnityEngine.Debug.LogError("[UI] rootVisualElement is null");
+                return;
+            }
+
             _btnStart      = _root.Q<Button>("btn-start");
             _btnStop       = _root.Q<Button>("btn-stop");
             _progressFill  = _root.Q<VisualElement>("progress-fill");
@@ -130,58 +220,191 @@ namespace CloudflareST.GUI
             _sbNextRunSep  = _root.Q<Label>("sb-next-run-sep");
             InitUserRoleLabel();
 
-            // ── 导航按钮：限定在 nav-list 内查找，避免跨页面误匹配 ──
-            var navList = _root.Q<VisualElement>("nav-list");
-            UnityEngine.Debug.Log("[NAV] nav-list found: " + (navList != null));
-
+            var navRoots = _root.Query<VisualElement>(name: "nav-list").ToList();
             _navBtns = new Button[PAGE_COUNT];
             string[] navNames = { "nav-ip","nav-latency","nav-download","nav-schedule",
                                   "nav-hosts","nav-output","nav-other","nav-about","nav-results",
                                   "nav-log","nav-hook" };
             for (int i = 0; i < PAGE_COUNT; i++)
             {
-                _navBtns[i] = navList != null
-                    ? navList.Q<Button>(navNames[i])
-                    : _root.Q<Button>(navNames[i]);
-                UnityEngine.Debug.Log("[NAV] " + navNames[i] + " = " + (_navBtns[i] != null ? "OK" : "NULL"));
+                foreach (var navRoot in navRoots)
+                {
+                    var btn = navRoot.Q<Button>(navNames[i]);
+                    if (btn == null) continue;
+                    _navBtns[i] = btn;
+                    break;
+                }
+                if (_navBtns[i] == null)
+                    _navBtns[i] = _root.Q<Button>(navNames[i]);
             }
 
-            // ── 页面容器：限定在 page-container 内查找 ──
             var pageContainer = _root.Q<VisualElement>("page-container");
-            UnityEngine.Debug.Log("[NAV] page-container found: " + (pageContainer != null));
-
             _pages = new VisualElement[PAGE_COUNT];
             string[] pageNames = { "page-ip","page-latency","page-download","page-schedule",
                                    "page-hosts","page-output","page-other","page-about","page-results",
                                    "page-log","page-hook" };
             for (int i = 0; i < PAGE_COUNT; i++)
             {
-                _pages[i] = pageContainer != null
-                    ? pageContainer.Q<VisualElement>(pageNames[i])
-                    : _root.Q<VisualElement>(pageNames[i]);
-                UnityEngine.Debug.Log("[NAV] " + pageNames[i] + " = " + (_pages[i] != null ? _pages[i].GetType().Name : "NULL"));
+                _pages[i] = FindPageRoot(pageContainer, pageNames[i]);
             }
+        }
+
+        private VisualElement FindPageRoot(VisualElement pageContainer, string pageName)
+        {
+            if (pageContainer == null)
+                return _root?.Q<VisualElement>(pageName);
+
+            var direct = _root?.Q<VisualElement>(pageName);
+            if (direct != null)
+                return direct;
+
+            foreach (var child in pageContainer.Children())
+            {
+                if (child == null) continue;
+                if (child.name == pageName)
+                    return child;
+
+                var nested = child.Q<VisualElement>(pageName);
+                if (nested != null)
+                    return nested;
+            }
+
+            UnityEngine.Debug.LogWarning("[UI] page root not found: " + pageName);
+            return null;
         }
 
         private void InitPages()
         {
-            PageIpSource?.Init(_pages[0], Options);
-            PageLatency ?.Init(_pages[1], Options);
-            PageDownload?.Init(_pages[2], Options);
-            PageSchedule?.Init(_pages[3], Options);
-            PageHosts   ?.Init(_pages[4], Options);
-            PageOutput  ?.Init(_pages[5], Options);
-            PageOther   ?.Init(_pages[6], Options);
-            PageAbout   ?.Init(_pages[7], Options);
-            PageResults ?.Init(_pages[8], Options);
-            PageLog     ?.Init(_pages[9],  Options);
-            PageHook    ?.Init(_pages[10], Options);
-            // 注入日志控制器到钩子页面
+            if (_pages == null || _pages.Length < PAGE_COUNT)
+            {
+                UnityEngine.Debug.LogError("[UI] page array not initialized");
+                return;
+            }
+
+            InitPage(PageIpSource, _pages[0], nameof(PageIpSource));
+            InitPage(PageLatency,  _pages[1], nameof(PageLatency));
+            InitPage(PageDownload, _pages[2], nameof(PageDownload));
+            InitPage(PageSchedule, _pages[3], nameof(PageSchedule));
+            InitPage(PageHosts,    _pages[4], nameof(PageHosts));
+            InitPage(PageOutput,   _pages[5], nameof(PageOutput));
+            InitPage(PageOther,    _pages[6], nameof(PageOther));
+            InitPage(PageAbout,    _pages[7], nameof(PageAbout));
+            InitPage(PageResults,  _pages[8], nameof(PageResults));
+            InitPage(PageLog,      _pages[9], nameof(PageLog));
+            InitPage(PageHook,     _pages[10], nameof(PageHook));
             if (PageHook  != null) PageHook.LogController  = PageLog;
-            // 注入日志控制器到其他设置页面（转发 AppendLog）
             if (PageOther != null) PageOther.LogController = PageLog;
-            // 绑定 ScheduleManager 依赖
             BindScheduleManager();
+        }
+
+        private void InitPage(PageIpSourceController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageLatencyController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageDownloadController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageScheduleController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageHostsController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageOutputController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageOtherController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageAboutController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageResultsController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageLogController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
+        }
+
+        private void InitPage(PageHookController controller, VisualElement root, string pageName)
+        {
+            if (controller == null || root == null)
+            {
+                UnityEngine.Debug.LogError($"[UI] init skipped: {pageName}, controller={(controller != null)}, root={(root != null)}");
+                return;
+            }
+            controller.Init(root, Options);
         }
 
         private void BindScheduleManager()
@@ -298,11 +521,14 @@ namespace CloudflareST.GUI
         // 由 TrayBridge.TrayReady 事件触发，与 TrayBridge 解耦
         private void RegisterTrayMenuItems()
         {
+            var trayBridge = GetComponent<TrayBridge>() ?? FindObjectOfType<TrayBridge>();
+            if (trayBridge == null) return;
+
             CfstTrayManager.Instance.Init(
                 onStartTest: () => StartTest(),
                 onStopTest:  StopTest,
                 isRunning:   () => AppState.Instance.IsRunning,
-                trayBridge:  GetComponent<TrayBridge>() ?? FindObjectOfType<TrayBridge>()
+                trayBridge:  trayBridge
             );
         }
 
@@ -461,8 +687,9 @@ namespace CloudflareST.GUI
                 NavigateTo(PAGE_RESULTS);
 
             // ── 托盘气泡通知 + 状态刷新 ──────────────────────
-            CfstTrayManager.Instance.OnRunningStateChanged(false);
-            if (exitCode == 0)
+            if (!_isMobileStructure)
+                CfstTrayManager.Instance.OnRunningStateChanged(false);
+            if (!_isMobileStructure && exitCode == 0)
             {
                 var s = AppState.Instance;
                 CfstTrayManager.Instance.ShowFinishedBalloon(
@@ -496,7 +723,8 @@ namespace CloudflareST.GUI
         private void RefreshSidebar()
         {
             // 同步托盘菜单运行状态
-            CfstTrayManager.Instance.OnRunningStateChanged(AppState.Instance.IsRunning);
+            if (!_isMobileStructure)
+                CfstTrayManager.Instance.OnRunningStateChanged(AppState.Instance.IsRunning);
 
             var s = AppState.Instance;
             float pct = s.Progress * 100f;
@@ -559,7 +787,10 @@ namespace CloudflareST.GUI
         {
             if (_sbUserRole == null) return;
             bool isAdmin = false;
-            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            if (!_isMobileStructure)
+            {
+                try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            }
             if (isAdmin)
             {
                 _sbUserRole.text = "管理员";
