@@ -110,16 +110,25 @@ public class TrayBridge : MonoBehaviour
     private void InitTray()
     {
         if (_initialized) return;
-        var tray = NativePlatform.Tray;
-        tray.Initialize();
-        tray.SetTooltip(Tooltip);
-        TrySetIcon();
-        RebuildMenu();
-        tray.OnTrayIconCreated += HandleTrayCreated;
-        HandleTrayCreated();
-        _initialized = true;
-        IsInitialized = true;
-        Debug.Log("[TrayBridge] 托盘初始化完成");
+        try
+        {
+            var tray = NativePlatform.Tray;
+            tray.Initialize();
+            tray.SetTooltip(Tooltip);
+            TrySetIcon();
+            RebuildMenu();
+            tray.OnTrayIconCreated += HandleTrayCreated;
+            HandleTrayCreated();
+            _initialized = true;
+            IsInitialized = true;
+            Debug.Log("[TrayBridge] 托盘初始化完成");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[TrayBridge] 托盘初始化失败，托盘功能已禁用: " + ex.Message);
+            _initialized = false;
+            IsInitialized = false;
+        }
     }
 
     private void ShutdownTray()

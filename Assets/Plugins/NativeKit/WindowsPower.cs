@@ -50,7 +50,7 @@ public static class WindowsPower
                 KillProcessSafe(ref _caffeinateProcess);
                 _caffeinateProcess = ProcessHelper.StartBackground("caffeinate", "-i");
             }
-            catch (Exception ex) { Debug.LogWarning($"[WindowsPower] PreventSleep: {ex.Message}"); }
+            catch (Exception ex) { UnityEngine.Debug.LogWarning($"[WindowsPower] PreventSleep: {ex.Message}"); }
         }
     }
 
@@ -63,7 +63,7 @@ public static class WindowsPower
                 KillProcessSafe(ref _caffeinateProcess);
                 _caffeinateProcess = ProcessHelper.StartBackground("caffeinate", "-i -s");
             }
-            catch (Exception ex) { Debug.LogWarning($"[WindowsPower] PreventSleepAndDisplay: {ex.Message}"); }
+            catch (Exception ex) { UnityEngine.Debug.LogWarning($"[WindowsPower] PreventSleepAndDisplay: {ex.Message}"); }
         }
     }
 
@@ -99,7 +99,7 @@ public static class WindowsPower
                 KillProcessSafe(ref _inhibitProcess);
                 _inhibitProcess = ProcessHelper.StartBackground("systemd-inhibit", "--what=idle:sleep --who=Unity --why=PreventSleep sleep infinity");
             }
-            catch (Exception ex) { Debug.LogWarning($"[WindowsPower] PreventSleep: {ex.Message}"); }
+            catch (Exception ex) { UnityEngine.Debug.LogWarning($"[WindowsPower] PreventSleep: {ex.Message}"); }
         }
     }
 

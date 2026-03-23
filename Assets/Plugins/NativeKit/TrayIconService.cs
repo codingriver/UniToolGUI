@@ -254,18 +254,29 @@ public class TrayIconService : ITrayService
 
 #elif UNITY_STANDALONE_OSX
     void PlatformInitialize() {
-        if (!MacTrayPlugin.Init()) { Debug.LogError("[Tray] Mac init failed"); return; }
-        MacTrayPlugin.SetTooltip(_tooltip); MacTrayPlugin.SetMenu(_menuItems);
-        _initialized=true; FireCreated();
-        Debug.Log("[TrayIconService] macOS 初始化完成");
+        try
+        {
+            if (!MacTrayPlugin.Init()) { UnityEngine.Debug.LogWarning("[Tray] Mac tray init failed (MacTray.bundle may be missing)"); return; }
+            MacTrayPlugin.SetTooltip(_tooltip); MacTrayPlugin.SetMenu(_menuItems);
+            _initialized=true; FireCreated();
+            UnityEngine.Debug.Log("[TrayIconService] macOS 初始化完成");
+        }
+        catch (DllNotFoundException ex)
+        {
+            UnityEngine.Debug.LogWarning("[Tray] MacTray.bundle 未找到，托盘功能已禁用。请编译并放置 MacTray.bundle 到 Assets/Plugins/NativeKit/。\n" + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogWarning("[Tray] macOS 托盘初始化异常: " + ex.Message);
+        }
     }
-    void PlatformShutdown()       { MacTrayPlugin.Shutdown(); _initialized=false; FireDestroyed(); }
-    void PlatformSetTooltip(string tip) => MacTrayPlugin.SetTooltip(tip);
-    void PlatformRebuildMenu()    => MacTrayPlugin.SetMenu(_menuItems);
-    void PlatformShowMainWindow() => MacTrayPlugin.ShowMainWindow();
-    void PlatformShowBalloon(string title,string msg,uint _1,uint _2) => MacTrayPlugin.ShowBalloon(title??"",msg??"");
-    void PlatformSetIcon(string iconPath) => MacTrayPlugin.SetIcon(iconPath);
-    void PlatformSetIconFromData(byte[] pngData) => MacTrayPlugin.SetIconFromData(pngData);
+    void PlatformShutdown()       { try { MacTrayPlugin.Shutdown(); } catch {} _initialized=false; FireDestroyed(); }
+    void PlatformSetTooltip(string tip) { try { MacTrayPlugin.SetTooltip(tip); } catch {} }
+    void PlatformRebuildMenu()    { try { MacTrayPlugin.SetMenu(_menuItems); } catch {} }
+    void PlatformShowMainWindow() { try { MacTrayPlugin.ShowMainWindow(); } catch {} }
+    void PlatformShowBalloon(string title,string msg,uint _1,uint _2) { try { MacTrayPlugin.ShowBalloon(title??"",msg??""); } catch {} }
+    void PlatformSetIcon(string iconPath) { try { MacTrayPlugin.SetIcon(iconPath); } catch {} }
+    void PlatformSetIconFromData(byte[] pngData) { try { MacTrayPlugin.SetIconFromData(pngData); } catch {} }
 
 #else
     void PlatformInitialize() { Debug.LogWarning("[TrayIconService] 托盘功能仅支持 Windows 和 macOS"); }

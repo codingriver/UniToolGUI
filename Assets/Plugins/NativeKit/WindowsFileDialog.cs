@@ -159,8 +159,7 @@ public static class WindowsFileDialog
         var sb = new StringBuilder();
         sb.Append("set theFile to (choose file");
         AppendPrompt(sb, title); AppendExtensions(sb, filter); AppendDefaultLocation(sb, initialDir);
-        sb.Append(")
-return POSIX path of theFile");
+        sb.Append(")\nreturn POSIX path of theFile");
         return RunOsascriptInline(sb.ToString());
     }
 
@@ -169,13 +168,7 @@ return POSIX path of theFile");
         var sb = new StringBuilder();
         sb.Append("set theFiles to (choose file with multiple selections allowed");
         AppendPrompt(sb, title); AppendExtensions(sb, filter); AppendDefaultLocation(sb, initialDir);
-        sb.Append(")
-set out to ""
-repeat with f in theFiles
-  set out to out & (POSIX path of f) & "
-"
-end repeat
-return out");
+        sb.Append(")\nset out to \"\"\nrepeat with f in theFiles\n  set out to out & (POSIX path of f) & \"\\n\"\nend repeat\nreturn out");
         var result = RunOsascriptInline(sb.ToString());
         if (string.IsNullOrEmpty(result)) return null;
         return result.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -187,10 +180,9 @@ return out");
         sb.Append("set theFile to (choose file name");
         AppendPrompt(sb, title);
         if (!string.IsNullOrEmpty(defaultFileName))
-            sb.Append(" default name "" + EscAS(defaultFileName) + """ );
+            sb.Append(" default name \"" + EscAS(defaultFileName) + "\"");
         AppendDefaultLocation(sb, initialDir);
-        sb.Append(")
-return POSIX path of theFile");
+        sb.Append(")\nreturn POSIX path of theFile");
         var result = RunOsascriptInline(sb.ToString());
         if (result != null && !string.IsNullOrEmpty(defaultExt) && !result.Contains("."))
             result += "." + defaultExt;
@@ -202,8 +194,7 @@ return POSIX path of theFile");
         var sb = new StringBuilder();
         sb.Append("set theFolder to (choose folder");
         AppendPrompt(sb, title); AppendDefaultLocation(sb, initialDir);
-        sb.Append(")
-return POSIX path of theFolder");
+        sb.Append(")\nreturn POSIX path of theFolder");
         return RunOsascriptInline(sb.ToString());
     }
 
@@ -220,7 +211,7 @@ return POSIX path of theFolder");
     private static void AppendPrompt(StringBuilder sb, string title)
     {
         if (!string.IsNullOrEmpty(title))
-            sb.Append(" with prompt "" + EscAS(title) + """ );
+            sb.Append(" with prompt \"" + EscAS(title) + "\"");
     }
 
     private static void AppendDefaultLocation(StringBuilder sb, string dir)
@@ -237,7 +228,7 @@ return POSIX path of theFolder");
         for (int i = 0; i < exts.Length; i++)
         {
             if (i > 0) sb.Append(", ");
-            sb.Append(""" + EscAS(exts[i]) + """ );
+            sb.Append("\"" + EscAS(exts[i]) + "\"");
         }
         sb.Append("}");
     }
@@ -274,13 +265,13 @@ return POSIX path of theFolder");
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[WindowsFileDialog] osascript failed: " + ex.Message);
+            UnityEngine.Debug.LogWarning("[WindowsFileDialog] osascript failed: " + ex.Message);
             return null;
         }
     }
 
     private static string EscAS(string s) =>
-        (s ?? "").Replace("\\", "\\\\").Replace(""", "\"");
+        (s ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static string[] ParseExtensionsFromFilter(string filter)
     {

@@ -169,7 +169,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   desktopWindow: {fileID: 9197481963319205126, guid: ab334eca754ba2e408c30397c2ff4842, type: 3}
   mobileWindow: {fileID: 9197481963319205126, guid: ae521a59573806949af772966745ef0d, type: 3}
-  layoutPreset: 0
+  layoutPreset: 1
 --- !u!114 &18177184
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -351,7 +351,7 @@ MonoBehaviour:
   MinimizeToTray: 1
   SimulateInEditor: 1
   WindowsIcoFileName: app.ico
-  MacPngFileName: app.png
+  MacPngFileName: app.jpg
   AddShowWindowItem: 1
   AddStartupItem: 1
   AddRestartItem: 1

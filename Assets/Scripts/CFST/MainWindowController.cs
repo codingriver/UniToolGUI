@@ -762,11 +762,17 @@ namespace CloudflareST.GUI
             var mgr = ScheduleManager.Instance;
             bool schedEnabled = mgr != null && mgr.IsEnabled && mgr.NextRunAt.HasValue;
             if (_sbNextRun != null)
+            {
                 _sbNextRun.text = schedEnabled
                     ? "⏰ 下次: " + mgr.NextRunAt.Value.ToString("MM-dd HH:mm:ss")
                     : "";
+                _sbNextRun.style.display = schedEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+            }
             if (_sbNextRunSep != null)
+            {
                 _sbNextRunSep.text = schedEnabled ? "|" : "";
+                _sbNextRunSep.style.display = schedEnabled ? DisplayStyle.Flex : DisplayStyle.None;
+            }
         }
 
         private void RefreshBadge()

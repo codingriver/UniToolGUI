@@ -105,14 +105,14 @@ public static class WindowsMessageBox
                 if (p.ExitCode != 0)
                 {
                     if (!string.IsNullOrEmpty(error))
-                        Debug.LogWarning($"[MessageBox] {error}");
+                        UnityEngine.Debug.LogWarning($"[MessageBox] {error}");
                     return null;
                 }
 
                 return string.IsNullOrEmpty(output) ? string.Empty : output;
             }
         }
-        catch (Exception ex) { Debug.LogWarning($"[MessageBox] {ex.Message}"); return null; }
+        catch (Exception ex) { UnityEngine.Debug.LogWarning($"[MessageBox] {ex.Message}"); return null; }
     }
 
     public static int Show(IntPtr hWnd, string text, string caption, int buttons = 0, int icon = 0)
@@ -201,12 +201,12 @@ public static class WindowsMessageBox
     public static bool Confirm(IntPtr hWnd, string text, string caption = "确认") => Confirm(text, caption);
 
 #else
-    public static int Show(IntPtr hWnd, string text, string caption, int buttons = 0, int icon = 0) { Debug.Log($"[{caption}] {text}"); return 1; }
-    public static void Info(string text, string caption = "信息") { Debug.Log($"[{caption}] {text}"); }
-    public static void Warning(string text, string caption = "警告") { Debug.LogWarning($"[{caption}] {text}"); }
-    public static void Error(string text, string caption = "错误") { Debug.LogError($"[{caption}] {text}"); }
-    public static bool Confirm(string text, string caption = "确认") { Debug.Log($"[{caption}] {text}"); return true; }
-    public static bool YesNo(string text, string caption = "请选择") { Debug.Log($"[{caption}] {text}"); return true; }
+    public static int Show(IntPtr hWnd, string text, string caption, int buttons = 0, int icon = 0) { UnityEngine.Debug.Log($"[{caption}] {text}"); return 1; }
+    public static void Info(string text, string caption = "信息") { UnityEngine.Debug.Log($"[{caption}] {text}"); }
+    public static void Warning(string text, string caption = "警告") { UnityEngine.Debug.LogWarning($"[{caption}] {text}"); }
+    public static void Error(string text, string caption = "错误") { UnityEngine.Debug.LogError($"[{caption}] {text}"); }
+    public static bool Confirm(string text, string caption = "确认") { UnityEngine.Debug.Log($"[{caption}] {text}"); return true; }
+    public static bool YesNo(string text, string caption = "请选择") { UnityEngine.Debug.Log($"[{caption}] {text}"); return true; }
     public static void Info(IntPtr hWnd, string text, string caption = "信息") => Info(text, caption);
     public static bool Confirm(IntPtr hWnd, string text, string caption = "确认") => Confirm(text, caption);
 #endif

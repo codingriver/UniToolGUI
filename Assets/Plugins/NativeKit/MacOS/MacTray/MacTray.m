@@ -1,4 +1,5 @@
 #import <AppKit/AppKit.h>
+#import <UserNotifications/UserNotifications.h>
 #import "MacTray.h"
 #import <objc/runtime.h>
 #import <string.h>
@@ -108,43 +109,28 @@ void MacTray_ShowBalloon(const char* title, const char* message) {
     NSString* m = message ? [NSString stringWithUTF8String:message] : @"";
     void (^block)(void) = ^{
         if (@available(macOS 10.14, *)) {
-            // macOS 10.14+: 使用 UNUserNotificationCenter
-            Class UNCenter = NSClassFromString(@"UNUserNotificationCenter");
-            if (UNCenter) {
-                id center = [UNCenter performSelector:@selector(currentNotificationCenter)];
-                [center performSelector:@selector(requestAuthorizationWithOptions:completionHandler:)
-                             withObject:@(1 | 2) // UNAuthorizationOptionAlert | UNAuthorizationOptionSound
-                             withObject:^(BOOL granted, NSError* error) {
-                    if (granted) {
-                        Class UNContent = NSClassFromString(@"UNMutableNotificationContent");
-                        id content = [[UNContent alloc] init];
-                        [content performSelector:@selector(setTitle:) withObject:t];
-                        [content performSelector:@selector(setBody:) withObject:m];
-                        
-                        Class UNRequest = NSClassFromString(@"UNNotificationRequest");
-                        NSString* identifier = [[NSUUID UUID] UUIDString];
-                        id request = [UNRequest performSelector:@selector(requestWithIdentifier:content:trigger:)
-                                                     withObject:identifier
-                                                     withObject:content
-                                                     withObject:nil];
-                        [center performSelector:@selector(addNotificationRequest:withCompletionHandler:)
-                                     withObject:request
-                                     withObject:nil];
-                    }
-                }];
-                return;
-            }
-        }
-        // macOS 10.13 及以下回退到 NSUserNotification
+            UNUserNotificationCenter* center = [UNUserNotificationCenter currentNotificationCenter];
+            [center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound)
+                                 completionHandler:^(BOOL granted, NSError* error) {
+                if (!granted) return;
+                UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
+                content.title = t;
+                content.body  = m;
+                NSString* identifier = [[NSUUID UUID] UUIDString];
+                UNNotificationRequest* request = [UNNotificationRequest requestWithIdentifier:identifier
+                                                                                      content:content
+                                                                                      trigger:nil];
+                [center addNotificationRequest:request withCompletionHandler:nil];
+            }];
+        } else {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        if ([NSUserNotificationCenter class]) {
             NSUserNotification* notif = [[NSUserNotification alloc] init];
             notif.title = t;
             notif.informativeText = m;
             [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:notif];
-        }
 #pragma clang diagnostic pop
+        }
     };
     if ([NSThread isMainThread]) block();
     else dispatch_async(dispatch_get_main_queue(), block);

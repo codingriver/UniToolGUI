@@ -91,7 +91,7 @@ public static class WindowsRecycleBin
             else if (Directory.Exists(path)) Directory.Move(path, dest);
             return 0;
         }
-        catch (Exception ex) { Debug.LogWarning($"[RecycleBin] {ex.Message}"); return -1; }
+        catch (Exception ex) { UnityEngine.Debug.LogWarning($"[RecycleBin] {ex.Message}"); return -1; }
     }
 
 #elif UNITY_STANDALONE_LINUX
@@ -127,7 +127,7 @@ public static class WindowsRecycleBin
             else if (Directory.Exists(path)) Directory.Move(path, dest);
             return 0;
         }
-        catch (Exception ex) { Debug.LogWarning($"[RecycleBin] {ex.Message}"); return -1; }
+        catch (Exception ex) { UnityEngine.Debug.LogWarning($"[RecycleBin] {ex.Message}"); return -1; }
     }
 
 #else

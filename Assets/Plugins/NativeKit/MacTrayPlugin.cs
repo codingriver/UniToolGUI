@@ -51,8 +51,15 @@ public static class MacTrayPlugin
 
     public static bool Init()
     {
-        _mainContext = SynchronizationContext.Current ?? new SynchronizationContext();
-        return MacTray_Init() != 0;
+        try
+        {
+            _mainContext = SynchronizationContext.Current ?? new SynchronizationContext();
+            return MacTray_Init() != 0;
+        }
+        catch (DllNotFoundException)
+        {
+            return false;
+        }
     }
 
     public static void Shutdown()
