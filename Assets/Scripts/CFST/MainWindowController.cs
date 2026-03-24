@@ -123,6 +123,7 @@ namespace CloudflareST.GUI
         {
             _layoutBootstrap = GetComponent<MainWindowLayoutBootstrap>();
             _isMobileStructure = _layoutBootstrap != null && _layoutBootstrap.IsMobileStructure;
+            ApplyPlatformUiScale();
 
             BindElements();
             LogVisualTreeDiagnostics();
@@ -158,6 +159,104 @@ namespace CloudflareST.GUI
 
             _initialized = true;
         }
+
+        private void ApplyPlatformUiScale()
+        {
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+            if (_doc == null || _doc.panelSettings == null)
+                return;
+
+            var ps = _doc.panelSettings;
+
+            // ── 根本原因 ────────────────────────────────────────────────────────────
+            // PanelSettings.ScaleMode = ConstantPhysicalSize（值=2）时，
+            // UI Toolkit 用 Screen.dpi / ReferenceDpi 计算缩放系数。
+            // macOS 上 Screen.dpi 通常返回 72（逻辑 DPI），ReferenceDpi=96，
+            // 导致 scale = 72/96 = 0.75，界面整体缩小 25%。
+            //
+            // 修复方案：在运行时切换为 ScaleWithScreenSize（值=0），
+            // 以参考分辨率（1200x800）为基准做比例缩放，与 Windows 观感一致。
+            // 同时对 Retina 屏额外补偿 scale，避免字体偏小。
+            // ────────────────────────────────────────────────────────────────────────
+
+            // 切换 ScaleMode 为 ScaleWithScreenSize
+            // PanelSettings.scaleMode 是 enum PanelScaleMode { ConstantPixelSize=0, ScaleWithScreenSize=1, ConstantPhysicalSize=2 }
+            // 运行时直接赋值即可（不影响 Asset 文件，仅本次运行生效）
+            try
+            {
+                // 用反射读写，避免版本差异导致编译失败
+                var scaleModeProp = ps.GetType().GetProperty("scaleMode",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (scaleModeProp != null)
+                {
+                    // PanelScaleMode.ScaleWithScreenSize = 1
+                    var enumType = scaleModeProp.PropertyType;
+                    var val = System.Enum.ToObject(enumType, 1);
+                    scaleModeProp.SetValue(ps, val);
+                    UnityEngine.Debug.Log("[UI] macOS: PanelSettings.scaleMode -> ScaleWithScreenSize");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning("[UI] macOS: scaleMode 设置失败: " + ex.Message);
+            }
+
+            // Retina 补偿：物理分辨率 / 逻辑分辨率 > 1.5 认为是 Retina 屏
+            float backingRatio = 1f;
+            try
+            {
+                if (Screen.width > 0 && Screen.currentResolution.width > 0)
+                    backingRatio = (float)Screen.currentResolution.width / Screen.width;
+            }
+            catch { }
+
+            float targetScale = ps.scale;
+            if (backingRatio >= 1.9f)
+                targetScale = Mathf.Max(targetScale, 1.2f);
+            else if (backingRatio >= 1.4f)
+                targetScale = Mathf.Max(targetScale, 1.1f);
+
+            if (!Mathf.Approximately(targetScale, ps.scale))
+                ps.scale = targetScale;
+
+            UnityEngine.Debug.Log($"[UI] macOS scale applied: scale={ps.scale:F2} backingRatio={backingRatio:F2} screenDpi={Screen.dpi:F0}");
+
+            // ── DPI 自适应窗口物理尺寸 ────────────────────────────────────────────
+            ApplyMacWindowSize(backingRatio);
+#endif
+        }
+
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        private void ApplyMacWindowSize(float backingRatio)
+        {
+            // 目标尺寸：设计稿 1200x800（逻辑点，与 Windows 一致）
+            const int refW = 1200;
+            const int refH = 800;
+
+            // Screen.currentResolution 在 macOS 返回物理像素分辨率
+            // backingRatio = 物理像素 / 逻辑点（Retina=2, 非Retina=1）
+            float physW = Screen.currentResolution.width;
+            float physH = Screen.currentResolution.height;
+            float backingScale = backingRatio >= 1.4f ? Mathf.Round(backingRatio) : 1f;
+
+            // 逻辑点屏幕尺寸
+            float logicW = physW / backingScale;
+            float logicH = physH / backingScale;
+
+            // 目标窗口不超过屏幕逻辑尺寸的 90%
+            int targetW = Mathf.Min(refW, Mathf.RoundToInt(logicW * 0.90f));
+            int targetH = Mathf.Min(refH, Mathf.RoundToInt(logicH * 0.90f));
+
+            // 居中（逻辑点坐标，macOS Cocoa 原点在左下，MacWindow_SetFrame 内部做翻转）
+            int posX = Mathf.RoundToInt((logicW - targetW) / 2f);
+            int posY = Mathf.RoundToInt((logicH - targetH) / 2f);
+
+            UnityEngine.Debug.Log($"[UI] macOS window: {targetW}x{targetH} @ ({posX},{posY}) logical, backingScale={backingScale} screen={logicW}x{logicH} (physical={physW}x{physH})");
+
+            try { MacWindowPlugin.SetFrame(posX, posY, targetW, targetH); }
+            catch (System.Exception ex) { UnityEngine.Debug.LogWarning("[UI] macOS SetFrame failed: " + ex.Message); }
+        }
+#endif
 
         private void LogVisualTreeDiagnostics()
         {

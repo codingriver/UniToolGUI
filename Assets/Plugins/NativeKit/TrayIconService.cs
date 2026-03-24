@@ -258,6 +258,8 @@ public class TrayIconService : ITrayService
         {
             if (!MacTrayPlugin.Init()) { UnityEngine.Debug.LogWarning("[Tray] Mac tray init failed (MacTray.bundle may be missing)"); return; }
             MacTrayPlugin.SetTooltip(_tooltip); MacTrayPlugin.SetMenu(_menuItems);
+            // 启用关闭按钮拦截：点关闭时隐藏窗口而非退出（最小化到托盘行为）
+            MacTrayPlugin.SetHideOnClose(true);
             _initialized=true; FireCreated();
             UnityEngine.Debug.Log("[TrayIconService] macOS 初始化完成");
         }

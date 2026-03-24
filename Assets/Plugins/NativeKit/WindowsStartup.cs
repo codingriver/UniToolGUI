@@ -197,7 +197,8 @@ public static class WindowsStartup
             var dir = Path.GetDirectoryName(plistPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             File.WriteAllText(plistPath, plist);
-            TryLaunchCtl("bootstrap", plistPath, label);
+            // 仅写入 LaunchAgents 配置，不在勾选当下主动 bootstrap。
+            // 否则 launchctl 会立刻拉起一个新实例，表现为“勾选开机自启后启动了第二个程序”。
             OnStartupChanged?.Invoke(true);
             return true;
         }
@@ -209,8 +210,6 @@ public static class WindowsStartup
         try
         {
             var path = GetPlistPath();
-            var label = "com.unity." + (keyName ?? Application.productName ?? "UnityApp").Replace(" ", "");
-            TryLaunchCtl("bootout", path, label);
             if (File.Exists(path))
             {
                 File.Delete(path);

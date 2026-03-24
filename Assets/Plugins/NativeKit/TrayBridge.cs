@@ -214,26 +214,38 @@ public class TrayBridge : MonoBehaviour
                 {
                     try
                     {
-                        if (_menuStartup.Checked)
+                        bool currentEnabled = WindowsStartup.IsStartupEnabled();
+                        bool targetEnabled = !currentEnabled;
+
+                        bool ok;
+                        if (targetEnabled)
                         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-                            WindowsStartup.EnableStartup(WindowsStartup.GetCurrentExePath());
+                            ok = WindowsStartup.EnableStartup(WindowsStartup.GetCurrentExePath());
 #elif UNITY_STANDALONE_OSX
                             var exePath = WindowsStartup.GetCurrentExePath();
                             if (string.IsNullOrEmpty(exePath))
                                 throw new InvalidOperationException("无法获取 macOS 可执行文件路径");
-                            WindowsStartup.EnableStartup(exePath);
+                            ok = WindowsStartup.EnableStartup(exePath);
+#else
+                            ok = false;
 #endif
                         }
                         else
                         {
-                            WindowsStartup.DisableStartup();
+                            ok = WindowsStartup.DisableStartup();
                         }
+
+                        if (!ok)
+                            throw new InvalidOperationException("开机自启切换失败");
+
+                        _menuStartup.Checked = WindowsStartup.IsStartupEnabled();
+                        NativePlatform.Tray.RefreshMenu();
                     }
                     catch (Exception ex)
                     {
                         Debug.LogWarning("[TrayBridge] 开机自启切换失败: " + ex.Message);
-                        _menuStartup.Checked = !_menuStartup.Checked;
+                        _menuStartup.Checked = WindowsStartup.IsStartupEnabled();
                         NativePlatform.Tray.RefreshMenu();
                     }
                 }, null)
@@ -262,14 +274,17 @@ public class TrayBridge : MonoBehaviour
 #elif UNITY_STANDALONE_OSX
                         var appPath = GetMacAppBundlePath();
                         if (!string.IsNullOrEmpty(appPath))
-                            System.Diagnostics.Process.Start(
-                                new System.Diagnostics.ProcessStartInfo
-                                {
-                                    FileName = "open",
-                                    Arguments = "-n " + ProcessHelper.Quote(appPath),
-                                    UseShellExecute = false,
-                                    CreateNoWindow = true,
-                                });
+                        {
+                            // 先释放单实例文件锁，再用 bash 延迟 1 秒启动新实例，最后退出。
+                            // 若先 Quit 再启动，文件锁在进程退出时由 OS 回收，但时序不确定；
+                            // 若先 open 再 Quit，新实例可能在旧锁释放前启动并因 TryAcquire 失败被 kill。
+                            // 正确做法：主动 Release 锁 → 后台延迟启动 → 当前进程 Quit。
+                            NativePlatform.SingleInstance.Release();
+                            // 用绝对路径 /usr/bin/open，避免打包后 $PATH 不完整导致找不到 open
+                            string escapedPath = appPath.Replace("\\", "\\\\").Replace("\"", "\\\"");
+                            ProcessHelper.StartBackground("/bin/bash",
+                                "-c \"/bin/sleep 1 && /usr/bin/open \\\"" + escapedPath + "\\\"\"");
+                        }
                         else
                             Debug.LogWarning("[TrayBridge] 未找到 .app 包路径，无法重启 macOS 应用");
 #endif
@@ -320,14 +335,25 @@ public class TrayBridge : MonoBehaviour
 #if UNITY_STANDALONE_OSX
         try
         {
+            // Application.dataPath = .../Foo.app/Contents/Resources/Data
+            // 需要向上 3 级才到 .app
             var dataPath = Application.dataPath;
             if (string.IsNullOrEmpty(dataPath)) return null;
-            var contentsDir = System.IO.Path.GetDirectoryName(dataPath);
-            if (string.IsNullOrEmpty(contentsDir)) return null;
-            var appDir = System.IO.Path.GetDirectoryName(contentsDir);
-            return !string.IsNullOrEmpty(appDir) && appDir.EndsWith(".app", StringComparison.OrdinalIgnoreCase)
-                ? appDir
-                : null;
+
+            // 向上逐级查找以 .app 结尾的目录
+            var dir = dataPath;
+            for (int i = 0; i < 5; i++)
+            {
+                dir = System.IO.Path.GetDirectoryName(dir);
+                if (string.IsNullOrEmpty(dir)) break;
+                if (dir.EndsWith(".app", StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.Log("[TrayBridge] .app 路径: " + dir);
+                    return dir;
+                }
+            }
+            Debug.LogWarning("[TrayBridge] 未能从 dataPath 向上找到 .app 目录，dataPath=" + dataPath);
+            return null;
         }
         catch (Exception ex)
         {

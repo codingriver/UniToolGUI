@@ -43,6 +43,9 @@ public static class MacTrayPlugin
     [DllImport(DllName)]
     private static extern int MacTray_SetIconFromData(byte[] pngData, int length);
 
+    [DllImport(DllName)]
+    private static extern void MacTray_SetHideOnClose(int enable);
+
     private static MenuCallbackDelegate _callbackDelegate;
     private static SynchronizationContext _mainContext;
     private static List<TrayMenuItem> _menuItems;
@@ -106,7 +109,18 @@ public static class MacTrayPlugin
 
         var strings = new List<string>();
         foreach (var item in items)
-            strings.Add(item.IsSeparator ? "---" : (item.Text ?? ""));
+        {
+            if (item.IsSeparator)
+            {
+                strings.Add("---");
+                continue;
+            }
+
+            var title = item.Text ?? "";
+            if (item.IsToggle && item.Checked)
+                title = "\u2713 " + title;
+            strings.Add(title);
+        }
 
         var ptrs = new IntPtr[strings.Count + 1];
         IntPtr arrPtr = IntPtr.Zero;
@@ -164,6 +178,7 @@ public static class MacTrayPlugin
     {
         MacTray_ShowMainWindow();
     }
+
     /// <summary>从文件路径设置托盘图标（PNG/ICNS，建议 18x18 px）。</summary>
     public static bool SetIcon(string imagePath)
     {
@@ -176,6 +191,16 @@ public static class MacTrayPlugin
     {
         if (pngData == null || pngData.Length == 0) return false;
         return MacTray_SetIconFromData(pngData, pngData.Length) != 0;
+    }
+
+    /// <summary>
+    /// 设置点击关闭按钮时的行为。
+    /// enable=true：隐藏窗口（最小化到托盘）；enable=false：正常关闭。
+    /// 必须在 Init() 之后调用。
+    /// </summary>
+    public static void SetHideOnClose(bool enable)
+    {
+        MacTray_SetHideOnClose(enable ? 1 : 0);
     }
 #endif
 }

@@ -23,6 +23,10 @@ int MacTray_SetIcon(const char* imagePath);
 /// pngData: PNG 字节数组；length: 字节长度。
 int MacTray_SetIconFromData(const unsigned char* pngData, int length);
 
+/// 设置关闭按钮行为：enable=1 时点关闭只隐藏窗口，enable=0 时恢复正常关闭。
+/// 需在 MacTray_Init() 之后调用。
+void MacTray_SetHideOnClose(int enable);
+
 // ── 窗口位置/大小/置顶 ────────────────────────────────────────────────────
 // 坐标系：左上角为原点（与 Windows 一致，内部翻转 macOS 坐标）
 int MacWindow_GetFrame(int* outX, int* outY, int* outWidth, int* outHeight);
