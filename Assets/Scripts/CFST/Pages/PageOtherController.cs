@@ -109,14 +109,19 @@ namespace CloudflareST.GUI
             // ── 管理员/普通用户切换按钮 ───────────────────────────────
             _isAdmin = false;
             try { _isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            string identity = WindowsAdmin.GetCurrentIdentityDisplay();
             var labelRole = root.Q<Label>("label-current-role");
             if (labelRole != null)
                 labelRole.text = _isAdmin
-                    ? "当前以管理员身份运行"
-                    : "当前以普通用户身份运行";
+                    ? "当前以管理员身份运行 · " + identity
+                    : "当前以普通用户身份运行 · " + identity;
             if (_btnSwitchRole != null)
             {
+#if UNITY_STANDALONE_OSX
+                _btnSwitchRole.text = _isAdmin ? "以普通用户重启" : "请求管理员权限重启";
+#else
                 _btnSwitchRole.text = _isAdmin ? "以普通用户重启" : "以管理员重启";
+#endif
                 _btnSwitchRole.RegisterCallback<ClickEvent>(OnSwitchRoleClicked);
             }
 
@@ -245,6 +250,7 @@ namespace CloudflareST.GUI
 
         private void OnAutoAdminToggleChanged(ChangeEvent<bool> e)
         {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             bool ok = e.newValue
                 ? WindowsAdminAutoElevate.EnableAutoAdmin()
                 : WindowsAdminAutoElevate.DisableAutoAdmin();
@@ -260,12 +266,28 @@ namespace CloudflareST.GUI
                 ToastManager.Error("注册表写入失败，设置未生效");
             }
             UpdateAutoAdminHint(_autoAdminHint, _autoAdminToggle != null && _autoAdminToggle.value);
+#elif UNITY_STANDALONE_OSX
+            // macOS 无注册表，toggle 仅作为触发器，切换时直接用 osascript 重启
+            _autoAdminToggle?.SetValueWithoutNotify(!e.newValue); // 恢复 toggle 状态（无持久化）
+            if (e.newValue)
+            {
+                bool ok = false;
+                try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
+                if (!ok) ToastManager.Error("提升权限失败，请手动以管理员身份运行");
+            }
+#else
+            ToastManager.Error("当前平台不支持自动管理员设置");
+            _autoAdminToggle?.SetValueWithoutNotify(!e.newValue);
+#endif
         }
 
         private void OnSwitchRoleClicked(ClickEvent evt)
         {
+            try { _isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { _isAdmin = false; }
+
             if (_isAdmin)
             {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
                 WindowsAdminAutoElevate.DisableAutoAdmin();
                 try
                 {
@@ -279,6 +301,34 @@ namespace CloudflareST.GUI
                 {
                     ToastManager.Error("重启失败：" + ex.Message);
                 }
+#elif UNITY_STANDALONE_OSX
+                // macOS root 模式下以普通用户重启：直接 open .app（不带 sudo）
+                try
+                {
+                    string appPath = null;
+                    string dir = UnityEngine.Application.dataPath;
+                    for (int i = 0; i < 5; i++)
+                    {
+                        dir = System.IO.Path.GetDirectoryName(dir);
+                        if (!string.IsNullOrEmpty(dir) && dir.EndsWith(".app", System.StringComparison.OrdinalIgnoreCase))
+                        { appPath = dir; break; }
+                    }
+                    if (!string.IsNullOrEmpty(appPath))
+                    {
+                        NativePlatform.SingleInstance.Release();
+                        string escaped = appPath.Replace("\"", "\\\"");
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = "/bin/bash",
+                            Arguments = $"-c \"/bin/sleep 1 && /usr/bin/open \\\"{escaped}\\\"\"",
+                            UseShellExecute = false
+                        });
+                        Application.Quit();
+                    }
+                    else ToastManager.Error("未找到 .app 路径");
+                }
+                catch (System.Exception ex) { ToastManager.Error("重启失败：" + ex.Message); }
+#endif
             }
             else
             {

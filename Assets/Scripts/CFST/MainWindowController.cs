@@ -234,26 +234,62 @@ namespace CloudflareST.GUI
             const int refH = 800;
 
             // Screen.currentResolution 在 macOS 返回物理像素分辨率
-            // backingRatio = 物理像素 / 逻辑点（Retina=2, 非Retina=1）
+            // backingRatio = 物理像素 / 逻辑点（Retina=2，异常值时回退到 2）
             float physW = Screen.currentResolution.width;
             float physH = Screen.currentResolution.height;
             float backingScale = backingRatio >= 1.4f ? Mathf.Round(backingRatio) : 1f;
+            if (backingScale > 3f) backingScale = 2f; // 避免偶发 4.x 导致坐标异常
 
-            // 逻辑点屏幕尺寸
             float logicW = physW / backingScale;
             float logicH = physH / backingScale;
 
-            // 目标窗口不超过屏幕逻辑尺寸的 90%
             int targetW = Mathf.Min(refW, Mathf.RoundToInt(logicW * 0.90f));
             int targetH = Mathf.Min(refH, Mathf.RoundToInt(logicH * 0.90f));
 
-            // 居中（逻辑点坐标，macOS Cocoa 原点在左下，MacWindow_SetFrame 内部做翻转）
-            int posX = Mathf.RoundToInt((logicW - targetW) / 2f);
-            int posY = Mathf.RoundToInt((logicH - targetH) / 2f);
+            // 使用当前窗口中心点计算目标位置，避免启动后跳到右下角
+            int posX;
+            int posY;
+            try
+            {
+                if (MacWindowPlugin.GetFrame(out int curX, out int curY, out int curW, out int curH) && curW > 0 && curH > 0)
+                {
+                    int centerX = curX + curW / 2;
+                    int centerY = curY + curH / 2;
+                    posX = centerX - targetW / 2;
+                    posY = centerY - targetH / 2;
+                }
+                else
+                {
+                    posX = Mathf.RoundToInt((logicW - targetW) / 2f);
+                    posY = Mathf.RoundToInt((logicH - targetH) / 2f);
+                }
+            }
+            catch
+            {
+                posX = Mathf.RoundToInt((logicW - targetW) / 2f);
+                posY = Mathf.RoundToInt((logicH - targetH) / 2f);
+            }
+
+            posX = Mathf.Clamp(posX, 0, Mathf.Max(0, Mathf.RoundToInt(logicW - targetW)));
+            posY = Mathf.Clamp(posY, 0, Mathf.Max(0, Mathf.RoundToInt(logicH - targetH)));
 
             UnityEngine.Debug.Log($"[UI] macOS window: {targetW}x{targetH} @ ({posX},{posY}) logical, backingScale={backingScale} screen={logicW}x{logicH} (physical={physW}x{physH})");
 
-            try { MacWindowPlugin.SetFrame(posX, posY, targetW, targetH); }
+            try
+            {
+                // 延后 1 帧应用，避免 Unity 首帧窗口初始化后再次覆盖位置引起闪动
+                StartCoroutine(ApplyMacWindowSizeNextFrame(posX, posY, targetW, targetH));
+            }
+            catch (System.Exception ex)
+            {
+                UnityEngine.Debug.LogWarning("[UI] macOS SetFrame schedule failed: " + ex.Message);
+            }
+        }
+
+        private IEnumerator ApplyMacWindowSizeNextFrame(int x, int y, int w, int h)
+        {
+            yield return null;
+            try { MacWindowPlugin.SetFrame(x, y, w, h); }
             catch (System.Exception ex) { UnityEngine.Debug.LogWarning("[UI] macOS SetFrame failed: " + ex.Message); }
         }
 #endif
@@ -892,19 +928,25 @@ namespace CloudflareST.GUI
         {
             if (_sbUserRole == null) return;
             bool isAdmin = false;
+            string user = "unknown";
             if (!_isMobileStructure)
             {
-                try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+                try
+                {
+                    isAdmin = WindowsAdmin.IsRunningAsAdmin();
+                    user = WindowsAdmin.GetCurrentUserName();
+                }
+                catch { }
             }
             if (isAdmin)
             {
-                _sbUserRole.text = "管理员";
+                _sbUserRole.text = $"管理员({user})";
                 _sbUserRole.RemoveFromClassList("sb-user-role--normal");
                 _sbUserRole.AddToClassList("sb-user-role--admin");
             }
             else
             {
-                _sbUserRole.text = "普通用户";
+                _sbUserRole.text = $"普通用户({user})";
                 _sbUserRole.RemoveFromClassList("sb-user-role--admin");
                 _sbUserRole.AddToClassList("sb-user-role--normal");
             }
