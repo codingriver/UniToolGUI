@@ -227,6 +227,9 @@ MonoBehaviour:
   MacStandaloneUiScale: 0.91
   MacWindowPreset: 0
   _lastMacWindowPreset: 0
+  WindowsWindowPreset: 0
+  _lastWindowsWindowPreset: 0
+  SyncMacPresetToProjectSettings: 1
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

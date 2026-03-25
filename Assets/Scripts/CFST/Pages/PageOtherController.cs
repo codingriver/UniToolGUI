@@ -20,6 +20,7 @@ namespace CloudflareST.GUI
         private Button        _btnCopyLog;
         private Button        _btnResetDefaults;
         private Button        _btnSwitchRole;
+        private TrayBridge    _trayBridge;
 
         // 开机自启 Toggle 引用，供事件回调刷新
         private Toggle _startupToggle;
@@ -38,6 +39,7 @@ namespace CloudflareST.GUI
 
             _root = root;
             _opts = opts;
+            _trayBridge = GetComponent<TrayBridge>() ?? FindObjectOfType<TrayBridge>();
 
             _debugToggle   = root.Q<Toggle>("toggle-debug");
             _logToFileToggle = root.Q<Toggle>("toggle-log-to-file");
@@ -93,7 +95,7 @@ namespace CloudflareST.GUI
             // ── 最小化到托盘开关 ──────────────────────────────────
             if (_trayMinToggle != null)
             {
-                _trayMinToggle.SetValueWithoutNotify(CfstTrayManager.MinimizeToTray);
+                _trayMinToggle.SetValueWithoutNotify(_trayBridge == null || _trayBridge.MinimizeToTray);
                 _trayMinToggle.RegisterValueChangedCallback(OnTrayMinToggleChanged);
             }
 
@@ -257,7 +259,8 @@ namespace CloudflareST.GUI
 
         private void OnTrayMinToggleChanged(ChangeEvent<bool> e)
         {
-            CfstTrayManager.MinimizeToTray = e.newValue;
+            if (_trayBridge != null)
+                _trayBridge.MinimizeToTray = e.newValue;
             ToastManager.Info(e.newValue ? "已启用最小化到托盘" : "已关闭最小化到托盘");
         }
 

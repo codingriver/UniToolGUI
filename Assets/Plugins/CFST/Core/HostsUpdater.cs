@@ -65,6 +65,7 @@ public static class HostsUpdater
             if (allUpdated.Count > 0) log?.Invoke($"[Hosts] 已更新: {string.Join(", ", allUpdated)}");
             if (allAdded.Count > 0) log?.Invoke($"[Hosts] 已新增: {string.Join(", ", allAdded)}");
             log?.Invoke($"[Hosts] 更新成功: {path}");
+            TryShowHostsToast("Hosts 更新成功", Path.GetFileName(path) + " 已写入");
             return true;
         }
         catch (UnauthorizedAccessException)
@@ -76,6 +77,7 @@ public static class HostsUpdater
                 if (allUpdated.Count > 0) log?.Invoke($"[Hosts] 已更新: {string.Join(", ", allUpdated)}");
                 if (allAdded.Count > 0) log?.Invoke($"[Hosts] 已新增: {string.Join(", ", allAdded)}");
                 log?.Invoke($"[Hosts] 提权写入成功: {path}");
+                TryShowHostsToast("Hosts 提权写入成功", Path.GetFileName(path) + " 已更新");
                 return true;
             }
 
@@ -87,13 +89,20 @@ public static class HostsUpdater
             var msg = $"[Hosts] 更新失败: 无写入权限且提权未完成，内容已保存到 {pendingPath}（请手动合并到 {path}）";
             if (log != null) log(msg); else CfstRunner.WriteLineLog(msg);
             File.WriteAllText(pendingPath, newContent);
+            TryShowHostsToast("Hosts 更新失败", "权限不足，已输出 hosts-pending.txt");
             return false;
         }
         catch (Exception ex)
         {
             log?.Invoke($"[Hosts] 更新失败: {ex.Message}");
+            TryShowHostsToast("Hosts 更新失败", ex.Message);
             return false;
         }
+    }
+
+    private static void TryShowHostsToast(string title, string message)
+    {
+        try { NativePlatform.ShowToast(title, message); } catch { }
     }
 
     private static List<(string Pattern, bool IsWildcard)> ParseHostsPatterns(string domains)

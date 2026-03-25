@@ -308,19 +308,19 @@ public class SystemFontFallback : MonoBehaviour
         var g = new List<string[]>();
         switch (languagePreset)
         {
-            case LanguagePreset.LatinOnly:          g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.ChineseSimplified:  g.Add(PathsCJK_SC); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.ChineseTraditional: g.Add(PathsCJK_TC); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.ChineseBoth:        g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Japanese:           g.Add(PathsJapanese); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Korean:             g.Add(PathsKorean); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.CJKAll:             g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Arabic:             g.Add(PathsArabic); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Thai:               g.Add(PathsThai); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Greek:              g.Add(PathsGreek); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Cyrillic:           g.Add(PathsCyrillic); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.Indic:              g.Add(PathsIndic); g.Add(PathsLatin); g.Add(PathsEmoji); break;
-            case LanguagePreset.AllLanguages:       g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsArabic); g.Add(PathsThai); g.Add(PathsLatin); g.Add(PathsEmoji); g.Add(PathsGreek); g.Add(PathsCyrillic); g.Add(PathsIndic); break;
+            case LanguagePreset.LatinOnly:          g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.ChineseSimplified:  g.Add(PathsCJK_SC); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.ChineseTraditional: g.Add(PathsCJK_TC); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.ChineseBoth:        g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Japanese:           g.Add(PathsJapanese); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Korean:             g.Add(PathsKorean); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.CJKAll:             g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Arabic:             g.Add(PathsArabic); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Thai:               g.Add(PathsThai); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Greek:              g.Add(PathsGreek); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Cyrillic:           g.Add(PathsCyrillic); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.Indic:              g.Add(PathsIndic); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); break;
+            case LanguagePreset.AllLanguages:       g.Add(PathsCJK_SC); g.Add(PathsCJK_TC); g.Add(PathsJapanese); g.Add(PathsKorean); g.Add(PathsArabic); g.Add(PathsThai); g.Add(PathsLatin); g.Add(PathsSymbols); g.Add(PathsEmoji); g.Add(PathsGreek); g.Add(PathsCyrillic); g.Add(PathsIndic); break;
         }
         return g;
     }
@@ -509,11 +509,24 @@ public class SystemFontFallback : MonoBehaviour
     #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         @"C:\Windows\Fonts\seguiemj.ttf",
     #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-        @"/System/Library/Fonts/Apple Color Emoji.ttf",
+        @"/System/Library/Fonts/Apple Color Emoji.ttc",
     #elif UNITY_ANDROID
         @"/system/fonts/NotoColorEmoji.ttf",
     #elif UNITY_IOS
-        @"/System/Library/Fonts/Apple Color Emoji.ttf",
+        @"/System/Library/Fonts/Apple Color Emoji.ttc",
+    #endif
+    };
+
+    private static readonly string[] PathsSymbols =
+    {
+    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        @"C:\Windows\Fonts\seguisym.ttf", @"C:\Windows\Fonts\symbol.ttf", @"C:\Windows\Fonts\arialuni.ttf",
+    #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+        @"/System/Library/Fonts/Apple Symbols.ttf", @"/System/Library/Fonts/Symbol.ttf", @"/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+    #elif UNITY_ANDROID
+        @"/system/fonts/NotoSansSymbols-Regular.ttf", @"/system/fonts/NotoSans-Regular.ttf",
+    #elif UNITY_IOS
+        @"/System/Library/Fonts/Apple Symbols.ttf", @"/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
     #endif
     };
 

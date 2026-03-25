@@ -4,9 +4,19 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIKit;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace CloudflareST.GUI
 {
+    public enum WindowsStandaloneWindowPreset
+    {
+        Compact1120x720,
+        Recommended1200x800,
+        Large1280x860
+    }
+
     public enum MacStandaloneWindowPreset
     {
         Compact1024x700,
@@ -37,6 +47,11 @@ namespace CloudflareST.GUI
         [Tooltip("仅 macOS 独立版生效，用于选择工具窗口默认尺寸预设；Windows 平台不会使用该选项。")]
         public MacStandaloneWindowPreset MacWindowPreset = MacStandaloneWindowPreset.Recommended1080x720;
         [SerializeField, HideInInspector] private MacStandaloneWindowPreset _lastMacWindowPreset = MacStandaloneWindowPreset.Recommended1080x720;
+        [Tooltip("仅 Windows 独立版生效，用于选择工具窗口默认尺寸预设；macOS 平台不会使用该选项。")]
+        public WindowsStandaloneWindowPreset WindowsWindowPreset = WindowsStandaloneWindowPreset.Recommended1200x800;
+        [SerializeField, HideInInspector] private WindowsStandaloneWindowPreset _lastWindowsWindowPreset = WindowsStandaloneWindowPreset.Recommended1200x800;
+        [Tooltip("仅在 Unity 编辑器中生效：切换桌面平台窗口预设时，同步修改当前激活目标平台的默认启动分辨率，减少 Play/本地测试时窗口尺寸跳变。正式构建前还会由 Editor 构建钩子自动覆盖为目标平台预设。")]
+        public bool SyncMacPresetToProjectSettings = true;
 
         private UIDocument    _doc;
         private VisualElement _root;
@@ -87,6 +102,13 @@ namespace CloudflareST.GUI
                 MacStandaloneUiScale = GetRecommendedMacScale(MacWindowPreset);
                 _lastMacWindowPreset = MacWindowPreset;
             }
+
+            if (_lastWindowsWindowPreset != WindowsWindowPreset)
+                _lastWindowsWindowPreset = WindowsWindowPreset;
+
+#if UNITY_EDITOR
+            SyncProjectSettingsResolutionForActiveDesktopTarget();
+#endif
         }
 
         private void OnEnable()
@@ -110,7 +132,6 @@ namespace CloudflareST.GUI
 
             if (PageOther != null)
                 PageOther.OnSettingsReset -= OnSettingsReset;
-            TrayBridge.TrayReady -= RegisterTrayMenuItems;
             AppState.Instance.OnChanged         -= RefreshSidebar;
             TestResult.Instance.OnResultUpdated -= RefreshBadge;
             UnbindButtons();
@@ -175,11 +196,6 @@ namespace CloudflareST.GUI
                 PageOther.OnSettingsReset -= OnSettingsReset;
             if (PageOther != null)
                 PageOther.OnSettingsReset += OnSettingsReset;
-
-            TrayBridge.TrayReady -= RegisterTrayMenuItems;
-            TrayBridge.TrayReady += RegisterTrayMenuItems;
-            if (!_isMobileStructure && TrayBridge.IsInitialized)
-                RegisterTrayMenuItems();
 
             _initialized = true;
         }
@@ -262,8 +278,29 @@ namespace CloudflareST.GUI
             float logicW = physW / backingScale;
             float logicH = physH / backingScale;
 
-            int targetW = Mathf.Min(refW, Mathf.RoundToInt(logicW * 0.90f));
-            int targetH = Mathf.Min(refH, Mathf.RoundToInt(logicH * 0.90f));
+            int maxAllowedW = Mathf.RoundToInt(logicW * 0.90f);
+            int maxAllowedH = Mathf.RoundToInt(logicH * 0.90f);
+            int targetW = refW;
+            int targetH = refH;
+
+            bool needsClampForSmallScreen = refW > maxAllowedW || refH > maxAllowedH;
+            if (needsClampForSmallScreen)
+            {
+                targetW = Mathf.Min(refW, maxAllowedW);
+                targetH = Mathf.Min(refH, maxAllowedH);
+            }
+
+            bool alreadyMatchesStartupSize =
+                Mathf.Abs(Screen.width - targetW) <= 2 &&
+                Mathf.Abs(Screen.height - targetH) <= 2;
+
+            if (alreadyMatchesStartupSize && !needsClampForSmallScreen)
+            {
+                UnityEngine.Debug.Log(
+                    $"[UI] macOS window size already matches startup size, skip runtime resize: " +
+                    $"screen={Screen.width}x{Screen.height}, target={targetW}x{targetH}");
+                return;
+            }
 
             // 使用当前窗口中心点计算目标位置，避免启动后跳到右下角
             int posX;
@@ -312,7 +349,9 @@ namespace CloudflareST.GUI
             catch (System.Exception ex) { UnityEngine.Debug.LogWarning("[UI] macOS SetFrame failed: " + ex.Message); }
         }
 
-        private static (int width, int height) GetMacWindowPresetSize(MacStandaloneWindowPreset preset)
+#endif
+
+        public static (int width, int height) GetMacWindowPresetSize(MacStandaloneWindowPreset preset)
         {
             switch (preset)
             {
@@ -328,9 +367,7 @@ namespace CloudflareST.GUI
             }
         }
 
-#endif
-
-        private static float GetRecommendedMacScale(MacStandaloneWindowPreset preset)
+        public static float GetRecommendedMacScale(MacStandaloneWindowPreset preset)
         {
             switch (preset)
             {
@@ -345,6 +382,54 @@ namespace CloudflareST.GUI
                     return 0.95f;
             }
         }
+
+        public static (int width, int height) GetWindowsWindowPresetSize(WindowsStandaloneWindowPreset preset)
+        {
+            switch (preset)
+            {
+                case WindowsStandaloneWindowPreset.Compact1120x720:
+                    return (1120, 720);
+                case WindowsStandaloneWindowPreset.Large1280x860:
+                    return (1280, 860);
+                case WindowsStandaloneWindowPreset.Recommended1200x800:
+                default:
+                    return (1200, 800);
+            }
+        }
+
+#if UNITY_EDITOR
+        public (int width, int height) GetConfiguredDesktopResolution(BuildTarget target)
+        {
+            switch (target)
+            {
+                case BuildTarget.StandaloneOSX:
+                    return GetMacWindowPresetSize(MacWindowPreset);
+                case BuildTarget.StandaloneWindows:
+                case BuildTarget.StandaloneWindows64:
+                    return GetWindowsWindowPresetSize(WindowsWindowPreset);
+                default:
+                    return (PlayerSettings.defaultScreenWidth, PlayerSettings.defaultScreenHeight);
+            }
+        }
+
+        private void SyncProjectSettingsResolutionForActiveDesktopTarget()
+        {
+            if (!SyncMacPresetToProjectSettings)
+                return;
+
+            var target = EditorUserBuildSettings.activeBuildTarget;
+            if (target != BuildTarget.StandaloneOSX &&
+                target != BuildTarget.StandaloneWindows &&
+                target != BuildTarget.StandaloneWindows64)
+                return;
+
+            var preset = GetConfiguredDesktopResolution(target);
+            if (PlayerSettings.defaultScreenWidth != preset.width)
+                PlayerSettings.defaultScreenWidth = preset.width;
+            if (PlayerSettings.defaultScreenHeight != preset.height)
+                PlayerSettings.defaultScreenHeight = preset.height;
+        }
+#endif
 
         private void LogVisualTreeDiagnostics()
         {
@@ -704,21 +789,6 @@ namespace CloudflareST.GUI
             NavigateTo(idx);
         }
 
-        // ── 托盘业务菜单项注册 ────────────────────────────────
-        // 由 TrayBridge.TrayReady 事件触发，与 TrayBridge 解耦
-        private void RegisterTrayMenuItems()
-        {
-            var trayBridge = GetComponent<TrayBridge>() ?? FindObjectOfType<TrayBridge>();
-            if (trayBridge == null) return;
-
-            CfstTrayManager.Instance.Init(
-                onStartTest: () => StartTest(),
-                onStopTest:  StopTest,
-                isRunning:   () => AppState.Instance.IsRunning,
-                trayBridge:  trayBridge
-            );
-        }
-
         private bool _startedByScheduler;
 
         // ── 开始测速 ─────────────────────────────────────────
@@ -873,17 +943,10 @@ namespace CloudflareST.GUI
             if (exitCode == 0 && TestResult.Instance.IpList.Count > 0)
                 NavigateTo(PAGE_RESULTS);
 
-            // ── 托盘气泡通知 + 状态刷新 ──────────────────────
-            if (!_isMobileStructure)
-                CfstTrayManager.Instance.OnRunningStateChanged(false);
             if (!_isMobileStructure && exitCode == 0)
             {
                 var s = AppState.Instance;
-                CfstTrayManager.Instance.ShowFinishedBalloon(
-                    TestResult.Instance.IpList.Count,
-                    s.BestLatency,
-                    s.BestSpeed);
-                // 同时发送 Toast（后台运行时也能收到）
+                // 同时发送系统通知（后台运行时也能收到）
                 NativePlatform.ShowToast(
                     "CFST 测速完成",
                     TestResult.Instance.IpList.Count > 0
@@ -909,10 +972,6 @@ namespace CloudflareST.GUI
         // ── 侧边栏刷新 ───────────────────────────────────────
         private void RefreshSidebar()
         {
-            // 同步托盘菜单运行状态
-            if (!_isMobileStructure)
-                CfstTrayManager.Instance.OnRunningStateChanged(AppState.Instance.IsRunning);
-
             var s = AppState.Instance;
             float pct = s.Progress * 100f;
             if (_progressFill != null)
