@@ -413,6 +413,9 @@ public class TrayBridge : MonoBehaviour
         }
         string pngPath = System.IO.Path.Combine(streamingPathMac, MacPngFileName);
         Debug.Log(string.Format("[TrayBridge][Icon] 尝试加载 macOS 托盘图标，路径: {0}", pngPath));
+        string ext = System.IO.Path.GetExtension(pngPath);
+        if (!string.Equals(ext, ".png", StringComparison.OrdinalIgnoreCase))
+            Debug.LogWarning(string.Format("[TrayBridge][Icon] macOS 托盘建议使用透明 PNG；当前文件扩展名为: {0}", ext));
         bool pngExists = System.IO.File.Exists(pngPath);
         Debug.Log(string.Format("[TrayBridge][Icon] macOS 图标文件是否存在: {0}", pngExists));
         if (!pngExists)

@@ -168,7 +168,8 @@ static void ApplyTrayImage(NSImage* img) {
           operation:NSCompositingOperationSourceOver
            fraction:1.0];
     [scaled unlockFocus];
-    scaled.template = YES;
+    // 保持彩色图标显示。若需要 macOS 菜单栏原生单色效果，应传入专门设计的 template PNG。
+    scaled.template = NO;
     void (^block)(void) = ^{ g_statusItem.button.image = scaled; };
     if ([NSThread isMainThread]) block();
     else dispatch_sync(dispatch_get_main_queue(), block);

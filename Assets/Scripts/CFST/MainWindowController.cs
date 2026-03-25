@@ -176,7 +176,7 @@ namespace CloudflareST.GUI
             //
             // 修复方案：在运行时切换为 ScaleWithScreenSize（值=0），
             // 以参考分辨率（1200x800）为基准做比例缩放，与 Windows 观感一致。
-            // 同时对 Retina 屏额外补偿 scale，避免字体偏小。
+            // 这里不再额外做 Retina 放大补偿，否则控件会明显比 Windows 更大。
             // ────────────────────────────────────────────────────────────────────────
 
             // 切换 ScaleMode 为 ScaleWithScreenSize
@@ -210,13 +210,8 @@ namespace CloudflareST.GUI
             }
             catch { }
 
-            float targetScale = ps.scale;
-            if (backingRatio >= 1.9f)
-                targetScale = Mathf.Max(targetScale, 1.2f);
-            else if (backingRatio >= 1.4f)
-                targetScale = Mathf.Max(targetScale, 1.1f);
-
-            if (!Mathf.Approximately(targetScale, ps.scale))
+            float targetScale = 1.0f;
+            if (!Mathf.Approximately(ps.scale, targetScale))
                 ps.scale = targetScale;
 
             UnityEngine.Debug.Log($"[UI] macOS scale applied: scale={ps.scale:F2} backingRatio={backingRatio:F2} screenDpi={Screen.dpi:F0}");
