@@ -23,6 +23,10 @@ namespace CloudflareST.GUI
         [SerializeField] private PageLogController       PageLog;
         [SerializeField] private PageHookController      PageHook;
 
+        [Header("Platform UI")]
+        [Tooltip("仅 macOS 独立版生效，用于微调整体 UI 缩放；Windows 平台不会使用该值。建议范围 0.90 ~ 1.00，默认 0.95。")]
+        public float MacStandaloneUiScale = 0.95f;
+
         private UIDocument    _doc;
         private VisualElement _root;
         private Button[]        _navBtns;
@@ -210,11 +214,11 @@ namespace CloudflareST.GUI
             }
             catch { }
 
-            float targetScale = 1.0f;
+            float targetScale = Mathf.Clamp(MacStandaloneUiScale, 0.75f, 1.25f);
             if (!Mathf.Approximately(ps.scale, targetScale))
                 ps.scale = targetScale;
 
-            UnityEngine.Debug.Log($"[UI] macOS scale applied: scale={ps.scale:F2} backingRatio={backingRatio:F2} screenDpi={Screen.dpi:F0}");
+            UnityEngine.Debug.Log($"[UI] macOS scale applied: scale={ps.scale:F2} inspectorScale={MacStandaloneUiScale:F2} backingRatio={backingRatio:F2} screenDpi={Screen.dpi:F0}");
 
             // ── DPI 自适应窗口物理尺寸 ────────────────────────────────────────────
             ApplyMacWindowSize(backingRatio);
