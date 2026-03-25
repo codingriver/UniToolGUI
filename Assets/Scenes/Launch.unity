@@ -224,6 +224,9 @@ MonoBehaviour:
   PageResults: {fileID: 0}
   PageLog: {fileID: 0}
   PageHook: {fileID: 0}
+  MacStandaloneUiScale: 0.91
+  MacWindowPreset: 0
+  _lastMacWindowPreset: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

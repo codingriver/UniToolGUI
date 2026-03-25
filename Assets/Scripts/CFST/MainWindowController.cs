@@ -7,6 +7,14 @@ using UIKit;
 
 namespace CloudflareST.GUI
 {
+    public enum MacStandaloneWindowPreset
+    {
+        Compact1024x700,
+        Recommended1080x720,
+        Balanced1120x760,
+        Large1200x800
+    }
+
     [RequireComponent(typeof(UIDocument))]
     public class MainWindowController : MonoBehaviour
     {
@@ -26,6 +34,9 @@ namespace CloudflareST.GUI
         [Header("Platform UI")]
         [Tooltip("仅 macOS 独立版生效，用于微调整体 UI 缩放；Windows 平台不会使用该值。建议范围 0.90 ~ 1.00，默认 0.95。")]
         public float MacStandaloneUiScale = 0.95f;
+        [Tooltip("仅 macOS 独立版生效，用于选择工具窗口默认尺寸预设；Windows 平台不会使用该选项。")]
+        public MacStandaloneWindowPreset MacWindowPreset = MacStandaloneWindowPreset.Recommended1080x720;
+        [SerializeField, HideInInspector] private MacStandaloneWindowPreset _lastMacWindowPreset = MacStandaloneWindowPreset.Recommended1080x720;
 
         private UIDocument    _doc;
         private VisualElement _root;
@@ -67,6 +78,15 @@ namespace CloudflareST.GUI
             _doc  = GetComponent<UIDocument>();
             _layoutBootstrap = GetComponent<MainWindowLayoutBootstrap>();
             EnsurePageControllers();
+        }
+
+        private void OnValidate()
+        {
+            if (_lastMacWindowPreset != MacWindowPreset)
+            {
+                MacStandaloneUiScale = GetRecommendedMacScale(MacWindowPreset);
+                _lastMacWindowPreset = MacWindowPreset;
+            }
         }
 
         private void OnEnable()
@@ -228,9 +248,9 @@ namespace CloudflareST.GUI
 #if UNITY_STANDALONE_OSX && !UNITY_EDITOR
         private void ApplyMacWindowSize(float backingRatio)
         {
-            // 目标尺寸：设计稿 1200x800（逻辑点，与 Windows 一致）
-            const int refW = 1200;
-            const int refH = 800;
+            var preset = GetMacWindowPresetSize(MacWindowPreset);
+            int refW = preset.width;
+            int refH = preset.height;
 
             // Screen.currentResolution 在 macOS 返回物理像素分辨率
             // backingRatio = 物理像素 / 逻辑点（Retina=2，异常值时回退到 2）
@@ -291,7 +311,40 @@ namespace CloudflareST.GUI
             try { MacWindowPlugin.SetFrame(x, y, w, h); }
             catch (System.Exception ex) { UnityEngine.Debug.LogWarning("[UI] macOS SetFrame failed: " + ex.Message); }
         }
+
+        private static (int width, int height) GetMacWindowPresetSize(MacStandaloneWindowPreset preset)
+        {
+            switch (preset)
+            {
+                case MacStandaloneWindowPreset.Compact1024x700:
+                    return (1024, 700);
+                case MacStandaloneWindowPreset.Balanced1120x760:
+                    return (1120, 760);
+                case MacStandaloneWindowPreset.Large1200x800:
+                    return (1200, 800);
+                case MacStandaloneWindowPreset.Recommended1080x720:
+                default:
+                    return (1080, 720);
+            }
+        }
+
 #endif
+
+        private static float GetRecommendedMacScale(MacStandaloneWindowPreset preset)
+        {
+            switch (preset)
+            {
+                case MacStandaloneWindowPreset.Compact1024x700:
+                    return 0.93f;
+                case MacStandaloneWindowPreset.Balanced1120x760:
+                    return 0.97f;
+                case MacStandaloneWindowPreset.Large1200x800:
+                    return 1.00f;
+                case MacStandaloneWindowPreset.Recommended1080x720:
+                default:
+                    return 0.95f;
+            }
+        }
 
         private void LogVisualTreeDiagnostics()
         {
