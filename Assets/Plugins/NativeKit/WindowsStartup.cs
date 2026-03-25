@@ -145,6 +145,9 @@ public static class WindowsStartup
 
     public static string GetCurrentExePath()
     {
+        if (MacAppLocator.TryGetExecutablePath(out var executablePath))
+            return executablePath;
+
         try
         {
             var args = Environment.GetCommandLineArgs();

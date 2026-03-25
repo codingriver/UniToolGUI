@@ -272,18 +272,16 @@ public class TrayBridge : MonoBehaviour
                             System.Diagnostics.Process.Start(
                                 new System.Diagnostics.ProcessStartInfo { FileName = exe, UseShellExecute = true });
 #elif UNITY_STANDALONE_OSX
-                        var appPath = GetMacAppBundlePath();
-                        if (!string.IsNullOrEmpty(appPath))
+                        if (MacAppLocator.TryGetAppBundlePath(out var appPath))
                         {
                             // 先释放单实例文件锁，再用 bash 延迟 1 秒启动新实例，最后退出。
                             // 若先 Quit 再启动，文件锁在进程退出时由 OS 回收，但时序不确定；
                             // 若先 open 再 Quit，新实例可能在旧锁释放前启动并因 TryAcquire 失败被 kill。
                             // 正确做法：主动 Release 锁 → 后台延迟启动 → 当前进程 Quit。
                             NativePlatform.SingleInstance.Release();
-                            // 用绝对路径 /usr/bin/open，避免打包后 $PATH 不完整导致找不到 open
-                            string escapedPath = appPath.Replace("\\", "\\\\").Replace("\"", "\\\"");
-                            ProcessHelper.StartBackground("/bin/bash",
-                                "-c \"/bin/sleep 1 && /usr/bin/open \\\"" + escapedPath + "\\\"\"");
+                            Debug.Log("[TrayBridge] .app 路径: " + appPath);
+                            if (!MacAppLocator.StartAppBundleDelayed(appPath))
+                                Debug.LogWarning("[TrayBridge] 已找到 .app 路径，但后台重启启动失败");
                         }
                         else
                             Debug.LogWarning("[TrayBridge] 未找到 .app 包路径，无法重启 macOS 应用");
@@ -328,41 +326,6 @@ public class TrayBridge : MonoBehaviour
 
         if (items.Count > 0)
             NativePlatform.Tray.RegisterMenuItems(items);
-    }
-
-    private string GetMacAppBundlePath()
-    {
-#if UNITY_STANDALONE_OSX
-        try
-        {
-            // Application.dataPath = .../Foo.app/Contents/Resources/Data
-            // 需要向上 3 级才到 .app
-            var dataPath = Application.dataPath;
-            if (string.IsNullOrEmpty(dataPath)) return null;
-
-            // 向上逐级查找以 .app 结尾的目录
-            var dir = dataPath;
-            for (int i = 0; i < 5; i++)
-            {
-                dir = System.IO.Path.GetDirectoryName(dir);
-                if (string.IsNullOrEmpty(dir)) break;
-                if (dir.EndsWith(".app", StringComparison.OrdinalIgnoreCase))
-                {
-                    Debug.Log("[TrayBridge] .app 路径: " + dir);
-                    return dir;
-                }
-            }
-            Debug.LogWarning("[TrayBridge] 未能从 dataPath 向上找到 .app 目录，dataPath=" + dataPath);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning("[TrayBridge] 获取 macOS .app 路径失败: " + ex.Message);
-            return null;
-        }
-#else
-        return null;
-#endif
     }
 
     private void TrySetIcon()

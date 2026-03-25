@@ -94,30 +94,73 @@ public static class WindowsAdmin
 #elif UNITY_STANDALONE_OSX
         try
         {
-            // 在 macOS 上直接以管理员身份启动 app 内可执行文件
-            // 注意：GUI 进程在新系统上可能仍由普通用户会话承载；
-            // 最终是否提权成功以 geteuid()==0 为准。
-            var exePath = Process.GetCurrentProcess().MainModule?.FileName;
-            if (string.IsNullOrEmpty(exePath) || !System.IO.File.Exists(exePath))
+            // 通过 osascript 提权执行 app 内主可执行文件。
+            // 用 stdin 传 AppleScript，避免命令行转义错误导致不弹密码框。
+            if (!MacAppLocator.TryGetAppBundlePath(out var appPath))
             {
-                Debug.LogWarning("[Admin] 未找到当前可执行文件路径，无法提升权限");
+                Debug.LogWarning("[Admin] 未找到 .app 路径，无法提升权限");
                 return false;
             }
 
-            string escapedExe = exePath.Replace("\\", "\\\\").Replace("\"", "\\\"");
-            string escapedArgs = (args ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
-            string shellCmd = $"/usr/bin/nohup \"{escapedExe}\" {escapedArgs} >/tmp/unitool_admin_restart.log 2>&1 &";
-            string script = $"do shell script \"{shellCmd.Replace("\"", "\\\"")}\" with administrator privileges";
+            if (!MacAppLocator.TryGetExecutablePath(out var exePath))
+            {
+                Debug.LogWarning("[Admin] 未找到 app 主可执行文件，appPath: " + appPath);
+                return false;
+            }
+
+            string macOsDir = System.IO.Path.GetDirectoryName(exePath);
+            string safeExe = exePath.Replace("'", "'\\''");
+            string safeArgs = (args ?? string.Empty).Replace("'", "'\\''");
+            string safeWorkDir = macOsDir.Replace("'", "'\\''");
+            string shell = $"cd '{safeWorkDir}' && /usr/bin/nohup '{safeExe}' {safeArgs} >/tmp/unitool_admin_restart.log 2>&1 &";
+            string apple = $"do shell script \"{shell.Replace("\"", "\\\"")}\" with administrator privileges";
+
+            Debug.Log("[Admin] 准备提权重启");
+            Debug.Log("[Admin] appPath=" + appPath);
+            Debug.Log("[Admin] exePath=" + exePath);
 
             var psi = new ProcessStartInfo
             {
                 FileName = "/usr/bin/osascript",
-                Arguments = $"-e \"{script.Replace("\"", "\\\"")}\"",
+                Arguments = "-",
                 UseShellExecute = false,
+                RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
-            Process.Start(psi);
+
+            using (var proc = Process.Start(psi))
+            {
+                if (proc == null)
+                {
+                    Debug.LogWarning("[Admin] osascript 启动失败");
+                    return false;
+                }
+
+                proc.StandardInput.WriteLine(apple);
+                proc.StandardInput.Close();
+
+                bool exited = proc.WaitForExit(30000);
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+
+                if (!exited)
+                {
+                    try { proc.Kill(); } catch { }
+                    Debug.LogWarning("[Admin] osascript 超时，未完成提权");
+                    return false;
+                }
+
+                if (proc.ExitCode != 0)
+                {
+                    Debug.LogWarning($"[Admin] osascript 失败 code={proc.ExitCode}, err={stderr}, out={stdout}");
+                    return false;
+                }
+
+                Debug.Log($"[Admin] osascript 成功, out={stdout}");
+            }
+
+            try { NativePlatform.SingleInstance.Release(); } catch { }
             Application.Quit();
             return true;
         }

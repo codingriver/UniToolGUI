@@ -305,24 +305,14 @@ namespace CloudflareST.GUI
                 // macOS root 模式下以普通用户重启：直接 open .app（不带 sudo）
                 try
                 {
-                    string appPath = null;
-                    string dir = UnityEngine.Application.dataPath;
-                    for (int i = 0; i < 5; i++)
-                    {
-                        dir = System.IO.Path.GetDirectoryName(dir);
-                        if (!string.IsNullOrEmpty(dir) && dir.EndsWith(".app", System.StringComparison.OrdinalIgnoreCase))
-                        { appPath = dir; break; }
-                    }
-                    if (!string.IsNullOrEmpty(appPath))
+                    if (MacAppLocator.TryGetAppBundlePath(out var appPath))
                     {
                         NativePlatform.SingleInstance.Release();
-                        string escaped = appPath.Replace("\"", "\\\"");
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        if (!MacAppLocator.StartAppBundleDelayed(appPath))
                         {
-                            FileName = "/bin/bash",
-                            Arguments = $"-c \"/bin/sleep 1 && /usr/bin/open \\\"{escaped}\\\"\"",
-                            UseShellExecute = false
-                        });
+                            ToastManager.Error("已找到 .app 路径，但重新启动失败");
+                            return;
+                        }
                         Application.Quit();
                     }
                     else ToastManager.Error("未找到 .app 路径");

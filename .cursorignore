@@ -1,22 +1,21 @@
-# Unity Éú³ÉÄ¿Â¼ - Cursor ÎÞÐèË÷Òý
+# Unity ï¿½ï¿½ï¿½ï¿½Ä¿Â¼ - Cursor ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Library/
 Temp/
 Obj/
-Build/
-Builds/
+
 Logs/
 UserSettings/
 MemoryCaptures/
 Recordings/
 ExportedObj/
 
-# ¹¹½¨²úÎï
+# ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 *.apk
 *.aab
 *.unitypackage
 *.app
 
-# ×Ô¶¯Éú³ÉµÄ¹¤³ÌÎÄ¼þ
+# ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ÉµÄ¹ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½
 *.csproj
 *.unityproj
 *.sln
@@ -37,7 +36,7 @@ ExportedObj/
 .idea/
 .consulo/
 
-# °æ±¾¿ØÖÆ
+# ï¿½æ±¾ï¿½ï¿½ï¿½ï¿½
 .plastic/
 .cursor/
 

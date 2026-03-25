@@ -19,6 +19,7 @@ namespace CloudflareST.GUI
         private Label         _hintHostsFile;
         private Toggle        _dryRunToggle;
         private Label         _hintDryRun;
+        private bool          _isAdmin;
 
         private readonly List<HostDomainEntry> _entries = new List<HostDomainEntry>();
 
@@ -47,19 +48,19 @@ namespace CloudflareST.GUI
             root.Q<Button>("btn-browse-hosts")?.RegisterCallback<ClickEvent>(_ => BrowseHostsFile());
             root.Q<Button>("btn-add-entry")   ?.RegisterCallback<ClickEvent>(_ => AddEntry("", 1));
 
-            bool isAdmin = false;
-            try { isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
+            _isAdmin = false;
+            try { _isAdmin = WindowsAdmin.IsRunningAsAdmin(); } catch { }
 
             var permRestartRow = root.Q<VisualElement>("perm-restart-row");
             var permIcon       = root.Q<Label>("perm-icon");
             var restartAdminBtn = root.Q<Button>("btn-restart-admin");
 
-            if (isAdmin)
+            if (_isAdmin)
             {
                 _permInfoBar?.RemoveFromClassList("info-bar--warning");
                 _permInfoBar?.AddToClassList("info-bar--success");
                 if (permIcon   != null) permIcon.text  = "✓";
-                if (_permText  != null) _permText.text = "当前已是管理员账户，Hosts 更新功能完整可用";
+                if (_permText  != null) _permText.text = GetPermissionHintText(true);
                 if (permRestartRow != null) permRestartRow.style.display = DisplayStyle.None;
             }
             else
@@ -67,7 +68,7 @@ namespace CloudflareST.GUI
                 _permInfoBar?.RemoveFromClassList("info-bar--warning");
                 _permInfoBar?.AddToClassList("info-bar--error");
                 if (permIcon   != null) permIcon.text  = "✕";
-                if (_permText  != null) _permText.text = "当前为非管理员账户，写入系统 Hosts 文件需要管理员权限";
+                if (_permText  != null) _permText.text = GetPermissionHintText(false);
                 if (permRestartRow != null) permRestartRow.style.display = DisplayStyle.Flex;
                 restartAdminBtn?.RegisterCallback<ClickEvent>(_ =>
                 {
@@ -299,10 +300,19 @@ namespace CloudflareST.GUI
         private void UpdatePermHint()
         {
             if (_permText == null) return;
+            _permText.text = GetPermissionHintText(_isAdmin);
+        }
+
+        private static string GetPermissionHintText(bool isAdmin)
+        {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            _permText.text = "Windows 需以管理员身份运行；权限不足时内容将输出到 hosts-pending.txt";
+            return isAdmin
+                ? "当前已是管理员账户，Hosts 更新功能完整可用"
+                : "Windows 需以管理员身份运行；权限不足时内容将输出到 hosts-pending.txt";
 #else
-            _permText.text = "需要 root 用户或 sudo 运行；权限不足时内容将输出到 hosts-pending.txt";
+            return isAdmin
+                ? "当前已具备 root 权限，Hosts 更新功能完整可用"
+                : "需要 root 用户或 sudo 运行；权限不足时内容将输出到 hosts-pending.txt";
 #endif
         }
     }

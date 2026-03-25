@@ -69,12 +69,22 @@ public static class HostsUpdater
         }
         catch (UnauthorizedAccessException)
         {
+            log?.Invoke($"[Hosts] 普通写入权限不足，尝试按操作临时提权: {path}");
+
+            if (PrivilegedHostsWriter.TryWrite(path, newContent, log))
+            {
+                if (allUpdated.Count > 0) log?.Invoke($"[Hosts] 已更新: {string.Join(", ", allUpdated)}");
+                if (allAdded.Count > 0) log?.Invoke($"[Hosts] 已新增: {string.Join(", ", allAdded)}");
+                log?.Invoke($"[Hosts] 提权写入成功: {path}");
+                return true;
+            }
+
             var pendingDir = Path.GetDirectoryName(config.OutputFile);
             if (string.IsNullOrWhiteSpace(pendingDir)) pendingDir = Environment.CurrentDirectory;
             Directory.CreateDirectory(pendingDir);
             var pendingPath = Path.Combine(pendingDir, "hosts-pending.txt");
 
-            var msg = $"[Hosts] 更新失败: 无写入权限，内容已保存到 {pendingPath}（请手动合并到 {path}）";
+            var msg = $"[Hosts] 更新失败: 无写入权限且提权未完成，内容已保存到 {pendingPath}（请手动合并到 {path}）";
             if (log != null) log(msg); else CfstRunner.WriteLineLog(msg);
             File.WriteAllText(pendingPath, newContent);
             return false;
