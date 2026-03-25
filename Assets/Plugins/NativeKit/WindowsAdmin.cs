@@ -92,83 +92,8 @@ public static class WindowsAdmin
             return false;
         }
 #elif UNITY_STANDALONE_OSX
-        try
-        {
-            // 通过 osascript 提权执行 app 内主可执行文件。
-            // 用 stdin 传 AppleScript，避免命令行转义错误导致不弹密码框。
-            if (!MacAppLocator.TryGetAppBundlePath(out var appPath))
-            {
-                Debug.LogWarning("[Admin] 未找到 .app 路径，无法提升权限");
-                return false;
-            }
-
-            if (!MacAppLocator.TryGetExecutablePath(out var exePath))
-            {
-                Debug.LogWarning("[Admin] 未找到 app 主可执行文件，appPath: " + appPath);
-                return false;
-            }
-
-            string macOsDir = System.IO.Path.GetDirectoryName(exePath);
-            string safeExe = exePath.Replace("'", "'\\''");
-            string safeArgs = (args ?? string.Empty).Replace("'", "'\\''");
-            string safeWorkDir = macOsDir.Replace("'", "'\\''");
-            string shell = $"cd '{safeWorkDir}' && /usr/bin/nohup '{safeExe}' {safeArgs} >/tmp/unitool_admin_restart.log 2>&1 &";
-            string apple = $"do shell script \"{shell.Replace("\"", "\\\"")}\" with administrator privileges";
-
-            Debug.Log("[Admin] 准备提权重启");
-            Debug.Log("[Admin] appPath=" + appPath);
-            Debug.Log("[Admin] exePath=" + exePath);
-
-            var psi = new ProcessStartInfo
-            {
-                FileName = "/usr/bin/osascript",
-                Arguments = "-",
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-
-            using (var proc = Process.Start(psi))
-            {
-                if (proc == null)
-                {
-                    Debug.LogWarning("[Admin] osascript 启动失败");
-                    return false;
-                }
-
-                proc.StandardInput.WriteLine(apple);
-                proc.StandardInput.Close();
-
-                bool exited = proc.WaitForExit(30000);
-                string stdout = proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
-
-                if (!exited)
-                {
-                    try { proc.Kill(); } catch { }
-                    Debug.LogWarning("[Admin] osascript 超时，未完成提权");
-                    return false;
-                }
-
-                if (proc.ExitCode != 0)
-                {
-                    Debug.LogWarning($"[Admin] osascript 失败 code={proc.ExitCode}, err={stderr}, out={stdout}");
-                    return false;
-                }
-
-                Debug.Log($"[Admin] osascript 成功, out={stdout}");
-            }
-
-            try { NativePlatform.SingleInstance.Release(); } catch { }
-            Application.Quit();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning($"[Admin] macOS 提升权限失败: {ex.Message}");
-            return false;
-        }
+        Debug.LogWarning("[Admin] macOS 不再支持整应用管理员重启；请改用按操作提权或后台 root worker");
+        return false;
 #else
         return false;
 #endif

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIKit;
+using NativeKit;
 
 namespace CloudflareST.GUI
 {
@@ -99,9 +100,16 @@ namespace CloudflareST.GUI
             // ── 自动管理员（方案A：注册表 AppCompatFlags） ────────────
             if (_autoAdminToggle != null)
             {
+#if UNITY_STANDALONE_OSX
+                _autoAdminToggle.SetValueWithoutNotify(false);
+                _autoAdminToggle.SetEnabled(false);
+                if (_autoAdminHint != null)
+                    _autoAdminHint.text = "macOS 不支持整应用长期管理员运行；Hosts 写入改为按操作提权";
+#else
                 _autoAdminToggle.SetValueWithoutNotify(WindowsAdminAutoElevate.IsAutoAdminEnabled());
                 UpdateAutoAdminHint(_autoAdminHint, _autoAdminToggle.value);
                 _autoAdminToggle.RegisterValueChangedCallback(OnAutoAdminToggleChanged);
+#endif
             }
 
             _eventsBound = true;
@@ -112,17 +120,22 @@ namespace CloudflareST.GUI
             string identity = WindowsAdmin.GetCurrentIdentityDisplay();
             var labelRole = root.Q<Label>("label-current-role");
             if (labelRole != null)
+#if UNITY_STANDALONE_OSX
+                labelRole.text = "macOS 当前固定以普通用户运行；需要权限时仅在写入 Hosts 时申请授权";
+#else
                 labelRole.text = _isAdmin
                     ? "当前以管理员身份运行 · " + identity
                     : "当前以普通用户身份运行 · " + identity;
+#endif
             if (_btnSwitchRole != null)
             {
 #if UNITY_STANDALONE_OSX
-                _btnSwitchRole.text = _isAdmin ? "以普通用户重启" : "请求管理员权限重启";
+                _btnSwitchRole.text = "macOS 不支持整应用管理员模式";
+                _btnSwitchRole.SetEnabled(false);
 #else
                 _btnSwitchRole.text = _isAdmin ? "以普通用户重启" : "以管理员重启";
-#endif
                 _btnSwitchRole.RegisterCallback<ClickEvent>(OnSwitchRoleClicked);
+#endif
             }
 
             // 启动提示 — 转发到日志页
@@ -267,14 +280,9 @@ namespace CloudflareST.GUI
             }
             UpdateAutoAdminHint(_autoAdminHint, _autoAdminToggle != null && _autoAdminToggle.value);
 #elif UNITY_STANDALONE_OSX
-            // macOS 无注册表，toggle 仅作为触发器，切换时直接用 osascript 重启
             _autoAdminToggle?.SetValueWithoutNotify(!e.newValue); // 恢复 toggle 状态（无持久化）
-            if (e.newValue)
-            {
-                bool ok = false;
-                try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
-                if (!ok) ToastManager.Error("提升权限失败，请手动以管理员身份运行");
-            }
+            FileLogger.LogWarning("[Admin] macOS 不支持整应用长期管理员运行；已阻止自动管理员开关");
+            ToastManager.Warning("macOS 不支持整应用长期管理员运行；Hosts 写入会在需要时单独申请授权");
 #else
             ToastManager.Error("当前平台不支持自动管理员设置");
             _autoAdminToggle?.SetValueWithoutNotify(!e.newValue);
@@ -302,29 +310,23 @@ namespace CloudflareST.GUI
                     ToastManager.Error("重启失败：" + ex.Message);
                 }
 #elif UNITY_STANDALONE_OSX
-                // macOS root 模式下以普通用户重启：直接 open .app（不带 sudo）
-                try
-                {
-                    if (MacAppLocator.TryGetAppBundlePath(out var appPath))
-                    {
-                        NativePlatform.SingleInstance.Release();
-                        if (!MacAppLocator.StartAppBundleDelayed(appPath))
-                        {
-                            ToastManager.Error("已找到 .app 路径，但重新启动失败");
-                            return;
-                        }
-                        Application.Quit();
-                    }
-                    else ToastManager.Error("未找到 .app 路径");
-                }
-                catch (System.Exception ex) { ToastManager.Error("重启失败：" + ex.Message); }
+                FileLogger.LogWarning("[Admin] macOS 不支持从设置页切换为整应用管理员模式");
+                ToastManager.Warning("macOS 不支持整应用长期管理员运行；请继续使用普通模式，Hosts 写入会按操作申请授权");
 #endif
             }
             else
             {
                 bool ok = false;
                 try { ok = WindowsAdmin.RestartAsAdmin(); } catch { }
-                if (!ok) ToastManager.Error("提升权限失败，请手动以管理员身份运行");
+                if (!ok)
+                {
+#if UNITY_STANDALONE_OSX
+                    FileLogger.LogWarning("[Admin] macOS 不支持整应用管理员重启，请改用按操作提权");
+                    ToastManager.Warning("macOS 不支持整应用管理员重启；请在写入 Hosts 时按提示授权");
+#else
+                    ToastManager.Error("提升权限失败，请手动以管理员身份运行");
+#endif
+                }
             }
         }
 

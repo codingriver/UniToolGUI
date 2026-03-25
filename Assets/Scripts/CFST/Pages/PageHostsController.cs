@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using NativeKit;
 
 namespace CloudflareST.GUI
 {
@@ -69,6 +70,9 @@ namespace CloudflareST.GUI
                 _permInfoBar?.AddToClassList("info-bar--error");
                 if (permIcon   != null) permIcon.text  = "✕";
                 if (_permText  != null) _permText.text = GetPermissionHintText(false);
+#if UNITY_STANDALONE_OSX
+                if (permRestartRow != null) permRestartRow.style.display = DisplayStyle.None;
+#else
                 if (permRestartRow != null) permRestartRow.style.display = DisplayStyle.Flex;
                 restartAdminBtn?.RegisterCallback<ClickEvent>(_ =>
                 {
@@ -79,9 +83,15 @@ namespace CloudflareST.GUI
                             "提升权限失败，请手动以管理员身份运行本程序。",
                             "权限不足");
                 });
+#endif
             }
 
             UpdatePermHint();
+
+#if UNITY_STANDALONE_OSX
+            if (!_isAdmin)
+                FileLogger.Log("[Hosts] macOS 当前采用按操作提权写入模式，不提供整应用管理员重启");
+#endif
 
             _enableToggle?.RegisterValueChangedCallback(e =>
             {
@@ -312,7 +322,7 @@ namespace CloudflareST.GUI
 #else
             return isAdmin
                 ? "当前已具备 root 权限，Hosts 更新功能完整可用"
-                : "需要 root 用户或 sudo 运行；权限不足时内容将输出到 hosts-pending.txt";
+                : "macOS/Linux 将在实际写入 Hosts 时单独申请权限；未授权时内容会输出到 hosts-pending.txt";
 #endif
         }
     }

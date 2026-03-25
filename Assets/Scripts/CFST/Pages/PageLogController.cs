@@ -66,7 +66,7 @@ namespace CloudflareST.GUI
             _autoScrollToggle = root.Q<Toggle>("toggle-log-autoscroll");
 
             _logFilePath = Path.Combine(
-                Environment.CurrentDirectory, "cfst_log.txt");
+                AppRuntimePaths.GetDataFilePath("cfst_log.txt"));
 
             if (_autoScrollToggle != null)
             {
@@ -92,6 +92,8 @@ namespace CloudflareST.GUI
             _flushCoroutine = StartCoroutine(FlushCoroutine());
 
             AppendLog("[INFO] 日志模块已就绪");
+            AppendLog("[INFO] 当前运行日志文件: " + NativeKit.FileLogger.LogPath);
+            AppendLog("[INFO] 当前导出日志文件: " + _logFilePath);
         }
 
         private void OnDestroy()

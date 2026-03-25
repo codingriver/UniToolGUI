@@ -18,11 +18,7 @@ namespace CloudflareST.GUI
 
         public static string GetDefaultBaseDir()
         {
-#if UNITY_ANDROID || UNITY_IOS
-            return Application.persistentDataPath;
-#else
-            return Environment.CurrentDirectory;
-#endif
+            return AppRuntimePaths.GetDesktopDataDir();
         }
 
         public static string GetDefaultIpv4File()   => Path.Combine(GetDefaultBaseDir(), "ip.txt");

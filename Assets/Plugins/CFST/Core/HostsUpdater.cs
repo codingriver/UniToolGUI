@@ -80,7 +80,7 @@ public static class HostsUpdater
             }
 
             var pendingDir = Path.GetDirectoryName(config.OutputFile);
-            if (string.IsNullOrWhiteSpace(pendingDir)) pendingDir = Environment.CurrentDirectory;
+            if (string.IsNullOrWhiteSpace(pendingDir)) pendingDir = AppRuntimePaths.GetDesktopDataDir();
             Directory.CreateDirectory(pendingDir);
             var pendingPath = Path.Combine(pendingDir, "hosts-pending.txt");
 

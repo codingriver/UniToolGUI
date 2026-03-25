@@ -17,11 +17,7 @@ namespace CloudflareST.GUI
         /// </summary>
         public static CloudflareST.Config Build(CfstOptions o)
         {
-#if UNITY_ANDROID || UNITY_IOS
-            string baseDir = Application.persistentDataPath;
-#else
-            string baseDir = Environment.CurrentDirectory;
-#endif
+            string baseDir = AppRuntimePaths.GetDesktopDataDir();
             var cfg = new CloudflareST.Config();
 
             // ── IP 来源 ──────────────────────────────────────
@@ -85,10 +81,6 @@ namespace CloudflareST.GUI
             cfg.OutputNum  = o.OutputCount;
             cfg.OnlyIpFile = o.OnlyIpFile ?? "onlyip.txt";
             cfg.Debug      = o.Debug;
-#if UNITY_ANDROID || UNITY_IOS
-            cfg.OutputFile = Path.Combine(baseDir, "result.csv");
-            cfg.OnlyIpFile = Path.Combine(baseDir, "onlyip.txt");
-#endif
             // ShowProgress = true 使 ProgressReporter 发出 JSON 事件
             cfg.ShowProgress = true;
 

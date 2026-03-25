@@ -274,11 +274,7 @@ public class TrayBridge : MonoBehaviour
 #elif UNITY_STANDALONE_OSX
                         if (MacAppLocator.TryGetAppBundlePath(out var appPath))
                         {
-                            // 先释放单实例文件锁，再用 bash 延迟 1 秒启动新实例，最后退出。
-                            // 若先 Quit 再启动，文件锁在进程退出时由 OS 回收，但时序不确定；
-                            // 若先 open 再 Quit，新实例可能在旧锁释放前启动并因 TryAcquire 失败被 kill。
-                            // 正确做法：主动 Release 锁 → 后台延迟启动 → 当前进程 Quit。
-                            NativePlatform.SingleInstance.Release();
+                            // 单实例功能已停用，直接后台延迟启动新实例后退出当前进程。
                             Debug.Log("[TrayBridge] .app 路径: " + appPath);
                             if (!MacAppLocator.StartAppBundleDelayed(appPath))
                                 Debug.LogWarning("[TrayBridge] 已找到 .app 路径，但后台重启启动失败");

@@ -39,14 +39,7 @@ namespace NativeKit
 
             try
             {
-                string logDir;
-#if UNITY_ANDROID || UNITY_IOS
-                logDir = Path.Combine(Application.persistentDataPath, "logs");
-#else
-                logDir = Path.Combine(Environment.CurrentDirectory, "logs");
-#endif
-                Directory.CreateDirectory(logDir);
-                _logPath = Path.Combine(logDir, fileName);
+                _logPath = AppRuntimePaths.GetLogFilePath(fileName);
 
                 // 保留最近一次日志，超过 4MB 时滚动备份
                 RollIfNeeded(_logPath);
