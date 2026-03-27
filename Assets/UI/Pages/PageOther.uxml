@@ -39,6 +39,37 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <ui:VisualElement name="group-mac-helper" class="group-box" style="flex-shrink:0;">
+            <ui:Label text="macOS Root Helper" class="group-title" />
+            <ui:Label name="label-helper-status" text="当前仅 macOS 独立版可用" class="form-hint" style="margin-left:0;" />
+            <ui:VisualElement style="flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                <ui:Button name="btn-helper-install" text="安装 Helper" class="btn-sm btn-accent" />
+                <ui:Button name="btn-helper-uninstall" text="卸载 Helper" class="btn-sm" />
+                <ui:Button name="btn-helper-refresh-status" text="刷新状态" class="btn-sm" />
+                <ui:Button name="btn-helper-diagnose" text="诊断自检" class="btn-sm" />
+                <ui:Button name="btn-helper-copy-report" text="复制诊断报告" class="btn-sm" />
+                <ui:Button name="btn-helper-export-report" text="导出诊断报告" class="btn-sm" />
+                <ui:Button name="btn-helper-refresh-trust" text="刷新信任" class="btn-sm" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                <ui:Button name="btn-helper-open-logs" text="打开日志目录" class="btn-sm" />
+                <ui:Button name="btn-helper-open-package" text="打开安装包目录" class="btn-sm" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="group-mac-shell" class="group-box" style="flex-shrink:0;">
+            <ui:Label text="高级 Root 命令" class="group-title" />
+            <ui:Label text="危险操作：命令将以 root 权限执行，请勿执行未知命令。" class="form-hint" style="margin-left:0;color:#ffb366;" />
+            <ui:TextField name="field-helper-command" multiline="true" class="field-text" style="min-height:72px;margin-top:8px;" />
+            <ui:VisualElement style="flex-direction:row;justify-content:flex-end;margin-top:8px;">
+                <ui:Button name="btn-helper-exec" text="执行 Root 命令" class="btn-sm btn-accent" />
+            </ui:VisualElement>
+            <ui:Label text="命令输出" class="form-label" style="margin-top:10px;" />
+            <ui:ScrollView name="helper-command-output-scroll" mode="Vertical" style="height:160px;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#2c3447;border-right-color:#2c3447;border-bottom-color:#2c3447;border-left-color:#2c3447;">
+                <ui:Label name="label-helper-command-output" text="" class="form-hint" style="margin-left:0;white-space:normal;" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+
         <!-- 重置默认参数 -->
         <ui:VisualElement class="group-box" style="flex-shrink:0;">
             <ui:Label text="数据管理" class="group-title" />

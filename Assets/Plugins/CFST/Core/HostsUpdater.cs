@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.IO;
+using NativeKit;
 
 namespace CloudflareST
 {
@@ -59,6 +60,25 @@ public static class HostsUpdater
             log?.Invoke(newContent);
             return true;
         }
+
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            log?.Invoke("[Hosts] macOS 将优先通过 Root Helper 执行高权限写入");
+            if (MacHelperService.SubmitHostsUpdate(path, newContent, log, out var helperError))
+            {
+                if (allUpdated.Count > 0) log?.Invoke($"[Hosts] 已更新: {string.Join(", ", allUpdated)}");
+                if (allAdded.Count > 0) log?.Invoke($"[Hosts] 已新增: {string.Join(", ", allAdded)}");
+                log?.Invoke($"[Hosts] Root Helper 写入成功: {path}");
+                TryShowHostsToast("Hosts 更新成功", "Root Helper 已完成写入");
+                return true;
+            }
+
+            log?.Invoke("[Hosts] Root Helper 写入失败: " + helperError);
+            TryShowHostsToast("Hosts 更新失败", helperError ?? "Root Helper 不可用");
+            return false;
+        }
+#endif
         try
         {
             File.WriteAllText(path, newContent);

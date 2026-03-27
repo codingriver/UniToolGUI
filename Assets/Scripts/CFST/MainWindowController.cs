@@ -4,6 +4,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UIKit;
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+using NativeKit;
+using System.Threading.Tasks;
+#endif
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -140,6 +144,10 @@ namespace CloudflareST.GUI
             _runner?.Dispose();
             _runner = null;
             _initialized = false;
+
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            MacHelperService.OnEvent -= OnMacHelperStatusEvent;
+#endif
         }
 
         /// <summary>重置后重新初始化所有页面控制器，使 UI 与新默认值同步</summary>
@@ -202,7 +210,7 @@ namespace CloudflareST.GUI
 
         private void ApplyPlatformUiScale()
         {
-#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             if (_doc == null || _doc.panelSettings == null)
                 return;
 
@@ -261,7 +269,7 @@ namespace CloudflareST.GUI
 #endif
         }
 
-#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
         private void ApplyMacWindowSize(float backingRatio)
         {
             var preset = GetMacWindowPresetSize(MacWindowPreset);
@@ -775,6 +783,10 @@ namespace CloudflareST.GUI
 
         private void OnStartClicked()
         {
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            if (IsHostsUpdateEnabled() && !EnsureMacRootHelperReadyForHosts())
+                return;
+#endif
             StartTest();
         }
 
@@ -790,6 +802,380 @@ namespace CloudflareST.GUI
         }
 
         private bool _startedByScheduler;
+
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+        private enum MacHelperUiState
+        {
+            Unknown,
+            Checking,
+            NotInstalled,
+            NotConnected,
+            TrustFailed,
+            Error,
+            Ok
+        }
+
+        private bool _macHelperStatusBound;
+        private bool _macHelperTrustCheckInFlight;
+        private MacHelperUiState _macHelperLastState = MacHelperUiState.Unknown;
+        private string _macHelperLastDetail = string.Empty;
+
+        private bool IsHostsUpdateEnabled()
+        {
+            return Options.HostsDomains != null
+                && Options.HostsDomains.Count > 0
+                && !Options.HostsDryRun;
+        }
+
+        private void LogMacHelperCheck(string message, bool isError = false)
+        {
+            string line = "[MAC-HELPER-CHECK] " + message;
+            if (isError)
+                UnityEngine.Debug.LogError(line);
+            else
+                UnityEngine.Debug.Log(line);
+            PageOther?.AppendLog(isError ? "[ERROR] " + line : "[INFO] " + line);
+            PageLog?.AppendLog(isError ? "[ERROR] " + line : "[INFO] " + line);
+        }
+
+        private bool EnsureMacRootHelperReadyForHosts()
+        {
+            try
+            {
+                LogMacHelperCheck("开始检查 Root Helper 安装/权限/信任状态");
+
+                var status = MacHelperInstallService.QueryStatus();
+                LogMacHelperCheck("当前状态: " + status.message);
+
+                if (!status.isInstalled)
+                {
+                    LogMacHelperCheck("检测到未安装 Root Helper");
+                    bool confirmInstall = WindowsMessageBox.Confirm(
+                        "检测到 macOS Root Helper 未安装，更新 hosts 需要先安装。\n是否立即安装？",
+                        "需要安装 Root Helper");
+                    LogMacHelperCheck("用户确认安装: " + confirmInstall);
+                    if (!confirmInstall)
+                    {
+                        ToastManager.Warning("未安装 Root Helper，无法更新 hosts");
+                        return false;
+                    }
+
+                    if (!MacHelperInstallService.Install(out var installMessage))
+                    {
+                        LogMacHelperCheck("安装失败: " + installMessage, isError: true);
+                        ToastManager.Error("Root Helper 安装失败: " + installMessage);
+                        return false;
+                    }
+
+                    LogMacHelperCheck("安装成功: " + installMessage);
+                    ToastManager.Success("Root Helper 安装成功");
+                }
+
+                if (!TryPingForTrust(out var pingEvent, out var pingError))
+                {
+                    bool isTrustError = IsTrustError(pingEvent, pingError);
+                    string reason = isTrustError ? "信任校验未通过" : "权限/通信校验未通过";
+                    LogMacHelperCheck(reason + ": " + (pingError ?? pingEvent?.Message ?? "unknown"), isError: true);
+
+                    bool confirmReinstall = WindowsMessageBox.Confirm(
+                        reason + "，需要重新安装 Root Helper 才能继续。\n是否立即重新安装？",
+                        "Root Helper 需要重装");
+                    LogMacHelperCheck("用户确认重装: " + confirmReinstall);
+                    if (!confirmReinstall)
+                    {
+                        ToastManager.Warning(reason + "，已取消开始测试");
+                        return false;
+                    }
+
+                    if (!MacHelperInstallService.Uninstall(out var uninstallMessage))
+                    {
+                        LogMacHelperCheck("卸载失败: " + uninstallMessage, isError: true);
+                        ToastManager.Error("Root Helper 卸载失败: " + uninstallMessage);
+                        return false;
+                    }
+
+                    LogMacHelperCheck("卸载成功: " + uninstallMessage);
+                    ToastManager.Success("Root Helper 卸载成功");
+
+                    if (!MacHelperInstallService.Install(out var reinstallMessage))
+                    {
+                        LogMacHelperCheck("重新安装失败: " + reinstallMessage, isError: true);
+                        ToastManager.Error("Root Helper 安装失败: " + reinstallMessage);
+                        return false;
+                    }
+
+                    LogMacHelperCheck("重新安装成功: " + reinstallMessage);
+                    ToastManager.Success("Root Helper 重新安装成功");
+
+                    if (!TryPingForTrust(out var pingEventAfter, out var pingErrorAfter))
+                    {
+                        LogMacHelperCheck("重装后仍无法通过校验: " + (pingErrorAfter ?? pingEventAfter?.Message ?? "unknown"), isError: true);
+                        ToastManager.Error("Root Helper 校验失败，请检查安装与权限");
+                        return false;
+                    }
+                }
+
+                LogMacHelperCheck("Root Helper 前置检查通过");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogMacHelperCheck("检查异常: " + ex.Message, isError: true);
+                ToastManager.Error("Root Helper 检查异常: " + ex.Message);
+                return false;
+            }
+        }
+
+        private static bool IsTrustError(MacHelperEvent evt, string errorMessage)
+        {
+            if (evt != null && evt.ExitCode == 403)
+                return true;
+            if (!string.IsNullOrEmpty(evt?.Message) && evt.Message.Contains("信任"))
+                return true;
+            if (!string.IsNullOrEmpty(errorMessage) && errorMessage.Contains("信任"))
+                return true;
+            return false;
+        }
+
+        private static bool TryPingForTrust(out MacHelperEvent pingEvent, out string errorMessage)
+        {
+            try
+            {
+                return MacHelperService.Ping(out pingEvent, out errorMessage);
+            }
+            catch (Exception ex)
+            {
+                pingEvent = null;
+                errorMessage = ex.Message;
+                return false;
+            }
+        }
+
+        private void InitMacHelperStatusLabel()
+        {
+            if (_sbUserRole == null)
+                return;
+
+            if (!_macHelperStatusBound)
+            {
+                _sbUserRole.RegisterCallback<ClickEvent>(_ => OnMacHelperStatusClicked());
+                _macHelperStatusBound = true;
+            }
+
+            MacHelperService.OnEvent -= OnMacHelperStatusEvent;
+            MacHelperService.OnEvent += OnMacHelperStatusEvent;
+
+            RefreshMacHelperStatusLabel();
+        }
+
+        private void OnMacHelperStatusEvent(MacHelperEvent evt)
+        {
+            if (evt == null)
+                return;
+            if (evt.EventType == "connection_opened"
+                || evt.EventType == "connection_closed"
+                || evt.EventType == "connection_error"
+                || string.Equals(evt.Action, "trust.refresh", StringComparison.Ordinal)
+                || string.Equals(evt.Action, "helper.status", StringComparison.Ordinal)
+                || string.Equals(evt.Action, "helper.ping", StringComparison.Ordinal))
+                RefreshMacHelperStatusLabel();
+        }
+
+        private void RefreshMacHelperStatusLabel()
+        {
+            if (_sbUserRole == null)
+                return;
+
+            try
+            {
+                MacHelperService.Initialize();
+                var status = MacHelperInstallService.QueryStatus();
+
+                if (!status.isInstalled)
+                {
+                    UpdateMacHelperStatus(MacHelperUiState.NotInstalled, "未安装", "Root Helper 未安装");
+                    return;
+                }
+
+                if (!status.isConnected)
+                {
+                    UpdateMacHelperStatus(MacHelperUiState.NotConnected, "未连接", status.message);
+                    return;
+                }
+
+                UpdateMacHelperStatus(MacHelperUiState.Checking, "已连接(校验中)", status.message);
+                KickoffTrustCheck();
+            }
+            catch (Exception ex)
+            {
+                UpdateMacHelperStatus(MacHelperUiState.Error, "状态异常", ex.Message);
+            }
+        }
+
+        private void KickoffTrustCheck()
+        {
+            if (_macHelperTrustCheckInFlight)
+                return;
+
+            _macHelperTrustCheckInFlight = true;
+            Task.Run(() =>
+            {
+                MacHelperEvent pingEvent;
+                string pingError;
+                bool ok = TryPingForTrust(out pingEvent, out pingError);
+                bool trustFailed = !ok && IsTrustError(pingEvent, pingError);
+                string detail = ok
+                    ? (pingEvent?.Message ?? "pong")
+                    : (pingError ?? pingEvent?.Message ?? "unknown");
+
+                UnityMainThreadDispatcher.Enqueue(() =>
+                {
+                    _macHelperTrustCheckInFlight = false;
+                    if (ok)
+                        UpdateMacHelperStatus(MacHelperUiState.Ok, "正常", detail);
+                    else if (trustFailed)
+                        UpdateMacHelperStatus(MacHelperUiState.TrustFailed, "信任失败", detail);
+                    else
+                        UpdateMacHelperStatus(MacHelperUiState.Error, "连接异常", detail);
+                });
+            });
+        }
+
+        private void UpdateMacHelperStatus(MacHelperUiState state, string shortText, string detail)
+        {
+            _macHelperLastState = state;
+            _macHelperLastDetail = detail ?? string.Empty;
+            string suffix = state == MacHelperUiState.Ok || state == MacHelperUiState.Checking
+                ? string.Empty
+                : " (点击修复)";
+            _sbUserRole.text = "RootHelper: " + (shortText ?? "未知") + suffix;
+        }
+
+        private void OnMacHelperStatusClicked()
+        {
+            try
+            {
+                string detail = string.IsNullOrWhiteSpace(_macHelperLastDetail) ? "无更多信息" : _macHelperLastDetail;
+                switch (_macHelperLastState)
+                {
+                    case MacHelperUiState.NotInstalled:
+                        LogMacHelperCheck("点击状态：未安装，提示安装");
+                        if (WindowsMessageBox.Confirm("Root Helper 未安装，更新 hosts 需要先安装。\n详情: " + detail + "\n是否立即安装？", "需要安装 Root Helper"))
+                        {
+                            if (MacHelperInstallService.Install(out var msg))
+                            {
+                                LogMacHelperCheck("安装成功: " + msg);
+                                ToastManager.Success("Root Helper 安装成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("安装失败: " + msg, isError: true);
+                                ToastManager.Error("Root Helper 安装失败: " + msg);
+                            }
+                            RefreshMacHelperStatusLabel();
+                        }
+                        break;
+                    case MacHelperUiState.NotConnected:
+                        LogMacHelperCheck("点击状态：未连接，提示重装");
+                        if (WindowsMessageBox.Confirm("Root Helper 未连接或异常，建议重新安装。\n详情: " + detail + "\n是否立即重新安装？", "需要重新安装"))
+                        {
+                            if (MacHelperInstallService.Uninstall(out var msg1))
+                            {
+                                LogMacHelperCheck("卸载成功: " + msg1);
+                                ToastManager.Success("Root Helper 卸载成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("卸载失败: " + msg1, isError: true);
+                                ToastManager.Error("Root Helper 卸载失败: " + msg1);
+                            }
+
+                            if (MacHelperInstallService.Install(out var msg2))
+                            {
+                                LogMacHelperCheck("重新安装成功: " + msg2);
+                                ToastManager.Success("Root Helper 重新安装成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("重新安装失败: " + msg2, isError: true);
+                                ToastManager.Error("Root Helper 重新安装失败: " + msg2);
+                            }
+
+                            RefreshMacHelperStatusLabel();
+                        }
+                        break;
+                    case MacHelperUiState.TrustFailed:
+                        LogMacHelperCheck("点击状态：信任失败，提示重装");
+                        if (WindowsMessageBox.Confirm("Root Helper 信任校验失败，需要重新安装。\n详情: " + detail + "\n是否立即重新安装？", "信任校验失败"))
+                        {
+                            if (MacHelperInstallService.Uninstall(out var msg1))
+                            {
+                                LogMacHelperCheck("卸载成功: " + msg1);
+                                ToastManager.Success("Root Helper 卸载成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("卸载失败: " + msg1, isError: true);
+                                ToastManager.Error("Root Helper 卸载失败: " + msg1);
+                            }
+
+                            if (MacHelperInstallService.Install(out var msg2))
+                            {
+                                LogMacHelperCheck("重新安装成功: " + msg2);
+                                ToastManager.Success("Root Helper 重新安装成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("重新安装失败: " + msg2, isError: true);
+                                ToastManager.Error("Root Helper 重新安装失败: " + msg2);
+                            }
+
+                            RefreshMacHelperStatusLabel();
+                        }
+                        break;
+                    case MacHelperUiState.Error:
+                        LogMacHelperCheck("点击状态：连接异常，提示重装");
+                        if (WindowsMessageBox.Confirm("Root Helper 当前异常，建议重新安装。\n详情: " + detail + "\n是否立即重新安装？", "Root Helper 异常"))
+                        {
+                            if (MacHelperInstallService.Uninstall(out var msg1))
+                            {
+                                LogMacHelperCheck("卸载成功: " + msg1);
+                                ToastManager.Success("Root Helper 卸载成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("卸载失败: " + msg1, isError: true);
+                                ToastManager.Error("Root Helper 卸载失败: " + msg1);
+                            }
+
+                            if (MacHelperInstallService.Install(out var msg2))
+                            {
+                                LogMacHelperCheck("重新安装成功: " + msg2);
+                                ToastManager.Success("Root Helper 重新安装成功");
+                            }
+                            else
+                            {
+                                LogMacHelperCheck("重新安装失败: " + msg2, isError: true);
+                                ToastManager.Error("Root Helper 重新安装失败: " + msg2);
+                            }
+
+                            RefreshMacHelperStatusLabel();
+                        }
+                        break;
+                    case MacHelperUiState.Ok:
+                        WindowsMessageBox.Info("Root Helper 状态正常。\n详情: " + detail, "Root Helper");
+                        break;
+                    default:
+                        WindowsMessageBox.Info("Root Helper 状态未知。\n详情: " + detail, "Root Helper");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMacHelperCheck("状态弹窗异常: " + ex.Message, isError: true);
+            }
+        }
+#endif
 
         // ── 开始测速 ─────────────────────────────────────────
         /// <param name="fromScheduler">true 时跳过前/后钩子（ScheduleManager 已在 RunOnce 中调用）</param>
@@ -1038,6 +1424,10 @@ namespace CloudflareST.GUI
         private void InitUserRoleLabel()
         {
             if (_sbUserRole == null) return;
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            InitMacHelperStatusLabel();
+            return;
+#endif
             bool isAdmin = false;
             string user = "unknown";
             if (!_isMobileStructure)

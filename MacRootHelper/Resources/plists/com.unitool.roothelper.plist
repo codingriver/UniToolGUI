@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.unitool.roothelper</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Library/PrivilegedHelperTools/com.unitool.roothelper</string>
+    </array>
+    <key>MachServices</key>
+    <dict>
+        <key>com.unitool.roothelper</key>
+        <true/>
+    </dict>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/Shared/UniTool/logs/helper.stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/Shared/UniTool/logs/helper.stderr.log</string>
+</dict>
+</plist>

@@ -24,12 +24,30 @@ using Debug = UnityEngine.Debug;
             FileLogger.Log("[AppBootstrap] 当前日志文件: " + FileLogger.LogPath);
             FileLogger.Log("[AppBootstrap] 单实例功能已停用，跳过启动检测");
             Debug.Log("[AppBootstrap] 单实例功能已停用，跳过启动检测");
+
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            try
+            {
+                MacHelperService.Initialize();
+                bool helperConnected = MacHelperService.Connect();
+                FileLogger.Log(helperConnected
+                    ? "[AppBootstrap] macOS Root Helper 已连接"
+                    : "[AppBootstrap] macOS Root Helper 当前不可连接");
+            }
+            catch (System.Exception ex)
+            {
+                FileLogger.LogWarning("[AppBootstrap] macOS Root Helper 初始化失败: " + ex.Message);
+            }
+#endif
             DontDestroyOnLoad(gameObject);
         }
 
         private void OnApplicationQuit()
         {
             FileLogger.Log("[AppBootstrap] 应用退出");
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            try { MacHelperService.Disconnect(); } catch { }
+#endif
             FileLogger.Shutdown();
         }
     }

@@ -89,8 +89,7 @@ namespace CloudflareST.GUI
             UpdatePermHint();
 
 #if UNITY_STANDALONE_OSX
-            if (!_isAdmin)
-                FileLogger.Log("[Hosts] macOS 当前采用按操作提权写入模式，不提供整应用管理员重启");
+            ApplyMacHelperPermissionState();
 #endif
 
             _enableToggle?.RegisterValueChangedCallback(e =>
@@ -325,5 +324,30 @@ namespace CloudflareST.GUI
                 : "macOS/Linux 将在实际写入 Hosts 时单独申请权限；未授权时内容会输出到 hosts-pending.txt";
 #endif
         }
+
+#if UNITY_STANDALONE_OSX
+        private void ApplyMacHelperPermissionState()
+        {
+            var status = MacHelperInstallService.QueryStatus();
+            if (_permInfoBar != null)
+            {
+                _permInfoBar.RemoveFromClassList("info-bar--warning");
+                _permInfoBar.RemoveFromClassList("info-bar--error");
+                _permInfoBar.RemoveFromClassList("info-bar--success");
+                _permInfoBar.AddToClassList(status.isConnected ? "info-bar--success" : "info-bar--warning");
+            }
+
+            if (_permText != null)
+            {
+                _permText.text = status.isConnected
+                    ? "Hosts 写入由 Root Helper 以 root 权限执行"
+                    : (status.isInstalled
+                        ? "Root Helper 已安装，但当前通信失败"
+                        : "Root Helper 未安装，自动 Hosts 更新不可用");
+            }
+
+            FileLogger.Log("[Hosts] macOS Root Helper 状态: " + status.message);
+        }
+#endif
     }
 }

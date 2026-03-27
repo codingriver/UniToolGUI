@@ -238,14 +238,20 @@ public class SystemFontFallback : MonoBehaviour
         if (ps == null) return;
         var ts = ps.textSettings;
         if (ts == null) { Debug.LogWarning("[SFF] textSettings null: " + ps.name); return; }
-        if (ts.defaultFontAsset == null)
-        { ts.defaultFontAsset = primary; Log("[SFF] Set " + ps.name + " <- " + primary.name); }
-        else
+
+        var existingDefault = ts.defaultFontAsset;
+        ts.defaultFontAsset = primary;
+        Log("[SFF] Set " + ps.name + " <- " + primary.name);
+
+        if (existingDefault != null && existingDefault != primary)
         {
-            var ex = ts.defaultFontAsset;
-            if (ex.fallbackFontAssetTable == null) ex.fallbackFontAssetTable = new List<FontAsset>();
-            if (_primary != null && _primary != ex && !ex.fallbackFontAssetTable.Contains(_primary))
-            { ex.fallbackFontAssetTable.Insert(0, _primary); Log("[SFF] Prepend " + ps.name + " <- " + _primary.name); }
+            if (primary.fallbackFontAssetTable == null)
+                primary.fallbackFontAssetTable = new List<FontAsset>();
+            if (!primary.fallbackFontAssetTable.Contains(existingDefault))
+            {
+                primary.fallbackFontAssetTable.Add(existingDefault);
+                Log("[SFF] Append existing default as fallback: " + existingDefault.name);
+            }
         }
     }
 
@@ -522,7 +528,7 @@ public class SystemFontFallback : MonoBehaviour
     #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         @"C:\Windows\Fonts\seguisym.ttf", @"C:\Windows\Fonts\symbol.ttf", @"C:\Windows\Fonts\arialuni.ttf",
     #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-        @"/System/Library/Fonts/Apple Symbols.ttf", @"/System/Library/Fonts/Symbol.ttf", @"/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        @"/System/Library/Fonts/Apple Symbols.ttf", @"/System/Library/Fonts/Supplemental/Symbol.ttf", @"/System/Library/Fonts/Supplemental/Arial Unicode.ttf", @"/System/Library/Fonts/Supplemental/Helvetica.ttc",
     #elif UNITY_ANDROID
         @"/system/fonts/NotoSansSymbols-Regular.ttf", @"/system/fonts/NotoSans-Regular.ttf",
     #elif UNITY_IOS
@@ -573,7 +579,7 @@ public class SystemFontFallback : MonoBehaviour
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         @"C:\Windows\Fonts\YuGothM.ttc", @"C:\Windows\Fonts\meiryo.ttc",
 #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-        "/System/Library/Fonts/Osaka.ttf",
+        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc", "/System/Library/Fonts/Supplemental/Hiragino Sans GB.ttc", "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
 #elif UNITY_ANDROID
         "/system/fonts/NotoSansCJK-Regular.ttc",
 #elif UNITY_IOS

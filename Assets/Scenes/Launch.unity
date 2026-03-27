@@ -224,7 +224,7 @@ MonoBehaviour:
   PageResults: {fileID: 0}
   PageLog: {fileID: 0}
   PageHook: {fileID: 0}
-  MacStandaloneUiScale: 0.91
+  MacStandaloneUiScale: 0.7
   MacWindowPreset: 0
   _lastMacWindowPreset: 0
   WindowsWindowPreset: 0
