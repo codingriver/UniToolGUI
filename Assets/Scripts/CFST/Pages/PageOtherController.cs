@@ -311,6 +311,27 @@ namespace CloudflareST.GUI
 #endif
         }
 
+        // 在后台线程重连 helper，完成后在主线程刷新状态标签
+        // 用于安装/卸载/刷新信任后，避免 XPC Connect 阻塞主线程
+        private void RefreshMacHelperStatusWithReconnect()
+        {
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                try
+                {
+                    MacHelperService.Disconnect();
+                    bool connected = MacHelperService.Connect();
+                    UnityMainThreadDispatcher.Enqueue(() => RefreshMacHelperStatus());
+                }
+                catch
+                {
+                    UnityMainThreadDispatcher.Enqueue(() => RefreshMacHelperStatus());
+                }
+            });
+#endif
+        }
+
         private void AppendHelperOutput(string line)
         {
             if (string.IsNullOrWhiteSpace(line))
@@ -324,6 +345,12 @@ namespace CloudflareST.GUI
                 _helperCommandOutput.text = _helperOutputBuffer.ToString();
 
             AppendLog("[MacHelper] " + line.Trim());
+        }
+
+        private System.Collections.IEnumerator DelayedRefreshStatus(float delaySec)
+        {
+            yield return new UnityEngine.WaitForSeconds(delaySec);
+            RefreshMacHelperStatus();
         }
 
         private void OnMacHelperEvent(MacHelperEvent evt)
@@ -349,9 +376,16 @@ namespace CloudflareST.GUI
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             bool ok = MacHelperInstallService.Install(out var message);
             AppendLog(ok ? "[INFO] Root Helper 安装成功: " + message : "[ERROR] Root Helper 安装失败: " + message);
-            if (ok) ToastManager.Success("Root Helper 安装成功");
-            else ToastManager.Error("Root Helper 安装失败: " + message);
-            RefreshMacHelperStatus();
+            if (ok)
+            {
+                ToastManager.Success("Root Helper 安装成功");
+                RefreshMacHelperStatusWithReconnect();
+            }
+            else
+            {
+                ToastManager.Error("Root Helper 安装失败: " + message);
+                RefreshMacHelperStatus();
+            }
 #endif
         }
 
@@ -360,11 +394,19 @@ namespace CloudflareST.GUI
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             bool confirmed = WindowsMessageBox.Confirm("确定要卸载 macOS Root Helper 吗？", "卸载确认");
             if (!confirmed) return;
+            MacHelperService.Disconnect();
             bool ok = MacHelperInstallService.Uninstall(out var message);
             AppendLog(ok ? "[INFO] Root Helper 卸载成功: " + message : "[ERROR] Root Helper 卸载失败: " + message);
-            if (ok) ToastManager.Success("Root Helper 卸载成功");
-            else ToastManager.Error("Root Helper 卸载失败: " + message);
-            RefreshMacHelperStatus();
+            if (ok)
+            {
+                ToastManager.Success("Root Helper 卸载成功");
+                RefreshMacHelperStatus();
+            }
+            else
+            {
+                ToastManager.Error("Root Helper 卸载失败: " + message);
+                RefreshMacHelperStatus();
+            }
 #endif
         }
 
@@ -541,11 +583,20 @@ namespace CloudflareST.GUI
         private void OnHelperRefreshTrustClicked(ClickEvent evt)
         {
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            // 先断开旧连接，避免刷新信任后旧连接状态缓存导致误报
+            MacHelperService.Disconnect();
             bool ok = MacHelperInstallService.RefreshTrust(out var message);
             AppendLog(ok ? "[INFO] Root Helper 信任刷新成功: " + message : "[ERROR] Root Helper 信任刷新失败: " + message);
-            if (ok) ToastManager.Success("信任刷新成功");
-            else ToastManager.Error("信任刷新失败: " + message);
-            RefreshMacHelperStatus();
+            if (ok)
+            {
+                ToastManager.Success("信任刷新成功");
+                RefreshMacHelperStatusWithReconnect();
+            }
+            else
+            {
+                ToastManager.Error("信任刷新失败: " + message);
+                RefreshMacHelperStatus();
+            }
 #endif
         }
 

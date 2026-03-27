@@ -22,9 +22,9 @@ namespace CloudflareST.GUI.Editor
                 return;
 
             if (!Directory.Exists(BridgeBundlePath))
-                throw new BuildFailedException("缺少 UniToolXpcBridge.bundle，请先执行 MacRootHelper/Scripts/build.sh");
+                throw new BuildFailedException("缺少 UniToolXpcBridge.bundle，请先执行 MacRootHelper/build.sh");
             if (!Directory.Exists(HelperPackagePath))
-                throw new BuildFailedException("缺少 HelperArtifacts/package，请先执行 MacRootHelper/Scripts/build.sh");
+                throw new BuildFailedException("缺少 HelperArtifacts/package，请先执行 MacRootHelper/build.sh");
 
             string[] requiredFiles =
             {
@@ -39,7 +39,7 @@ namespace CloudflareST.GUI.Editor
             {
                 string filePath = Path.Combine(HelperPackagePath, fileName);
                 if (!File.Exists(filePath))
-                    throw new BuildFailedException("缺少 helper 打包文件: " + fileName + "，请先执行 MacRootHelper/Scripts/build.sh");
+                    throw new BuildFailedException("缺少 helper 打包文件: " + fileName + "，请先执行 MacRootHelper/build.sh");
             }
         }
 

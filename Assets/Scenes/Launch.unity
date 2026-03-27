@@ -229,7 +229,7 @@ MonoBehaviour:
   _lastMacWindowPreset: 0
   WindowsWindowPreset: 0
   _lastWindowsWindowPreset: 0
-  SyncMacPresetToProjectSettings: 1
+  SyncMacPresetToProjectSettings: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

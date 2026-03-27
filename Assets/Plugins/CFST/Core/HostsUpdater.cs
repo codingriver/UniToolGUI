@@ -61,7 +61,7 @@ public static class HostsUpdater
             return true;
         }
 
-#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             log?.Invoke("[Hosts] macOS 将优先通过 Root Helper 执行高权限写入");

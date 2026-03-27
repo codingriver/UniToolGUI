@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-BUILD_SCRIPT="${SCRIPT_DIR}/build.sh"
+BUILD_SCRIPT="${ROOT_DIR}/MacRootHelper/build.sh"
 PACKAGE_DIR="${ROOT_DIR}/Assets/Plugins/NativeKit/MacOS/HelperArtifacts/package"
 OUTPUT_DIR="${ROOT_DIR}/MacRootHelper/Build"
 STAMP="$(date +"%Y%m%d-%H%M%S")"

@@ -288,6 +288,25 @@ static NSString *const kDefaultTrustToken = @"unitool-default-token";
         NSFileHandle *stdoutRead = stdoutPipe.fileHandleForReading;
         NSFileHandle *stderrRead = stderrPipe.fileHandleForReading;
 
+        // Guard against duplicate terminal events (timeout race vs normal exit)
+        __block BOOL finalEventSent = NO;
+        dispatch_queue_t guardQueue = dispatch_queue_create("com.unitool.taskguard", DISPATCH_QUEUE_SERIAL);
+
+        void (^sendFinal)(BOOL, int, NSString *) = ^(BOOL ok, int exitCode, NSString *msg) {
+            dispatch_sync(guardQueue, ^{
+                if (finalEventSent) return;
+                finalEventSent = YES;
+                [self sendEventToPeer:peer
+                            requestId:requestId
+                               action:action
+                            eventType:(ok ? @"completed" : @"failed")
+                                   ok:ok
+                             exitCode:exitCode
+                              message:msg ?: @""
+                          payloadJson:@"{}"];
+            });
+        };
+
         [self sendEventToPeer:peer requestId:requestId action:action eventType:@"progress" ok:YES exitCode:0 message:@"shell.exec started" payloadJson:@"{}"];
 
         stdoutRead.readabilityHandler = ^(NSFileHandle *handle) {
@@ -312,7 +331,7 @@ static NSString *const kDefaultTrustToken = @"unitool-default-token";
         {
             NSString *msg = [NSString stringWithFormat:@"命令启动失败: %@", exception.reason ?: @"unknown"];
             [self log:[NSString stringWithFormat:@"[Helper] %@", msg]];
-            [self sendEventToPeer:peer requestId:requestId action:action eventType:@"failed" ok:NO exitCode:-1 message:msg payloadJson:@"{}"];
+            sendFinal(NO, -1, msg);
             return;
         }
 
@@ -321,7 +340,7 @@ static NSString *const kDefaultTrustToken = @"unitool-default-token";
             if (task.isRunning)
             {
                 [task terminate];
-                [self sendEventToPeer:peer requestId:requestId action:action eventType:@"failed" ok:NO exitCode:124 message:@"命令执行超时" payloadJson:@"{}"];
+                sendFinal(NO, 124, @"命令执行超时");
             }
         });
 
@@ -332,7 +351,7 @@ static NSString *const kDefaultTrustToken = @"unitool-default-token";
         int code = task.terminationStatus;
         NSString *message = code == 0 ? @"命令执行完成" : [NSString stringWithFormat:@"命令退出 code=%d", code];
         [self log:[NSString stringWithFormat:@"[Helper] shell.exec requestId=%@ exit=%d", requestId ?: @"", code]];
-        [self sendEventToPeer:peer requestId:requestId action:action eventType:(code == 0 ? @"completed" : @"failed") ok:(code == 0) exitCode:code message:message payloadJson:@"{}"];
+        sendFinal(code == 0, code, message);
     });
 }
 

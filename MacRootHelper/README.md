@@ -28,10 +28,10 @@ Root Helper 支持的 action 列表（详见 `Sources/RootHelper/root_helper_mai
 
 ## 构建与产物
 
-统一构建入口：`MacRootHelper/Scripts/build.sh`
+统一构建入口：`MacRootHelper/build.sh`
 
 ```zsh
-MacRootHelper/Scripts/build.sh --all
+MacRootHelper/build.sh --all
 ```
 
 构建产物：
@@ -48,9 +48,11 @@ MacRootHelper/Scripts/build.sh --all
 - `uninstall_helper.sh`
 - `refresh_trust.sh`
 
+说明：这些脚本的**源文件**位于 `MacRootHelper/scripts/`，构建时由 `build.sh` 复制到 package 目录。
+
 ## 一键打包脚本
 
-脚本位置：`MacRootHelper/Scripts/package_oneclick.sh`
+脚本位置：`MacRootHelper/test/package_oneclick.sh`
 
 作用：
 
@@ -61,7 +63,7 @@ MacRootHelper/Scripts/build.sh --all
 用法：
 
 ```zsh
-MacRootHelper/Scripts/package_oneclick.sh
+MacRootHelper/test/package_oneclick.sh
 ```
 
 产物输出：
@@ -99,13 +101,13 @@ sudo Assets/Plugins/NativeKit/MacOS/HelperArtifacts/package/refresh_trust.sh \
 验收脚本：
 
 ```zsh
-MacRootHelper/Scripts/acceptance_check.sh
+MacRootHelper/test/acceptance_check.sh
 ```
 
 测试 helper 自动重启：
 
 ```zsh
-MacRootHelper/Scripts/acceptance_check.sh --test-restart
+MacRootHelper/test/acceptance_check.sh --test-restart
 ```
 
 常用运行态路径：

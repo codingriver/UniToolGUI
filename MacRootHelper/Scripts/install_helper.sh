@@ -10,8 +10,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PACKAGE_DIR="${ROOT_DIR}/Assets/Plugins/NativeKit/MacOS/HelperArtifacts/package"
 HELPER_SRC="${SCRIPT_DIR}/com.unitool.roothelper"
 PLIST_SRC="${SCRIPT_DIR}/com.unitool.roothelper.plist"
+if [[ ! -f "${HELPER_SRC}" || ! -f "${PLIST_SRC}" ]]; then
+  HELPER_SRC="${PACKAGE_DIR}/com.unitool.roothelper"
+  PLIST_SRC="${PACKAGE_DIR}/com.unitool.roothelper.plist"
+fi
 
 HELPER_DST="/Library/PrivilegedHelperTools/com.unitool.roothelper"
 PLIST_DST="/Library/LaunchDaemons/com.unitool.roothelper.plist"

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 HELPER_SRC="${ROOT_DIR}/MacRootHelper/Sources/RootHelper/root_helper_main.m"
 BRIDGE_SRC="${ROOT_DIR}/MacRootHelper/Sources/Bridge/xpc_bridge.m"
 PLIST_SRC="${ROOT_DIR}/MacRootHelper/Resources/plists/com.unitool.roothelper.plist"
@@ -15,7 +15,7 @@ BRIDGE_INFO_DIR="${BRIDGE_BUNDLE_DIR}/Contents"
 
 mkdir -p "${HELPER_OUT_DIR}" "${PACKAGE_OUT_DIR}" "${BRIDGE_BIN_DIR}"
 
-MODE="${1:-all}"
+MODE="${1:---all}"
 
 build_helper() {
   echo "[build] compiling root helper..."
@@ -28,6 +28,7 @@ build_helper() {
     "${HELPER_SRC}"
 
   chmod 755 "${HELPER_OUT_DIR}/com.unitool.roothelper"
+  echo "[build] helper output: ${HELPER_OUT_DIR}/com.unitool.roothelper"
 }
 
 build_bridge() {
@@ -54,6 +55,8 @@ build_bridge() {
 </dict>
 </plist>
 EOF
+  echo "[build] bridge output: ${BRIDGE_BIN_DIR}/UniToolXpcBridge"
+  echo "[build] bridge info: ${BRIDGE_INFO_DIR}/Info.plist"
 }
 
 case "${MODE}" in
@@ -74,12 +77,21 @@ case "${MODE}" in
 esac
 
 cp "${PLIST_SRC}" "${PACKAGE_OUT_DIR}/com.unitool.roothelper.plist"
-cp "${SCRIPT_DIR}/install_helper.sh" "${PACKAGE_OUT_DIR}/install_helper.sh"
-cp "${SCRIPT_DIR}/uninstall_helper.sh" "${PACKAGE_OUT_DIR}/uninstall_helper.sh"
-cp "${SCRIPT_DIR}/refresh_trust.sh" "${PACKAGE_OUT_DIR}/refresh_trust.sh"
+echo "[build] copy: ${PLIST_SRC} -> ${PACKAGE_OUT_DIR}/com.unitool.roothelper.plist"
+SCRIPTS_DIR="${SCRIPT_DIR}/scripts"
+cp "${SCRIPTS_DIR}/install_helper.sh" "${PACKAGE_OUT_DIR}/install_helper.sh"
+echo "[build] copy: ${SCRIPTS_DIR}/install_helper.sh -> ${PACKAGE_OUT_DIR}/install_helper.sh"
+cp "${SCRIPTS_DIR}/uninstall_helper.sh" "${PACKAGE_OUT_DIR}/uninstall_helper.sh"
+echo "[build] copy: ${SCRIPTS_DIR}/uninstall_helper.sh -> ${PACKAGE_OUT_DIR}/uninstall_helper.sh"
+cp "${SCRIPTS_DIR}/refresh_trust.sh" "${PACKAGE_OUT_DIR}/refresh_trust.sh"
+echo "[build] copy: ${SCRIPTS_DIR}/refresh_trust.sh -> ${PACKAGE_OUT_DIR}/refresh_trust.sh"
 if [[ -f "${HELPER_OUT_DIR}/com.unitool.roothelper" ]]; then
   cp "${HELPER_OUT_DIR}/com.unitool.roothelper" "${PACKAGE_OUT_DIR}/com.unitool.roothelper"
+  echo "[build] copy: ${HELPER_OUT_DIR}/com.unitool.roothelper -> ${PACKAGE_OUT_DIR}/com.unitool.roothelper"
 fi
 
 chmod 755 "${PACKAGE_OUT_DIR}/install_helper.sh" "${PACKAGE_OUT_DIR}/uninstall_helper.sh" "${PACKAGE_OUT_DIR}/refresh_trust.sh"
+echo "[build] package dir: ${PACKAGE_OUT_DIR}"
+echo "[build] helper artifacts dir: ${HELPER_OUT_DIR}"
+echo "[build] bridge bundle dir: ${BRIDGE_BUNDLE_DIR}"
 echo "[build] success"

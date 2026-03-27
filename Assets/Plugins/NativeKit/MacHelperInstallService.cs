@@ -15,9 +15,18 @@ namespace NativeKit
         private const string LogDirectory = "/Users/Shared/UniTool/logs";
 
         // macOS 授权弹窗提示语，可由 Unity 侧覆盖
-        public static string AuthorizationPrompt { get; set; } = "更新Hosts权限申请";
+        public static string AuthorizationPrompt { get; set; } = "request update permission";
+
+        // 各操作专属授权弹窗提示语（为空时回退到 AuthorizationPrompt）
+        public static string InstallPrompt { get; set; } = "UniTool needs your permission to install a background service that enables automatic Hosts file updates.";
+        public static string UninstallPrompt { get; set; } = "UniTool needs your permission to remove the background service used for Hosts file updates.";
+        public static string RefreshTrustPrompt { get; set; } = "UniTool needs your permission to update the authorization settings for its background service.";
         // Root Helper 信任 token，可由 Unity 侧覆盖
-        public static string TrustToken { get; set; } = "unitool-default-token";
+        // 警告：请在安装前替换为非默认值，使用默认 token 会降低安全性
+        public static string TrustToken { get; set; } = "codingriver_unitool_token";
+
+        private static bool IsDefaultToken =>
+            string.IsNullOrWhiteSpace(TrustToken) || TrustToken == "codingriver_unitool_token";
 
         public static MacHelperStatus QueryStatus()
         {
@@ -34,34 +43,32 @@ namespace NativeKit
             };
 
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
-            try
-            {
-                status.isConnected = status.isInstalled && MacHelperService.Connect();
-                status.message = status.isConnected
-                    ? "helper 已连接"
-                    : (status.isInstalled ? "helper 已安装但通信失败" : "helper 未安装");
-            }
-            catch (Exception ex)
-            {
-                status.message = ex.Message;
-            }
+            // 直接读取已有连接状态，不在 QueryStatus 里做 Disconnect/Connect
+            // Disconnect+Connect 是阻塞调用，在主线程调用会卡死 UI
+            status.isConnected = status.isInstalled && MacHelperService.IsConnected;
+            status.message = status.isConnected
+                ? "helper 已连接"
+                : (status.isInstalled ? "helper 已安装（未连接）" : "helper 未安装");
 #endif
             return status;
         }
 
         public static bool Install(out string message)
         {
-            return RunPrivilegedScript("install_helper.sh", out message);
+            return RunPrivilegedScript("install_helper.sh", out message,
+                prompt: string.IsNullOrWhiteSpace(InstallPrompt) ? AuthorizationPrompt : InstallPrompt);
         }
 
         public static bool Uninstall(out string message)
         {
-            return RunPrivilegedScript("uninstall_helper.sh", out message, includeTrustArgs: false);
+            return RunPrivilegedScript("uninstall_helper.sh", out message, includeTrustArgs: false,
+                prompt: string.IsNullOrWhiteSpace(UninstallPrompt) ? AuthorizationPrompt : UninstallPrompt);
         }
 
         public static bool RefreshTrust(out string message)
         {
-            return RunPrivilegedScript("refresh_trust.sh", out message);
+            return RunPrivilegedScript("refresh_trust.sh", out message,
+                prompt: string.IsNullOrWhiteSpace(RefreshTrustPrompt) ? AuthorizationPrompt : RefreshTrustPrompt);
         }
 
         public static void OpenPackageFolder()
@@ -111,10 +118,12 @@ namespace NativeKit
 #endif
         }
 
-        private static bool RunPrivilegedScript(string scriptName, out string message, bool includeTrustArgs = true)
+        private static bool RunPrivilegedScript(string scriptName, out string message, bool includeTrustArgs = true, string prompt = null)
         {
             message = "仅 macOS 打包版支持";
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            if (includeTrustArgs && IsDefaultToken)
+                UnityEngine.Debug.LogWarning("[MacHelper] 当前使用默认 token 执行安装/信任刷新，建议在发布前替换为项目专属 token");
             string packageDir = GetRuntimePackageDirectory();
             string scriptPath = Path.Combine(packageDir, scriptName);
             if (!File.Exists(scriptPath))
@@ -131,9 +140,11 @@ namespace NativeKit
 
             // Ensure a safe working directory for osascript (Unity editor can have a deleted CWD)
             string shell = "cd /; " + QuoteForShell(scriptPath) + arguments;
-            string prompt = string.IsNullOrWhiteSpace(AuthorizationPrompt) ? "需要管理员权限" : AuthorizationPrompt;
+            string effectivePrompt = !string.IsNullOrWhiteSpace(prompt) ? prompt
+                : !string.IsNullOrWhiteSpace(AuthorizationPrompt) ? AuthorizationPrompt
+                : "需要管理员权限";
             string appleScript = "do shell script \"" + EscapeForAppleScript(shell) + "\" with administrator privileges"
-                               + " with prompt \"" + EscapeForAppleScript(prompt) + "\"";
+                               + " with prompt \"" + EscapeForAppleScript(effectivePrompt) + "\"";
 
             try
             {

@@ -88,7 +88,7 @@ namespace CloudflareST.GUI
 
             UpdatePermHint();
 
-#if UNITY_STANDALONE_OSX
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             ApplyMacHelperPermissionState();
 #endif
 
@@ -325,7 +325,7 @@ namespace CloudflareST.GUI
 #endif
         }
 
-#if UNITY_STANDALONE_OSX
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
         private void ApplyMacHelperPermissionState()
         {
             var status = MacHelperInstallService.QueryStatus();
