@@ -1240,6 +1240,20 @@ namespace CloudflareST.GUI
             _runner?.Dispose();
             _runner = new CfstDllRunner();
 
+            // 注册 Hosts 写入结果回调（解耦 Plugins 程序集与 Scripts 程序集）
+            HostsUpdater.OnHostsWriteResult = (ok, denied) =>
+            {
+                TestResult.Instance.HostsWriteSuccess     = ok;
+                TestResult.Instance.HostsPermissionDenied = denied;
+            };
+            HostsUpdater.OnShowToast          = (title, msg) => NativePlatform.ShowToast(title, msg);
+            HostsUpdater.GetDesktopDataDirFunc = () => AppRuntimePaths.GetDesktopDataDir();
+            HostsUpdater.OnPrivilegedWrite    = (path, content, log) => PrivilegedHostsWriter.TryWrite(path, content, log);
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            HostsUpdater.OnMacHostsUpdate = (string path, string content, Action<string> log, out string error) =>
+                NativeKit.MacHelperService.SubmitHostsUpdate(path, content, log, out error);
+#endif
+
             _runner.OnLog += line =>
                 UnityMainThreadDispatcher.Enqueue(() =>
                 {
@@ -1319,7 +1333,24 @@ namespace CloudflareST.GUI
             AppState.Instance.Elapsed    = DateTime.Now - AppState.Instance.StartTime;
             AppState.Instance.StatusText = exitCode == 0 ? "已完成" : (exitCode == -1 ? "已取消" : "完成 (异常)");
             if (exitCode == 0)
+            {
                 ToastManager.Success("测速完成！共 " + TestResult.Instance.IpList.Count + " 条结果", 4f);
+
+                // Hosts 写入结果 toast
+                var tr = TestResult.Instance;
+                bool hostsEnabled = Options.HostsDomains != null && Options.HostsDomains.Count > 0;
+                if (hostsEnabled)
+                {
+                    if (Options.HostsDryRun)
+                        ToastManager.Info("Hosts 预览已生成，未实际写入（预览模式）", 4f);
+                    else if (tr.HostsWriteSuccess)
+                        ToastManager.Success("Hosts 更新成功", 4f);
+                    else if (tr.HostsPermissionDenied)
+                        ToastManager.Warning("Hosts 更新失败：权限不足，内容已输出至 hosts-pending.txt", 5f);
+                    else
+                        ToastManager.Error("Hosts 更新失败", 4f);
+                }
+            }
             else if (exitCode == -1)
                 ToastManager.Warning("测速已取消");
             else
