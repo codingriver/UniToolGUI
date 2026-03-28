@@ -842,33 +842,33 @@ namespace CloudflareST.GUI
         {
             try
             {
-                LogMacHelperCheck("开始检查 Root Helper 安装/权限/信任状态");
+                LogMacHelperCheck("开始检查权限组件安装/权限/信任状态");
 
                 var status = MacHelperInstallService.QueryStatus();
                 LogMacHelperCheck("当前状态: " + status.message);
 
                 if (!status.isInstalled)
                 {
-                    LogMacHelperCheck("检测到未安装 Root Helper");
+                    LogMacHelperCheck("检测到未安装权限组件");
                     bool confirmInstall = WindowsMessageBox.Confirm(
-                        "检测到 macOS Root Helper 未安装，更新 hosts 需要先安装。\n是否立即安装？",
-                        "需要安装 Root Helper");
+                        "检测到 macOS 权限组件未安装，更新 hosts 需要先安装。\n是否立即安装？",
+                        "需要安装权限组件");
                     LogMacHelperCheck("用户确认安装: " + confirmInstall);
                     if (!confirmInstall)
                     {
-                        ToastManager.Warning("未安装 Root Helper，无法更新 hosts");
+                        ToastManager.Warning("未安装权限组件，无法更新 hosts");
                         return false;
                     }
 
                     if (!MacHelperInstallService.Install(out var installMessage))
                     {
                         LogMacHelperCheck("安装失败: " + installMessage, isError: true);
-                        ToastManager.Error("Root Helper 安装失败: " + installMessage);
+                        ToastManager.Error("权限组件安装失败: " + installMessage);
                         return false;
                     }
 
                     LogMacHelperCheck("安装成功: " + installMessage);
-                    ToastManager.Success("Root Helper 安装成功");
+                    ToastManager.Success("权限组件安装成功");
                 }
 
                 if (!TryPingForTrust(out var pingEvent, out var pingError))
@@ -878,8 +878,8 @@ namespace CloudflareST.GUI
                     LogMacHelperCheck(reason + ": " + (pingError ?? pingEvent?.Message ?? "unknown"), isError: true);
 
                     bool confirmReinstall = WindowsMessageBox.Confirm(
-                        reason + "，需要重新安装 Root Helper 才能继续。\n是否立即重新安装？",
-                        "Root Helper 需要重装");
+                        reason + "，需要重新安装权限组件才能继续。\n是否立即重新安装？",
+                        "权限组件需要重装");
                     LogMacHelperCheck("用户确认重装: " + confirmReinstall);
                     if (!confirmReinstall)
                     {
@@ -890,38 +890,38 @@ namespace CloudflareST.GUI
                     if (!MacHelperInstallService.Uninstall(out var uninstallMessage))
                     {
                         LogMacHelperCheck("卸载失败: " + uninstallMessage, isError: true);
-                        ToastManager.Error("Root Helper 卸载失败: " + uninstallMessage);
+                        ToastManager.Error("权限组件卸载失败: " + uninstallMessage);
                         return false;
                     }
 
                     LogMacHelperCheck("卸载成功: " + uninstallMessage);
-                    ToastManager.Success("Root Helper 卸载成功");
+                    ToastManager.Success("权限组件卸载成功");
 
                     if (!MacHelperInstallService.Install(out var reinstallMessage))
                     {
                         LogMacHelperCheck("重新安装失败: " + reinstallMessage, isError: true);
-                        ToastManager.Error("Root Helper 安装失败: " + reinstallMessage);
+                        ToastManager.Error("权限组件安装失败: " + reinstallMessage);
                         return false;
                     }
 
                     LogMacHelperCheck("重新安装成功: " + reinstallMessage);
-                    ToastManager.Success("Root Helper 重新安装成功");
+                    ToastManager.Success("权限组件重新安装成功");
 
                     if (!TryPingForTrust(out var pingEventAfter, out var pingErrorAfter))
                     {
                         LogMacHelperCheck("重装后仍无法通过校验: " + (pingErrorAfter ?? pingEventAfter?.Message ?? "unknown"), isError: true);
-                        ToastManager.Error("Root Helper 校验失败，请检查安装与权限");
+                        ToastManager.Error("权限组件校验失败，请检查安装与权限");
                         return false;
                     }
                 }
 
-                LogMacHelperCheck("Root Helper 前置检查通过");
+                LogMacHelperCheck("权限组件前置检查通过");
                 return true;
             }
             catch (Exception ex)
             {
                 LogMacHelperCheck("检查异常: " + ex.Message, isError: true);
-                ToastManager.Error("Root Helper 检查异常: " + ex.Message);
+                ToastManager.Error("权限组件检查异常: " + ex.Message);
                 return false;
             }
         }
@@ -993,7 +993,7 @@ namespace CloudflareST.GUI
 
                 if (!status.isInstalled)
                 {
-                    UpdateMacHelperStatus(MacHelperUiState.NotInstalled, "未安装", "Root Helper 未安装");
+                    UpdateMacHelperStatus(MacHelperUiState.NotInstalled, "未安装", "权限组件未安装");
                     return;
                 }
 
@@ -1048,7 +1048,7 @@ namespace CloudflareST.GUI
             string suffix = state == MacHelperUiState.Ok || state == MacHelperUiState.Checking
                 ? string.Empty
                 : " (点击修复)";
-            _sbUserRole.text = "RootHelper: " + (shortText ?? "未知") + suffix;
+            _sbUserRole.text = "权限: " + (shortText ?? "未知") + suffix;
         }
 
         private void OnMacHelperStatusClicked()
@@ -1060,45 +1060,45 @@ namespace CloudflareST.GUI
                 {
                     case MacHelperUiState.NotInstalled:
                         LogMacHelperCheck("点击状态：未安装，提示安装");
-                        if (WindowsMessageBox.Confirm("Root Helper 未安装，更新 hosts 需要先安装。\n详情: " + detail + "\n是否立即安装？", "需要安装 Root Helper"))
+                        if (WindowsMessageBox.Confirm("权限组件未安装，更新 hosts 需要先安装。\n详情: " + detail + "\n是否立即安装？", "需要安装权限组件"))
                         {
                             if (MacHelperInstallService.Install(out var msg))
                             {
                                 LogMacHelperCheck("安装成功: " + msg);
-                                ToastManager.Success("Root Helper 安装成功");
+                                ToastManager.Success("权限组件安装成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("安装失败: " + msg, isError: true);
-                                ToastManager.Error("Root Helper 安装失败: " + msg);
+                                ToastManager.Error("权限组件安装失败: " + msg);
                             }
                             RefreshMacHelperStatusLabel();
                         }
                         break;
                     case MacHelperUiState.NotConnected:
                         LogMacHelperCheck("点击状态：未连接，提示重装");
-                        if (WindowsMessageBox.Confirm("Root Helper 未连接或异常，建议重新安装。\n详情: " + detail + "\n是否立即重新安装？", "需要重新安装"))
+                        if (WindowsMessageBox.Confirm("权限组件未连接或异常，建议重新安装。\n详情: " + detail + "\n是否立即重新安装？", "需要重新安装"))
                         {
                             if (MacHelperInstallService.Uninstall(out var msg1))
                             {
                                 LogMacHelperCheck("卸载成功: " + msg1);
-                                ToastManager.Success("Root Helper 卸载成功");
+                                ToastManager.Success("权限组件卸载成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("卸载失败: " + msg1, isError: true);
-                                ToastManager.Error("Root Helper 卸载失败: " + msg1);
+                                ToastManager.Error("权限组件卸载失败: " + msg1);
                             }
 
                             if (MacHelperInstallService.Install(out var msg2))
                             {
                                 LogMacHelperCheck("重新安装成功: " + msg2);
-                                ToastManager.Success("Root Helper 重新安装成功");
+                                ToastManager.Success("权限组件重新安装成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("重新安装失败: " + msg2, isError: true);
-                                ToastManager.Error("Root Helper 重新安装失败: " + msg2);
+                                ToastManager.Error("权限组件重新安装失败: " + msg2);
                             }
 
                             RefreshMacHelperStatusLabel();
@@ -1106,28 +1106,28 @@ namespace CloudflareST.GUI
                         break;
                     case MacHelperUiState.TrustFailed:
                         LogMacHelperCheck("点击状态：信任失败，提示重装");
-                        if (WindowsMessageBox.Confirm("Root Helper 信任校验失败，需要重新安装。\n详情: " + detail + "\n是否立即重新安装？", "信任校验失败"))
+                        if (WindowsMessageBox.Confirm("权限组件信任校验失败，需要重新安装。\n详情: " + detail + "\n是否立即重新安装？", "信任校验失败"))
                         {
                             if (MacHelperInstallService.Uninstall(out var msg1))
                             {
                                 LogMacHelperCheck("卸载成功: " + msg1);
-                                ToastManager.Success("Root Helper 卸载成功");
+                                ToastManager.Success("权限组件卸载成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("卸载失败: " + msg1, isError: true);
-                                ToastManager.Error("Root Helper 卸载失败: " + msg1);
+                                ToastManager.Error("权限组件卸载失败: " + msg1);
                             }
 
                             if (MacHelperInstallService.Install(out var msg2))
                             {
                                 LogMacHelperCheck("重新安装成功: " + msg2);
-                                ToastManager.Success("Root Helper 重新安装成功");
+                                ToastManager.Success("权限组件重新安装成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("重新安装失败: " + msg2, isError: true);
-                                ToastManager.Error("Root Helper 重新安装失败: " + msg2);
+                                ToastManager.Error("权限组件重新安装失败: " + msg2);
                             }
 
                             RefreshMacHelperStatusLabel();
@@ -1135,38 +1135,38 @@ namespace CloudflareST.GUI
                         break;
                     case MacHelperUiState.Error:
                         LogMacHelperCheck("点击状态：连接异常，提示重装");
-                        if (WindowsMessageBox.Confirm("Root Helper 当前异常，建议重新安装。\n详情: " + detail + "\n是否立即重新安装？", "Root Helper 异常"))
+                        if (WindowsMessageBox.Confirm("权限组件当前异常，建议重新安装。\n详情: " + detail + "\n是否立即重新安装？", "权限组件异常"))
                         {
                             if (MacHelperInstallService.Uninstall(out var msg1))
                             {
                                 LogMacHelperCheck("卸载成功: " + msg1);
-                                ToastManager.Success("Root Helper 卸载成功");
+                                ToastManager.Success("权限组件卸载成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("卸载失败: " + msg1, isError: true);
-                                ToastManager.Error("Root Helper 卸载失败: " + msg1);
+                                ToastManager.Error("权限组件卸载失败: " + msg1);
                             }
 
                             if (MacHelperInstallService.Install(out var msg2))
                             {
                                 LogMacHelperCheck("重新安装成功: " + msg2);
-                                ToastManager.Success("Root Helper 重新安装成功");
+                                ToastManager.Success("权限组件重新安装成功");
                             }
                             else
                             {
                                 LogMacHelperCheck("重新安装失败: " + msg2, isError: true);
-                                ToastManager.Error("Root Helper 重新安装失败: " + msg2);
+                                ToastManager.Error("权限组件重新安装失败: " + msg2);
                             }
 
                             RefreshMacHelperStatusLabel();
                         }
                         break;
                     case MacHelperUiState.Ok:
-                        WindowsMessageBox.Info("Root Helper 状态正常。\n详情: " + detail, "Root Helper");
+                        WindowsMessageBox.Info("权限组件状态正常。\n详情: " + detail, "权限组件");
                         break;
                     default:
-                        WindowsMessageBox.Info("Root Helper 状态未知。\n详情: " + detail, "Root Helper");
+                        WindowsMessageBox.Info("权限组件状态未知。\n详情: " + detail, "权限组件");
                         break;
                 }
             }
@@ -1360,17 +1360,30 @@ namespace CloudflareST.GUI
             if (exitCode == 0 && TestResult.Instance.IpList.Count > 0)
                 NavigateTo(PAGE_RESULTS);
 
-            if (!_isMobileStructure && exitCode == 0)
+            var s = AppState.Instance;
+            // 同时发送系统通知（后台运行时也能收到）
+            string title;
+            string body;
+            if (exitCode == 0)
             {
-                var s = AppState.Instance;
-                // 同时发送系统通知（后台运行时也能收到）
-                NativePlatform.ShowToast(
-                    "CFST 测速完成",
-                    TestResult.Instance.IpList.Count > 0
-                        ? string.Format("有效 {0} 个 IP，最快 {1:F0} ms",
-                            TestResult.Instance.IpList.Count, s.BestLatency)
-                        : "未找到有效 IP");
+                title = "CFST 测速完成";
+                body = TestResult.Instance.IpList.Count > 0
+                    ? string.Format("有效 {0} 个 IP，最快 {1:F0} ms",
+                        TestResult.Instance.IpList.Count, s.BestLatency)
+                    : "未找到有效 IP";
             }
+            else if (exitCode == -1)
+            {
+                title = "CFST 测速已取消";
+                body = "用户取消或已中止";
+            }
+            else
+            {
+                title = "CFST 测速失败";
+                body = "异常退出 (code=" + exitCode + ")";
+            }
+
+            NativePlatform.ShowToast(title, body);
 
             UnityEngine.Debug.Log("[CFST] Finished, exitCode=" + exitCode
                 + ", results=" + TestResult.Instance.IpList.Count);

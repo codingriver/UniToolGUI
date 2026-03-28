@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 
 /// <summary>
-/// 按操作临时提权写入 hosts，避免整个 GUI 进程长期以管理员/root 运行。
+/// 按操作临时提权写入 hosts，避免整个 GUI 进程长期以管理员/高权限账号运行。
 /// 当前优先支持 macOS/Linux；Windows 保留后续补充。
 /// </summary>
 public static class PrivilegedHostsWriter

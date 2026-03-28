@@ -123,7 +123,7 @@ namespace NativeKit
                 request.token = MacHelperInstallService.TrustToken;
 
             if (!Connect())
-                throw new InvalidOperationException("无法连接 macOS Root Helper");
+                throw new InvalidOperationException("无法连接 macOS 权限组件");
 
             try
             {
@@ -151,7 +151,7 @@ namespace NativeKit
                                      + " requestId=" + request.requestId);
                 }
                 catch { }
-                throw new InvalidOperationException("Root Helper 请求发送失败");
+                throw new InvalidOperationException("权限组件请求发送失败");
             }
 
             return request.requestId;
@@ -203,7 +203,7 @@ namespace NativeKit
                             eventType = "failed",
                             ok = false,
                             exitCode = 124,
-                            message = "等待 Root Helper 响应超时",
+                            message = "等待权限组件响应超时",
                             payloadJson = "{}"
                         };
                         try
@@ -258,7 +258,7 @@ namespace NativeKit
 
             if (!SubmitAndWait(request, out var result))
             {
-                errorMessage = result?.Message ?? "Root Helper 无响应";
+                errorMessage = result?.Message ?? "权限组件无响应";
                 log?.Invoke("[MacHelper] hosts.update 失败: " + errorMessage);
                 return false;
             }

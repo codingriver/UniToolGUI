@@ -31,12 +31,12 @@ using Debug = UnityEngine.Debug;
                 MacHelperService.Initialize();
                 bool helperConnected = MacHelperService.Connect();
                 FileLogger.Log(helperConnected
-                    ? "[AppBootstrap] macOS Root Helper 已连接"
-                    : "[AppBootstrap] macOS Root Helper 当前不可连接");
+                    ? "[AppBootstrap] macOS 权限组件已连接"
+                    : "[AppBootstrap] macOS 权限组件当前不可连接");
             }
             catch (System.Exception ex)
             {
-                FileLogger.LogWarning("[AppBootstrap] macOS Root Helper 初始化失败: " + ex.Message);
+                FileLogger.LogWarning("[AppBootstrap] macOS 权限组件初始化失败: " + ex.Message);
             }
 #endif
             DontDestroyOnLoad(gameObject);

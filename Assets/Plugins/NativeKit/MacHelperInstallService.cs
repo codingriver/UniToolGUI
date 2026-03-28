@@ -21,7 +21,7 @@ namespace NativeKit
         public static string InstallPrompt { get; set; } = "UniTool needs your permission to install a background service that enables automatic Hosts file updates.";
         public static string UninstallPrompt { get; set; } = "UniTool needs your permission to remove the background service used for Hosts file updates.";
         public static string RefreshTrustPrompt { get; set; } = "UniTool needs your permission to update the authorization settings for its background service.";
-        // Root Helper 信任 token，可由 Unity 侧覆盖
+        // 权限组件信任 token，可由 Unity 侧覆盖
         // 警告：请在安装前替换为非默认值，使用默认 token 会降低安全性
         public static string TrustToken { get; set; } = "codingriver_unitool_token";
 

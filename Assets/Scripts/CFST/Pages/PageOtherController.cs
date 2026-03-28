@@ -36,6 +36,8 @@ namespace CloudflareST.GUI
         private Button        _btnHelperRefreshTrust;
         private Button        _btnHelperOpenLogs;
         private Button        _btnHelperOpenPackage;
+        private Label         _helperTitleLabel;
+        private VisualElement _helperToolsRow;
         private TextField     _helperCommandField;
         private Button        _btnHelperExec;
         private Label         _helperCommandOutput;
@@ -48,6 +50,7 @@ namespace CloudflareST.GUI
         private bool   _isAdmin;
 
         private bool _eventsBound;
+        private bool _lastDebugUiUnlocked;
 
         public void Init(VisualElement root, CfstOptions opts)
         {
@@ -85,6 +88,8 @@ namespace CloudflareST.GUI
             _btnHelperRefreshTrust = root.Q<Button>("btn-helper-refresh-trust");
             _btnHelperOpenLogs = root.Q<Button>("btn-helper-open-logs");
             _btnHelperOpenPackage = root.Q<Button>("btn-helper-open-package");
+            _helperTitleLabel = _groupMacHelper != null ? _groupMacHelper.Q<Label>(className: "group-title") : null;
+            _helperToolsRow = _btnHelperOpenLogs != null ? _btnHelperOpenLogs.parent : null;
             _helperCommandField = root.Q<TextField>("field-helper-command");
             _btnHelperExec = root.Q<Button>("btn-helper-exec");
             _helperCommandOutput = root.Q<Label>("label-helper-command-output");
@@ -111,6 +116,10 @@ namespace CloudflareST.GUI
             // ── 重置默认参数 ──────────────────────────────────────
             _btnResetDefaults?.RegisterCallback<ClickEvent>(OnResetDefaultsClicked);
             ConfigureMacHelperUi();
+            ApplyDebugVisibility();
+            _lastDebugUiUnlocked = AppState.Instance.DebugUiUnlocked;
+            AppState.Instance.OnChanged -= OnAppStateChanged;
+            AppState.Instance.OnChanged += OnAppStateChanged;
 
             // ── 开机自启 ─────────────────────────────────────────
             if (_startupToggle != null)
@@ -142,7 +151,7 @@ namespace CloudflareST.GUI
                 _autoAdminToggle.SetValueWithoutNotify(false);
                 _autoAdminToggle.SetEnabled(false);
                 if (_autoAdminHint != null)
-                    _autoAdminHint.text = "macOS 改为通过 Root Helper 执行高权限操作；整应用管理员模式已停用";
+                    _autoAdminHint.text = "macOS 改为通过权限组件执行高权限操作；整应用管理员模式已停用";
 #else
                 _autoAdminToggle.SetValueWithoutNotify(WindowsAdminAutoElevate.IsAutoAdminEnabled());
                 UpdateAutoAdminHint(_autoAdminHint, _autoAdminToggle.value);
@@ -159,7 +168,7 @@ namespace CloudflareST.GUI
             var labelRole = root.Q<Label>("label-current-role");
             if (labelRole != null)
 #if UNITY_STANDALONE_OSX
-                labelRole.text = "macOS 当前固定以普通用户运行；高权限操作交由 Root Helper 执行";
+                labelRole.text = "macOS 当前固定以普通用户运行；高权限操作交由权限组件执行";
 #else
                 labelRole.text = _isAdmin
                     ? "当前以管理员身份运行 · " + identity
@@ -241,8 +250,49 @@ namespace CloudflareST.GUI
             _btnHelperExec?.UnregisterCallback<ClickEvent>(OnHelperExecClicked);
             WindowsStartup.OnStartupChanged -= OnStartupChangedExternal;
             MacHelperService.OnEvent -= OnMacHelperEvent;
+            AppState.Instance.OnChanged -= OnAppStateChanged;
 
             _eventsBound = false;
+        }
+
+        private void OnAppStateChanged()
+        {
+            bool unlocked = AppState.Instance.DebugUiUnlocked;
+            if (unlocked == _lastDebugUiUnlocked)
+                return;
+            _lastDebugUiUnlocked = unlocked;
+            ApplyDebugVisibility();
+        }
+
+        private static void SetDisplay(VisualElement element, bool show)
+        {
+            if (element == null) return;
+            element.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void ApplyDebugVisibility()
+        {
+            bool unlocked = AppState.Instance.DebugUiUnlocked;
+
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            SetDisplay(_groupMacShell, unlocked);
+#else
+            SetDisplay(_groupMacShell, false);
+#endif
+
+            SetDisplay(_helperTitleLabel, unlocked);
+            SetDisplay(_helperStatusLabel, unlocked);
+            SetDisplay(_btnHelperDiagnose, unlocked);
+            SetDisplay(_btnHelperCopyReport, unlocked);
+            SetDisplay(_btnHelperExportReport, unlocked);
+            SetDisplay(_btnHelperOpenLogs, unlocked);
+            SetDisplay(_btnHelperOpenPackage, unlocked);
+            SetDisplay(_helperToolsRow, unlocked);
+
+            SetDisplay(_btnHelperInstall, true);
+            SetDisplay(_btnHelperUninstall, true);
+            SetDisplay(_btnHelperRefreshStatus, true);
+            SetDisplay(_btnHelperRefreshTrust, true);
         }
 
         private void OnDebugToggleChanged(ChangeEvent<bool> e)
@@ -304,10 +354,15 @@ namespace CloudflareST.GUI
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             var status = MacHelperInstallService.QueryStatus();
             if (_helperStatusLabel != null)
+            {
+                bool helperExists = !string.IsNullOrEmpty(status.helperBinaryPath) && File.Exists(status.helperBinaryPath);
+                bool trustExists = !string.IsNullOrEmpty(status.trustFilePath) && File.Exists(status.trustFilePath);
+                bool packageExists = !string.IsNullOrEmpty(status.packageDirectory) && Directory.Exists(status.packageDirectory);
                 _helperStatusLabel.text = status.message
-                    + "\nHelper: " + status.helperBinaryPath
-                    + "\nTrust: " + status.trustFilePath
-                    + "\nPackage: " + status.packageDirectory;
+                    + "\n组件文件: " + (helperExists ? "已存在" : "未找到")
+                    + "\n信任文件: " + (trustExists ? "已存在" : "未找到")
+                    + "\n安装包: " + (packageExists ? "已找到" : "未找到");
+            }
 #endif
         }
 
@@ -375,15 +430,15 @@ namespace CloudflareST.GUI
         {
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             bool ok = MacHelperInstallService.Install(out var message);
-            AppendLog(ok ? "[INFO] Root Helper 安装成功: " + message : "[ERROR] Root Helper 安装失败: " + message);
+            AppendLog(ok ? "[INFO] 权限组件安装成功: " + message : "[ERROR] 权限组件安装失败: " + message);
             if (ok)
             {
-                ToastManager.Success("Root Helper 安装成功");
+                ToastManager.Success("权限组件安装成功");
                 RefreshMacHelperStatusWithReconnect();
             }
             else
             {
-                ToastManager.Error("Root Helper 安装失败: " + message);
+                ToastManager.Error("权限组件安装失败: " + message);
                 RefreshMacHelperStatus();
             }
 #endif
@@ -392,19 +447,19 @@ namespace CloudflareST.GUI
         private void OnHelperUninstallClicked(ClickEvent evt)
         {
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
-            bool confirmed = WindowsMessageBox.Confirm("确定要卸载 macOS Root Helper 吗？", "卸载确认");
+            bool confirmed = WindowsMessageBox.Confirm("确定要卸载权限组件吗？", "卸载确认");
             if (!confirmed) return;
             MacHelperService.Disconnect();
             bool ok = MacHelperInstallService.Uninstall(out var message);
-            AppendLog(ok ? "[INFO] Root Helper 卸载成功: " + message : "[ERROR] Root Helper 卸载失败: " + message);
+            AppendLog(ok ? "[INFO] 权限组件卸载成功: " + message : "[ERROR] 权限组件卸载失败: " + message);
             if (ok)
             {
-                ToastManager.Success("Root Helper 卸载成功");
+                ToastManager.Success("权限组件卸载成功");
                 RefreshMacHelperStatus();
             }
             else
             {
-                ToastManager.Error("Root Helper 卸载失败: " + message);
+                ToastManager.Error("权限组件卸载失败: " + message);
                 RefreshMacHelperStatus();
             }
 #endif
@@ -413,7 +468,7 @@ namespace CloudflareST.GUI
         private void OnHelperRefreshStatusClicked(ClickEvent evt)
         {
             RefreshMacHelperStatus();
-            ToastManager.Info("已刷新 Root Helper 状态");
+            ToastManager.Info("已刷新权限组件状态");
         }
 
         private void OnHelperDiagnoseClicked(ClickEvent evt)
@@ -427,33 +482,36 @@ namespace CloudflareST.GUI
             RefreshMacHelperStatus();
 
             var report = new StringBuilder();
-            report.AppendLine("=== UniTool macOS Root Helper 诊断报告 ===");
+            report.AppendLine("=== UniTool macOS 权限诊断报告 ===");
             report.AppendLine("时间: " + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             var uiStatus = MacHelperInstallService.QueryStatus();
             report.AppendLine("UI状态: " + uiStatus.message);
-            report.AppendLine("Helper路径: " + uiStatus.helperBinaryPath);
-            report.AppendLine("Trust路径: " + uiStatus.trustFilePath);
-            report.AppendLine("Package路径: " + uiStatus.packageDirectory);
+            bool helperExists = !string.IsNullOrEmpty(uiStatus.helperBinaryPath) && File.Exists(uiStatus.helperBinaryPath);
+            bool trustExists = !string.IsNullOrEmpty(uiStatus.trustFilePath) && File.Exists(uiStatus.trustFilePath);
+            bool packageExists = !string.IsNullOrEmpty(uiStatus.packageDirectory) && Directory.Exists(uiStatus.packageDirectory);
+            report.AppendLine("组件文件: " + (helperExists ? "存在" : "不存在"));
+            report.AppendLine("信任文件: " + (trustExists ? "存在" : "不存在"));
+            report.AppendLine("安装包: " + (packageExists ? "存在" : "不存在"));
 
             string packageDir = uiStatus.packageDirectory;
             if (!string.IsNullOrEmpty(packageDir))
             {
-                string[] packageFiles =
+                (string label, string fileName)[] packageFiles =
                 {
-                    "com.unitool.roothelper",
-                    "com.unitool.roothelper.plist",
-                    "install_helper.sh",
-                    "uninstall_helper.sh",
-                    "refresh_trust.sh"
+                    ("组件可执行文件", "com.unitool.roothelper"),
+                    ("组件配置文件", "com.unitool.roothelper.plist"),
+                    ("安装脚本", "install_helper.sh"),
+                    ("卸载脚本", "uninstall_helper.sh"),
+                    ("信任脚本", "refresh_trust.sh")
                 };
 
                 report.AppendLine("Package完整性:");
-                foreach (var fileName in packageFiles)
+                foreach (var item in packageFiles)
                 {
-                    string path = Path.Combine(packageDir, fileName);
+                    string path = Path.Combine(packageDir, item.fileName);
                     bool exists = File.Exists(path);
-                    report.AppendLine("- " + fileName + ": " + (exists ? "OK" : "MISSING"));
+                    report.AppendLine("- " + item.label + ": " + (exists ? "OK" : "MISSING"));
                 }
             }
 
@@ -492,9 +550,9 @@ namespace CloudflareST.GUI
 
                 _helperLastDiagnosticReport = report.ToString();
                 if (pingOk && statusOk)
-                    ToastManager.Success("Root Helper 诊断通过");
+                    ToastManager.Success("权限组件诊断通过");
                 else
-                    ToastManager.Warning("Root Helper 诊断完成（存在异常项）");
+                    ToastManager.Warning("权限组件诊断完成（存在异常项）");
             }
             catch (System.Exception ex)
             {
@@ -586,7 +644,7 @@ namespace CloudflareST.GUI
             // 先断开旧连接，避免刷新信任后旧连接状态缓存导致误报
             MacHelperService.Disconnect();
             bool ok = MacHelperInstallService.RefreshTrust(out var message);
-            AppendLog(ok ? "[INFO] Root Helper 信任刷新成功: " + message : "[ERROR] Root Helper 信任刷新失败: " + message);
+            AppendLog(ok ? "[INFO] 权限信任刷新成功: " + message : "[ERROR] 权限信任刷新失败: " + message);
             if (ok)
             {
                 ToastManager.Success("信任刷新成功");
@@ -620,13 +678,13 @@ namespace CloudflareST.GUI
             string command = _helperCommandField?.value;
             if (string.IsNullOrWhiteSpace(command))
             {
-                ToastManager.Warning("请输入要执行的 root 命令");
+                ToastManager.Warning("请输入要执行的高权限命令");
                 return;
             }
 
             bool confirmed = WindowsMessageBox.Confirm(
-                "以下命令将以 root 权限执行。\n请勿执行未知命令，确认后继续：\n\n" + command,
-                "执行 Root 命令");
+                "以下命令将以最高权限执行。\n请勿执行未知命令，确认后继续：\n\n" + command,
+                "执行高权限命令");
             if (!confirmed)
                 return;
 
@@ -637,13 +695,13 @@ namespace CloudflareST.GUI
             try
             {
                 string requestId = MacHelperService.SubmitShellCommand(command);
-                AppendHelperOutput("已提交 Root 命令，请求 ID: " + requestId);
-                ToastManager.Info("Root 命令已提交");
+                AppendHelperOutput("已提交高权限命令，请求 ID: " + requestId);
+                ToastManager.Info("高权限命令已提交");
             }
             catch (System.Exception ex)
             {
                 AppendHelperOutput("提交失败: " + ex.Message);
-                ToastManager.Error("Root 命令提交失败: " + ex.Message);
+                ToastManager.Error("高权限命令提交失败: " + ex.Message);
             }
 #endif
         }
@@ -706,7 +764,7 @@ namespace CloudflareST.GUI
 #elif UNITY_STANDALONE_OSX
             _autoAdminToggle?.SetValueWithoutNotify(!e.newValue); // 恢复 toggle 状态（无持久化）
             FileLogger.LogWarning("[Admin] macOS 不支持整应用长期管理员运行；已阻止自动管理员开关");
-            ToastManager.Warning("macOS 不支持整应用长期管理员运行；请改用 Root Helper");
+            ToastManager.Warning("macOS 不支持整应用长期管理员运行；请改用权限组件");
 #else
             ToastManager.Error("当前平台不支持自动管理员设置");
             _autoAdminToggle?.SetValueWithoutNotify(!e.newValue);
@@ -735,7 +793,7 @@ namespace CloudflareST.GUI
                 }
 #elif UNITY_STANDALONE_OSX
                 FileLogger.LogWarning("[Admin] macOS 不支持从设置页切换为整应用管理员模式");
-                ToastManager.Warning("macOS 不支持整应用长期管理员运行；请继续使用普通模式并安装 Root Helper");
+                ToastManager.Warning("macOS 不支持整应用长期管理员运行；请继续使用普通模式并安装权限组件");
 #endif
             }
             else
@@ -746,7 +804,7 @@ namespace CloudflareST.GUI
                 {
 #if UNITY_STANDALONE_OSX
                     FileLogger.LogWarning("[Admin] macOS 不支持整应用管理员重启，请改用按操作提权");
-                    ToastManager.Warning("macOS 不支持整应用管理员重启；请安装 Root Helper 处理高权限操作");
+                    ToastManager.Warning("macOS 不支持整应用管理员重启；请安装权限组件处理高权限操作");
 #else
                     ToastManager.Error("提升权限失败，请手动以管理员身份运行");
 #endif

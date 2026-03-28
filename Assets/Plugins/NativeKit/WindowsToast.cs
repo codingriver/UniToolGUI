@@ -126,7 +126,7 @@ public static class WindowsToast
                 .Replace("'", "&apos;");
     }
 
-#elif UNITY_STANDALONE_OSX
+#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
     /// <summary>
     /// 显示系统通知（osascript）。Mac 不支持 imagePath。
     /// </summary>

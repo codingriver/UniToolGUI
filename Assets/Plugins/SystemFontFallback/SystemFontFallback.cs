@@ -543,6 +543,10 @@ public class SystemFontFallback : MonoBehaviour
         @"C:\Windows\Fonts\segoeui.ttf", @"C:\Windows\Fonts\arial.ttf", @"C:\Windows\Fonts\tahoma.ttf",
 #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
         "/System/Library/Fonts/Helvetica.ttc",
+        "/System/Library/Fonts/SFNS.ttf",
+        "/System/Library/Fonts/SFNSDisplay.ttf",
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
 #elif UNITY_ANDROID
         "/system/fonts/Roboto-Regular.ttf",
 #elif UNITY_IOS
@@ -555,7 +559,17 @@ public class SystemFontFallback : MonoBehaviour
         @"C:\Windows\Fonts\msyh.ttc", @"C:\Windows\Fonts\msyhbd.ttc",
         @"C:\Windows\Fonts\simsun.ttc", @"C:\Windows\Fonts\simhei.ttf",
 #elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-        "/System/Library/Fonts/PingFang.ttc", "/System/Library/Fonts/STHeiti Medium.ttc",
+        // PingFang：macOS 主要中文字体（含简繁体大部分字符）
+        "/System/Library/Fonts/PingFang.ttc",
+        // STHeiti：覆盖 PingFang 缺失的部分汉字
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        // Songti / STSong：宋体，覆盖更多 CJK Extension 字符
+        "/System/Library/Fonts/Supplemental/Songti.ttc",
+        "/System/Library/Fonts/Supplemental/STSong.ttf",
+        // Arial Unicode：超大字符集，覆盖 CJK Extension A/B 及生僻字兜底
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/Library/Fonts/Arial Unicode.ttf",
 #elif UNITY_ANDROID
         "/system/fonts/NotoSansCJK-Regular.ttc",
 #elif UNITY_IOS

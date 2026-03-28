@@ -111,6 +111,14 @@ namespace CloudflareST.GUI
             set { if (_resultCount == value) return; _resultCount = value; Notify(); }
         }
 
+        // ── 高级调试 UI 解锁 ────────────────────────────────
+        private bool _debugUiUnlocked;
+        public bool DebugUiUnlocked
+        {
+            get => _debugUiUnlocked;
+            set { if (_debugUiUnlocked == value) return; _debugUiUnlocked = value; Notify(); }
+        }
+
         // ── 进度辅助字段（由 OutputParser 写入，不触发 Notify）────
         /// <summary>true = 本次测速禁用了下载测速（-dd），Ping 阶段占满 100% 进度</summary>
         public bool SpeedDisabled { get; set; }

@@ -22,9 +22,9 @@ namespace CloudflareST.GUI.Editor
                 return;
 
             if (!Directory.Exists(BridgeBundlePath))
-                throw new BuildFailedException("缺少 UniToolXpcBridge.bundle，请先执行 MacRootHelper/build.sh");
+                throw new BuildFailedException("缺少 UniToolXpcBridge.bundle，请先执行权限组件构建脚本");
             if (!Directory.Exists(HelperPackagePath))
-                throw new BuildFailedException("缺少 HelperArtifacts/package，请先执行 MacRootHelper/build.sh");
+                throw new BuildFailedException("缺少 HelperArtifacts/package，请先执行权限组件构建脚本");
 
             string[] requiredFiles =
             {
@@ -39,7 +39,7 @@ namespace CloudflareST.GUI.Editor
             {
                 string filePath = Path.Combine(HelperPackagePath, fileName);
                 if (!File.Exists(filePath))
-                    throw new BuildFailedException("缺少 helper 打包文件: " + fileName + "，请先执行 MacRootHelper/build.sh");
+                    throw new BuildFailedException("缺少必要的 helper 打包文件，请先执行权限组件构建脚本");
             }
         }
 
@@ -53,7 +53,7 @@ namespace CloudflareST.GUI.Editor
             Directory.CreateDirectory(contentsPath);
             CopyDirectory(HelperPackagePath, contentsPath);
             RestoreExecutablePermissions(contentsPath);
-            UnityEngine.Debug.Log("[MacHelperBuild] 已复制 Root Helper 资源到: " + contentsPath);
+            UnityEngine.Debug.Log("[MacHelperBuild] 已复制权限组件资源到: " + contentsPath);
         }
 
         private static void CopyDirectory(string sourceDir, string destinationDir)

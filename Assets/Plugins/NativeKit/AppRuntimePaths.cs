@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 应用运行时路径统一入口。
-/// 在 macOS 长期以管理员/root 运行时，避免普通用户与 root 因工作目录不同而写到不同位置。
+/// 在 macOS 长期以管理员/高权限账号运行时，避免普通用户与高权限账号因工作目录不同而写到不同位置。
 /// </summary>
 public static class AppRuntimePaths
 {

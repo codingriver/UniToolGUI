@@ -6,6 +6,8 @@ namespace CloudflareST.GUI
     public class PageAboutController : MonoBehaviour
     {
         private VisualElement _root;
+        private int _guiVersionTapCount;
+        private const int DebugUnlockTapCount = 5;
 
         public void Init(VisualElement root, CfstOptions opts)
         {
@@ -24,6 +26,9 @@ namespace CloudflareST.GUI
                 var asm = System.Reflection.Assembly.GetExecutingAssembly();
                 var ver = asm.GetName().Version;
                 labelGui.text = ver != null ? ver.ToString() : "1.0.0";
+                labelGui.pickingMode = PickingMode.Position;
+                labelGui.UnregisterCallback<ClickEvent>(OnGuiVersionClicked);
+                labelGui.RegisterCallback<ClickEvent>(OnGuiVersionClicked);
             }
 
             // cfst.dll 版本（读取 ProductVersion，含语义版本+commit hash）
@@ -58,6 +63,16 @@ namespace CloudflareST.GUI
             // 按钮链接
             root.Q<Button>("btn-gui-repo")?.RegisterCallback<ClickEvent>(_ =>
                 NativePlatform.Shell.OpenUrl("https://github.com/codingriver/UniToolGUI"));
+        }
+
+        private void OnGuiVersionClicked(ClickEvent evt)
+        {
+            if (AppState.Instance.DebugUiUnlocked)
+                return;
+
+            _guiVersionTapCount++;
+            if (_guiVersionTapCount >= DebugUnlockTapCount)
+                AppState.Instance.DebugUiUnlocked = true;
         }
     }
 }

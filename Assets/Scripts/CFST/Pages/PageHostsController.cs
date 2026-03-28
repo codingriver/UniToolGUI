@@ -320,7 +320,7 @@ namespace CloudflareST.GUI
                 : "Windows 需以管理员身份运行；权限不足时内容将输出到 hosts-pending.txt";
 #else
             return isAdmin
-                ? "当前已具备 root 权限，Hosts 更新功能完整可用"
+                ? "当前已具备管理员权限，Hosts 更新功能完整可用"
                 : "macOS/Linux 将在实际写入 Hosts 时单独申请权限；未授权时内容会输出到 hosts-pending.txt";
 #endif
         }
@@ -340,13 +340,13 @@ namespace CloudflareST.GUI
             if (_permText != null)
             {
                 _permText.text = status.isConnected
-                    ? "Hosts 写入由 Root Helper 以 root 权限执行"
+                    ? "Hosts 写入由权限组件以最高权限执行"
                     : (status.isInstalled
-                        ? "Root Helper 已安装，但当前通信失败"
-                        : "Root Helper 未安装，自动 Hosts 更新不可用");
+                        ? "权限组件已安装，但当前通信失败"
+                        : "权限组件未安装，自动 Hosts 更新不可用");
             }
 
-            FileLogger.Log("[Hosts] macOS Root Helper 状态: " + status.message);
+            FileLogger.Log("[Hosts] macOS 权限组件状态: " + status.message);
         }
 #endif
     }

@@ -5,7 +5,7 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 /// <summary>
-/// 管理员/root 权限检测与提权重启（Win/Mac/Linux）
+/// 管理员权限检测与提权重启（Win/Mac/Linux）
 /// </summary>
 public static class WindowsAdmin
 {
@@ -92,7 +92,7 @@ public static class WindowsAdmin
             return false;
         }
 #elif UNITY_STANDALONE_OSX
-        Debug.LogWarning("[Admin] macOS 不再支持整应用管理员重启；请改用按操作提权或后台 root worker");
+        Debug.LogWarning("[Admin] macOS 不再支持整应用管理员重启；请改用按操作提权或后台高权限 worker");
         return false;
 #else
         return false;
@@ -122,7 +122,7 @@ public static class WindowsAdmin
             uint uid = getuid();
             uint euid = geteuid();
             string user = GetCurrentUserName();
-            string role = euid == 0 ? "root" : "user";
+            string role = euid == 0 ? "admin" : "user";
             return $"{user} ({role}, uid={uid}, euid={euid})";
         }
         catch

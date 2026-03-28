@@ -60,11 +60,11 @@ public static class HostsUpdater
             return true;
         }
 
-        // ── macOS Root Helper 路径 ──────────────────────────────────────────────
+        // ── macOS 权限组件路径 ────────────────────────────────────────────────
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) && OnMacHostsUpdate != null)
         {
-            log?.Invoke("[Hosts] macOS 将优先通过 Root Helper 执行高权限写入");
+            log?.Invoke("[Hosts] macOS 将优先通过权限组件执行高权限写入");
             string helperError = null;
             bool helperOk = false;
             try { helperOk = OnMacHostsUpdate(path, newContent, log, out helperError); } catch { }
@@ -72,13 +72,13 @@ public static class HostsUpdater
             {
                 if (allUpdated.Count > 0) log?.Invoke($"[Hosts] 已更新: {string.Join(", ", allUpdated)}");
                 if (allAdded.Count > 0) log?.Invoke($"[Hosts] 已新增: {string.Join(", ", allAdded)}");
-                log?.Invoke($"[Hosts] Root Helper 写入成功: {path}");
-                TryShowHostsToast("Hosts 更新成功", "Root Helper 已完成写入");
+                log?.Invoke($"[Hosts] 权限组件写入成功: {path}");
+                TryShowHostsToast("Hosts 更新成功", "权限组件已完成写入");
                 SetHostsWriteResult(success: true, permissionDenied: false);
                 return true;
             }
-            log?.Invoke("[Hosts] Root Helper 写入失败: " + helperError);
-            TryShowHostsToast("Hosts 更新失败", helperError ?? "Root Helper 不可用");
+            log?.Invoke("[Hosts] 权限组件写入失败: " + helperError);
+            TryShowHostsToast("Hosts 更新失败", helperError ?? "权限组件不可用");
             SetHostsWriteResult(success: false, permissionDenied: false);
             return false;
         }
@@ -137,7 +137,7 @@ public static class HostsUpdater
 
     // ── 静态委托（由宿主程序集注入，解耦跨程序集依赖）────────────────────────
 
-    /// <summary>macOS Root Helper 写入回调。签名：(path, content, log, out error) => bool</summary>
+    /// <summary>macOS 权限组件写入回调。签名：(path, content, log, out error) => bool</summary>
     public static MacHostsUpdateDelegate OnMacHostsUpdate;
     public delegate bool MacHostsUpdateDelegate(string path, string content, Action<string> log, out string error);
 
