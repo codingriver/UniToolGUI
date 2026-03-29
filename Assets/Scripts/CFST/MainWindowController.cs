@@ -202,6 +202,9 @@ namespace CloudflareST.GUI
             }
 
             InitPages();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            PageLatencyController.LogPingModeGroupFromRoot(_root);
+#endif
             BindNav();
             BindButtons();
 

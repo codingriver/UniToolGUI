@@ -1,0 +1,48 @@
+name: Clear Unity Library cache
+
+# 手动运行：删除本仓库中 key 以 unity-library- 开头的 Actions 缓存，下次正式构建会重新导入 Library。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  clear:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete unity-library-* caches
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prefix = 'unity-library-';
+            let page = 1;
+            let deleted = 0;
+            while (true) {
+              const res = await github.rest.actions.getActionsCacheList({
+                owner,
+                repo,
+                per_page: 100,
+                page,
+              });
+              const list = res.data.actions_caches || [];
+              if (list.length === 0) break;
+              for (const c of list) {
+                if (c.key && c.key.startsWith(prefix)) {
+                  await github.rest.actions.deleteActionsCacheById({
+                    owner,
+                    repo,
+                    cache_id: c.id,
+                  });
+                  deleted++;
+                  core.info(`Deleted cache id=${c.id} key=${c.key}`);
+                }
+              }
+              if (list.length < 100) break;
+              page++;
+            }
+            core.info(`Done. Deleted ${deleted} cache(s).`);

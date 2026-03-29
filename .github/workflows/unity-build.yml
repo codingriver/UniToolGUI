@@ -1,0 +1,184 @@
+name: Unity Build & Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Git 标签（例如 v1.0.0），将用于创建/更新 Release"
+        required: true
+        type: string
+      draft:
+        description: "是否为草稿 Release"
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: "是否为预发布（Prerelease）"
+        required: false
+        type: boolean
+        default: false
+      skip_cache:
+        description: "本次构建不使用也不写入 Library 缓存（冷构建）"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  # actions/cache 保存/恢复 Library 需要写权限
+  actions: write
+
+concurrency:
+  group: unity-build-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  UNITY_VERSION: 2022.3.62f3
+  BUILD_NAME: UniTool
+  BUILDS_PATH: build
+  # 与 workflow 运行号绑定，避免 Custom 版本为空；可按需改为 tag 语义化版本
+  CI_APP_VERSION: 1.0.${{ github.run_number }}
+
+jobs:
+  build-windows:
+    name: Build Windows (Mono)
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Library
+        if: ${{ !inputs.skip_cache }}
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: unity-library-Windows-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**', 'PackageManager/**') }}
+          restore-keys: |
+            unity-library-Windows-
+
+      - name: Build Unity (StandaloneWindows64)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneWindows64
+          buildsPath: ${{ env.BUILDS_PATH }}
+          buildName: ${{ env.BUILD_NAME }}
+          versioning: Custom
+          version: ${{ env.CI_APP_VERSION }}
+
+      - name: Zip Windows build (whole folder for self-extract)
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path "${{ env.BUILDS_PATH }}" -Recurse -Filter "*.exe" |
+            Where-Object { $_.Name -notmatch "Unity" } |
+            Select-Object -First 1
+          if (-not $exe) { throw "No player exe found under ${{ env.BUILDS_PATH }}" }
+          $dir = $exe.DirectoryName
+          Compress-Archive -Path $dir -DestinationPath "$env:GITHUB_WORKSPACE/UniTool-Windows.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UniTool-Windows
+          path: UniTool-Windows.zip
+          if-no-files-found: error
+
+  build-macos:
+    name: Build macOS (Mono)
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Library
+        if: ${{ !inputs.skip_cache }}
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: unity-library-macOS-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**', 'PackageManager/**') }}
+          restore-keys: |
+            unity-library-macOS-
+
+      - name: Build Unity (StandaloneOSX)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          unityVersion: ${{ env.UNITY_VERSION }}
+          targetPlatform: StandaloneOSX
+          buildsPath: ${{ env.BUILDS_PATH }}
+          buildName: ${{ env.BUILD_NAME }}
+          versioning: Custom
+          version: ${{ env.CI_APP_VERSION }}
+
+      - name: Zip macOS .app
+        run: |
+          set -euo pipefail
+          APP=$(find "${{ env.BUILDS_PATH }}" -name "*.app" -type d | head -n 1)
+          if [ -z "$APP" ]; then
+            echo "No .app bundle under ${{ env.BUILDS_PATH }}"
+            find "${{ env.BUILDS_PATH }}" -maxdepth 4 -type d || true
+            exit 1
+          fi
+          cd "$(dirname "$APP")"
+          zip -r "$GITHUB_WORKSPACE/UniTool-macOS.zip" "$(basename "$APP")"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UniTool-macOS
+          path: UniTool-macOS.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for tagging)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create tag if missing
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping create."
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "$TAG"
+          fi
+        env:
+          TAG: ${{ inputs.release_tag }}
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: UniTool-Windows
+          path: artifacts
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: UniTool-macOS
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: ${{ env.BUILD_NAME }} ${{ inputs.release_tag }}
+          draft: ${{ inputs.draft }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          files: |
+            artifacts/UniTool-Windows.zip
+            artifacts/UniTool-macOS.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

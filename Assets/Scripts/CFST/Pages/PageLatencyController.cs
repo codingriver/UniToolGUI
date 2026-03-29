@@ -1,3 +1,4 @@
+using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -70,10 +71,53 @@ namespace CloudflareST.GUI
                 _opts.CfColo = string.IsNullOrEmpty(raw) ? null : raw;
             });
 
-            // 强制选中第一项，确保运行时 RadioButtonGroup 有默认选中状态
-            if (_pingModeGroup != null) _pingModeGroup.value = 0;
-            SetMode(PingMode.IcmpAuto);
+            // 与 SettingsStorage.Load 后的 _opts 对齐；RadioButtonGroup 在「目标索引与当前 value 相同」时
+            // 往往不会刷新子 Radio 的 :checked 样式（同值赋值不触发内部刷新），需先切到临时索引再设回。
+            int modeIndex = Mathf.Clamp((int)_opts.PingMode, 0, 2);
+            ApplyPingModeGroupSelection(_pingModeGroup, modeIndex);
+            SetMode((PingMode)modeIndex);
         }
+
+        /// <summary>
+        /// 供 MainWindow 等在 InitPages 之后输出诊断；仅 Editor / Development Build 有日志。
+        /// </summary>
+        public static void LogPingModeGroupFromRoot(VisualElement root)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            LogPingModeGroupDiagnostics(root?.Q<RadioButtonGroup>("ping-mode-group"));
+#endif
+        }
+
+        /// <summary>
+        /// 解决 RadioButtonGroup 在 UXML 已设 value 且运行时再次设为同一索引时，子项不显示选中态的问题。
+        /// </summary>
+        private static void ApplyPingModeGroupSelection(RadioButtonGroup group, int index)
+        {
+            if (group == null) return;
+            index = Mathf.Clamp(index, 0, 2);
+            if (group.value == index)
+            {
+                int temp = index == 0 ? 1 : 0;
+                group.SetValueWithoutNotify(temp);
+            }
+            group.SetValueWithoutNotify(index);
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private static void LogPingModeGroupDiagnostics(RadioButtonGroup group)
+        {
+            if (group == null) return;
+            var sb = new StringBuilder();
+            sb.Append("[UI] ping-mode-group value=").Append(group.value);
+            int i = 0;
+            foreach (var child in group.Children())
+            {
+                if (child is RadioButton rb)
+                    sb.Append(" | rb[").Append(i++).Append("].value=").Append(rb.value);
+            }
+            Debug.Log(sb.ToString());
+        }
+#endif
 
         private void SetMode(PingMode mode)
         {
