@@ -42,11 +42,12 @@ namespace CloudflareST.GUI
             VisualTreeAsset desktopAsset,
             VisualTreeAsset mobileAsset)
         {
-            bool prefersMobileStructure = ShouldUseMobileStructure(preset);
             int shortSide = Mathf.Min(Screen.width, Screen.height);
+            var effectivePreset = ResolveEditorPresetOverride(preset, shortSide);
+            bool prefersMobileStructure = ShouldUseMobileStructure(effectivePreset);
 
             MainWindowLayoutKind kind;
-            switch (preset)
+            switch (effectivePreset)
             {
                 case MainWindowLayoutPreset.Desktop:
                     kind = MainWindowLayoutKind.Desktop;
@@ -67,6 +68,16 @@ namespace CloudflareST.GUI
                 picked = desktopAsset != null ? desktopAsset : mobileAsset;
 
             return new MainWindowLayoutDecision(picked, kind, prefersMobileStructure);
+        }
+
+        private static MainWindowLayoutPreset ResolveEditorPresetOverride(MainWindowLayoutPreset preset, int shortSide)
+        {
+#if UNITY_EDITOR
+            // Editor 下如果 GameView 太小，强制用移动布局避免桌面布局被挤乱
+            if (preset == MainWindowLayoutPreset.Desktop && shortSide > 0 && shortSide < PhoneShortSideThreshold)
+                return MainWindowLayoutPreset.MobilePhone;
+#endif
+            return preset;
         }
 
         public static bool ShouldUseMobileStructure(MainWindowLayoutPreset preset)

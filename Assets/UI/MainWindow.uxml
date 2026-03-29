@@ -5,7 +5,6 @@
 
     <ui:Template name="PageIpSource"   src="Pages/PageIpSource.uxml" />
     <ui:Template name="PageLog"        src="Pages/PageLog.uxml" />
-    <ui:Template name="PageHook"       src="Pages/PageHook.uxml" />
     <ui:Template name="PageLatency"    src="Pages/PageLatency.uxml" />
     <ui:Template name="PageDownload"   src="Pages/PageDownload.uxml" />
     <ui:Template name="PageSchedule"   src="Pages/PageSchedule.uxml" />
@@ -42,7 +41,6 @@
                     <ui:Button name="nav-hosts"    text="Hosts 更新"  class="nav-item" />
                     <ui:Button name="nav-output"   text="输出设置"    class="nav-item" />
                     <ui:Button name="nav-other"    text="其他设置"    class="nav-item" />
-                    <ui:Button name="nav-hook"     text="执行钩子"    class="nav-item" />
                     <ui:Button name="nav-log"      text="运行日志"    class="nav-item" />
                     <ui:VisualElement class="nav-divider" />
                     <ui:Button name="nav-results"  class="nav-item nav-item--results">
@@ -82,7 +80,6 @@
                 <ui:Instance template="PageAbout"     name="page-about"    class="page" />
                 <ui:Instance template="PageResults"   name="page-results"  class="page" />
                 <ui:Instance template="PageLog"       name="page-log"      class="page" />
-                <ui:Instance template="PageHook"      name="page-hook"     class="page" />
             </ui:VisualElement>
 
         </ui:VisualElement>

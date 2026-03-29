@@ -27,10 +27,9 @@
                 <ui:Label text="源码仓库" class="form-label" />
                 <ui:Button name="btn-gui-repo" text="查看源码仓库" class="btn-sm btn-accent" />
             </ui:VisualElement>
-            <ui:Label text="基于 Unity UIToolkit 的 CloudflareSpeedTest 图形界面，直接内嵌 cfst.dll 运行" class="form-hint" style="margin-left:0;margin-bottom:8px;" />
             <ui:VisualElement class="form-row" style="margin-bottom:0;">
                 <ui:Label text="开源协议" class="form-label" />
-                <ui:Label text="MIT License" style="font-size:12px;color:#e8eaf0;" />
+                <ui:Label name="label-license" text="MIT License" style="font-size:12px;color:#e8eaf0;" />
             </ui:VisualElement>
         </ui:VisualElement>
 

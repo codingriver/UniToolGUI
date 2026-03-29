@@ -2,7 +2,6 @@
 
     <ui:Template name="PageIpSource"   src="Pages/PageIpSource.uxml" />
     <ui:Template name="PageLog"        src="Pages/PageLog.uxml" />
-    <ui:Template name="PageHook"       src="Pages/PageHook.uxml" />
     <ui:Template name="PageLatency"    src="Pages/PageLatency.uxml" />
     <ui:Template name="PageDownload"   src="Pages/PageDownload.uxml" />
     <ui:Template name="PageSchedule"   src="Pages/PageSchedule.uxml" />
@@ -58,7 +57,6 @@
                         <ui:Instance template="PageAbout"     name="page-about"    class="page" />
                         <ui:Instance template="PageResults"   name="page-results"  class="page" />
                         <ui:Instance template="PageLog"       name="page-log"      class="page" />
-                        <ui:Instance template="PageHook"      name="page-hook"     class="page" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 
@@ -88,7 +86,6 @@
                             <ui:Button name="nav-output" text="输出" class="nav-item mobile-chip" />
                             <ui:Button name="nav-other" text="其他" class="nav-item mobile-chip" />
                             <ui:Button name="nav-about" text="关于" class="nav-item mobile-chip" />
-                            <ui:Button name="nav-hook" text="钩子" class="nav-item mobile-chip" />
                         </ui:VisualElement>
                     </ui:ScrollView>
                 </ui:VisualElement>

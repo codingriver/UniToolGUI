@@ -24,6 +24,7 @@ namespace NativeKit
         // 权限组件信任 token，可由 Unity 侧覆盖
         // 警告：请在安装前替换为非默认值，使用默认 token 会降低安全性
         public static string TrustToken { get; set; } = "codingriver_unitool_token";
+        public static event Action OnHelperStateChanged;
 
         private static bool IsDefaultToken =>
             string.IsNullOrWhiteSpace(TrustToken) || TrustToken == "codingriver_unitool_token";
@@ -69,6 +70,11 @@ namespace NativeKit
         {
             return RunPrivilegedScript("refresh_trust.sh", out message,
                 prompt: string.IsNullOrWhiteSpace(RefreshTrustPrompt) ? AuthorizationPrompt : RefreshTrustPrompt);
+        }
+
+        public static void NotifyStateChanged()
+        {
+            RaiseHelperStateChanged();
         }
 
         public static void OpenPackageFolder()
@@ -122,32 +128,32 @@ namespace NativeKit
         {
             message = "仅 macOS 打包版支持";
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
-            if (includeTrustArgs && IsDefaultToken)
-                UnityEngine.Debug.LogWarning("[MacHelper] 当前使用默认 token 执行安装/信任刷新，建议在发布前替换为项目专属 token");
-            string packageDir = GetRuntimePackageDirectory();
-            string scriptPath = Path.Combine(packageDir, scriptName);
-            if (!File.Exists(scriptPath))
-            {
-                message = "缺少 helper 脚本: " + scriptPath;
-                return false;
-            }
-
-            string arguments = string.Empty;
-            if (includeTrustArgs)
-            {
-                arguments = " --token " + QuoteForShell(TrustToken);
-            }
-
-            // Ensure a safe working directory for osascript (Unity editor can have a deleted CWD)
-            string shell = "cd /; " + QuoteForShell(scriptPath) + arguments;
-            string effectivePrompt = !string.IsNullOrWhiteSpace(prompt) ? prompt
-                : !string.IsNullOrWhiteSpace(AuthorizationPrompt) ? AuthorizationPrompt
-                : "需要管理员权限";
-            string appleScript = "do shell script \"" + EscapeForAppleScript(shell) + "\" with administrator privileges"
-                               + " with prompt \"" + EscapeForAppleScript(effectivePrompt) + "\"";
-
             try
             {
+                if (includeTrustArgs && IsDefaultToken)
+                    UnityEngine.Debug.LogWarning("[MacHelper] 当前使用默认 token 执行安装/信任刷新，建议在发布前替换为项目专属 token");
+                string packageDir = GetRuntimePackageDirectory();
+                string scriptPath = Path.Combine(packageDir, scriptName);
+                if (!File.Exists(scriptPath))
+                {
+                    message = "缺少 helper 脚本: " + scriptPath;
+                    return false;
+                }
+
+                string arguments = string.Empty;
+                if (includeTrustArgs)
+                {
+                    arguments = " --token " + QuoteForShell(TrustToken);
+                }
+
+                // Ensure a safe working directory for osascript (Unity editor can have a deleted CWD)
+                string shell = "cd /; " + QuoteForShell(scriptPath) + arguments;
+                string effectivePrompt = !string.IsNullOrWhiteSpace(prompt) ? prompt
+                    : !string.IsNullOrWhiteSpace(AuthorizationPrompt) ? AuthorizationPrompt
+                    : "需要管理员权限";
+                string appleScript = "do shell script \"" + EscapeForAppleScript(shell) + "\" with administrator privileges"
+                                   + " with prompt \"" + EscapeForAppleScript(effectivePrompt) + "\"";
+
                 try
                 {
                     FileLogger.Log("[MacHelperInstall] script=" + scriptName
@@ -212,9 +218,25 @@ namespace NativeKit
                 message = ex.Message;
                 return false;
             }
+            finally
+            {
+                RaiseHelperStateChanged();
+            }
 #else
             return false;
 #endif
+        }
+
+        private static void RaiseHelperStateChanged()
+        {
+            try
+            {
+                UnityMainThreadDispatcher.Enqueue(() => OnHelperStateChanged?.Invoke());
+            }
+            catch
+            {
+                try { OnHelperStateChanged?.Invoke(); } catch { }
+            }
         }
 
         private static bool TryGetAppExecutableAndHash(out string appExe, out string appSha256, out string message)

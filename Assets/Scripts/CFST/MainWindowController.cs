@@ -57,14 +57,19 @@ namespace CloudflareST.GUI
         [Tooltip("仅在 Unity 编辑器中生效：切换桌面平台窗口预设时，同步修改当前激活目标平台的默认启动分辨率，减少 Play/本地测试时窗口尺寸跳变。正式构建前还会由 Editor 构建钩子自动覆盖为目标平台预设。")]
         public bool SyncMacPresetToProjectSettings = true;
 
+        [Header("About Page")]
+        public string AboutGuiVersionText = string.Empty;
+        public string AboutDllVersionText = string.Empty;
+        public string AboutRepoUrl = "";
+        public string AboutRepoButtonText = "查看源码仓库";
+        public string AboutLicenseText = "MIT License";
+
         private UIDocument    _doc;
         private VisualElement _root;
         private Button[]        _navBtns;
         private VisualElement[] _pages;
-        private const int PAGE_COUNT   = 11;
+        private const int PAGE_COUNT   = 10;
         private const int PAGE_RESULTS = 8;
-        private const int PAGE_LOG     = 9;
-        private const int PAGE_HOOK    = 10;
 
         private Button        _btnStart;
         private Button        _btnStop;
@@ -96,6 +101,7 @@ namespace CloudflareST.GUI
         {
             _doc  = GetComponent<UIDocument>();
             _layoutBootstrap = GetComponent<MainWindowLayoutBootstrap>();
+            EnsureAboutDefaults();
             EnsurePageControllers();
         }
 
@@ -113,6 +119,7 @@ namespace CloudflareST.GUI
 #if UNITY_EDITOR
             SyncProjectSettingsResolutionForActiveDesktopTarget();
 #endif
+            EnsureAboutDefaults();
         }
 
         private void OnEnable()
@@ -147,6 +154,12 @@ namespace CloudflareST.GUI
 
 #if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
             MacHelperService.OnEvent -= OnMacHelperStatusEvent;
+            MacHelperInstallService.OnHelperStateChanged -= OnMacHelperStateChanged;
+            if (_macHelperRefreshCoroutine != null)
+            {
+                StopCoroutine(_macHelperRefreshCoroutine);
+                _macHelperRefreshCoroutine = null;
+            }
 #endif
         }
 
@@ -265,7 +278,9 @@ namespace CloudflareST.GUI
             UnityEngine.Debug.Log($"[UI] macOS scale applied: scale={ps.scale:F2} inspectorScale={MacStandaloneUiScale:F2} backingRatio={backingRatio:F2} screenDpi={Screen.dpi:F0}");
 
             // ── DPI 自适应窗口物理尺寸 ────────────────────────────────────────────
+#if UNITY_STANDALONE_OSX && !UNITY_EDITOR
             ApplyMacWindowSize(backingRatio);
+#endif
 #endif
         }
 
@@ -449,6 +464,46 @@ namespace CloudflareST.GUI
             UnityEngine.Debug.Log($"[UI] asset={assetName}, root={rootName}, rootChildren={rootChildCount}, pageContainer={(pageContainer != null)}, pageContainerChildren={pageContainerChildren}, mobile={_isMobileStructure}");
         }
 
+        private void EnsureAboutDefaults()
+        {
+            if (string.IsNullOrWhiteSpace(AboutGuiVersionText))
+            {
+                var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                AboutGuiVersionText = ver != null ? ver.ToString() : "1.0.0";
+            }
+
+            if (string.IsNullOrWhiteSpace(AboutDllVersionText))
+            {
+                try
+                {
+                    var dllPath = typeof(CloudflareST.CfstRunner).Assembly.Location;
+                    var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(dllPath);
+                    var productVer = fvi.ProductVersion;
+                    if (!string.IsNullOrEmpty(productVer))
+                    {
+                        int plusIdx = productVer.IndexOf('+');
+                        AboutDllVersionText = plusIdx > 0 ? productVer.Substring(0, plusIdx) : productVer;
+                    }
+                    else
+                    {
+                        var dllVer = typeof(CloudflareST.CfstRunner).Assembly.GetName().Version;
+                        AboutDllVersionText = dllVer != null ? dllVer.ToString() : "unknown";
+                    }
+                }
+                catch
+                {
+                    AboutDllVersionText = "unknown";
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(AboutRepoUrl))
+                AboutRepoUrl = "https://github.com/codingriver/UniToolGUI";
+            if (string.IsNullOrWhiteSpace(AboutRepoButtonText))
+                AboutRepoButtonText = "查看源码仓库";
+            if (string.IsNullOrWhiteSpace(AboutLicenseText))
+                AboutLicenseText = "MIT License";
+        }
+
         private void EnsurePageControllers()
         {
             PageIpSource = EnsureController(PageIpSource);
@@ -461,7 +516,10 @@ namespace CloudflareST.GUI
             PageAbout    = EnsureController(PageAbout);
             PageResults  = EnsureController(PageResults);
             PageLog      = EnsureController(PageLog);
-            PageHook     = EnsureController(PageHook);
+            if (FeatureFlags.HookFeatureEnabled)
+                PageHook = EnsureController(PageHook);
+            else
+                PageHook = null;
         }
 
         private T EnsureController<T>(T existing) where T : Component
@@ -504,7 +562,7 @@ namespace CloudflareST.GUI
             _navBtns = new Button[PAGE_COUNT];
             string[] navNames = { "nav-ip","nav-latency","nav-download","nav-schedule",
                                   "nav-hosts","nav-output","nav-other","nav-about","nav-results",
-                                  "nav-log","nav-hook" };
+                                  "nav-log" };
             for (int i = 0; i < PAGE_COUNT; i++)
             {
                 foreach (var navRoot in navRoots)
@@ -522,7 +580,7 @@ namespace CloudflareST.GUI
             _pages = new VisualElement[PAGE_COUNT];
             string[] pageNames = { "page-ip","page-latency","page-download","page-schedule",
                                    "page-hosts","page-output","page-other","page-about","page-results",
-                                   "page-log","page-hook" };
+                                   "page-log" };
             for (int i = 0; i < PAGE_COUNT; i++)
             {
                 _pages[i] = FindPageRoot(pageContainer, pageNames[i]);
@@ -571,8 +629,6 @@ namespace CloudflareST.GUI
             InitPage(PageAbout,    _pages[7], nameof(PageAbout));
             InitPage(PageResults,  _pages[8], nameof(PageResults));
             InitPage(PageLog,      _pages[9], nameof(PageLog));
-            InitPage(PageHook,     _pages[10], nameof(PageHook));
-            if (PageHook  != null) PageHook.LogController  = PageLog;
             if (PageOther != null) PageOther.LogController = PageLog;
             BindScheduleManager();
         }
@@ -696,7 +752,7 @@ namespace CloudflareST.GUI
                 mgr.OnStateChanged -= RefreshSidebar;
             }
             mgr.StartTestAction  = () => StartTest(fromScheduler: true);
-            mgr.HookController   = PageHook;
+            mgr.HookController   = FeatureFlags.HookFeatureEnabled ? PageHook : null;
             mgr.LogController    = PageLog;
             // 调度状态变更时刷新状态栏
             mgr.OnStateChanged  += RefreshSidebar;
@@ -817,6 +873,7 @@ namespace CloudflareST.GUI
 
         private bool _macHelperStatusBound;
         private bool _macHelperTrustCheckInFlight;
+        private Coroutine _macHelperRefreshCoroutine;
         private MacHelperUiState _macHelperLastState = MacHelperUiState.Unknown;
         private string _macHelperLastDetail = string.Empty;
 
@@ -964,8 +1021,38 @@ namespace CloudflareST.GUI
 
             MacHelperService.OnEvent -= OnMacHelperStatusEvent;
             MacHelperService.OnEvent += OnMacHelperStatusEvent;
+            MacHelperInstallService.OnHelperStateChanged -= OnMacHelperStateChanged;
+            MacHelperInstallService.OnHelperStateChanged += OnMacHelperStateChanged;
 
             RefreshMacHelperStatusLabel();
+        }
+
+        private void OnMacHelperStateChanged()
+        {
+            _macHelperTrustCheckInFlight = false;
+            UnityMainThreadDispatcher.Enqueue(() =>
+            {
+                RefreshMacHelperStatusLabel();
+                ScheduleMacHelperRefresh();
+            });
+        }
+
+        private void ScheduleMacHelperRefresh()
+        {
+            if (_macHelperRefreshCoroutine != null)
+                StopCoroutine(_macHelperRefreshCoroutine);
+            _macHelperRefreshCoroutine = StartCoroutine(DelayedMacHelperRefresh());
+        }
+
+        private IEnumerator DelayedMacHelperRefresh()
+        {
+            yield return new WaitForSeconds(1.0f);
+            _macHelperTrustCheckInFlight = false;
+            RefreshMacHelperStatusLabel();
+            yield return new WaitForSeconds(2.0f);
+            _macHelperTrustCheckInFlight = false;
+            RefreshMacHelperStatusLabel();
+            _macHelperRefreshCoroutine = null;
         }
 
         private void OnMacHelperStatusEvent(MacHelperEvent evt)
@@ -1178,13 +1265,13 @@ namespace CloudflareST.GUI
 #endif
 
         // ── 开始测速 ─────────────────────────────────────────
-        /// <param name="fromScheduler">true 时跳过前/后钩子（ScheduleManager 已在 RunOnce 中调用）</param>
+        /// <param name="fromScheduler">true 时跳过前/后钩子（钩子功能暂时禁用）</param>
         public void StartTest(bool fromScheduler = false)
         {
             if (AppState.Instance.IsRunning) return;
 
             // ── 前钩子（非调度器调用时执行）─────────────────
-            if (!fromScheduler && PageHook != null && !PageHook.RunPreHook())
+            if (FeatureFlags.HookFeatureEnabled && !fromScheduler && PageHook != null && !PageHook.RunPreHook())
                 return;  // 前钩子失败，取消测速
 
             _startedByScheduler = fromScheduler;
@@ -1280,7 +1367,7 @@ namespace CloudflareST.GUI
                     PageOther?.AppendLog(finMsg);
                     PageLog?.AppendLog("[INFO] " + finMsg);
                     // ── 后钩子（非调度器调用时执行，调度器在 RunOnce 中自行调用）
-                    if (!_startedByScheduler)
+                    if (!_startedByScheduler && FeatureFlags.HookFeatureEnabled)
                         PageHook?.RunPostHook(exitCode);
                 });
 

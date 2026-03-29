@@ -4,7 +4,7 @@
 // 职责：
 //   1. 用 Cronos 解析 Cron 表达式，计算下次触发时间
 //   2. 在 Unity 协程中等待到触发时间后执行一次测速
-//   3. 每次执行顺序：RunPreHook → StartTest → (OnFinished 回调) RunPostHook
+//   3. 每次执行顺序：StartTest → (OnFinished 回调)（钩子暂时禁用）
 //   4. 提供启动、停止、立即触发一次等操作
 //   5. 对外暴露状态和下次执行时间供 UI 绑定
 // ============================================================
@@ -179,14 +179,14 @@ namespace CloudflareST.GUI
             }
         }
 
-        // ── 单次执行（前钩子 → 测速 → 后钩子）──────────────
+        // ── 单次执行（钩子暂时禁用）────────────────────────
         private IEnumerator RunOnce(string tag)
         {
             RunCount++;
             Log("[SCHEDULE] [" + tag + "] 开始");
 
             // ① 前置程序检查（同步，主线程执行）
-            if (HookController != null && HookController.IsPreHookEnabled)
+            if (FeatureFlags.HookFeatureEnabled && HookController != null && HookController.IsPreHookEnabled)
             {
                 Log("[SCHEDULE] [" + tag + "] 运行前钩子...");
                 bool preOk = false;
@@ -234,7 +234,7 @@ namespace CloudflareST.GUI
             }
 
             // ③ 后置程序检查（同步）
-            if (HookController != null && HookController.IsPostHookEnabled)
+            if (FeatureFlags.HookFeatureEnabled && HookController != null && HookController.IsPostHookEnabled)
             {
                 Log("[SCHEDULE] [" + tag + "] 运行后钩子...");
                 try { HookController.RunPostHook(_testExitCode); }

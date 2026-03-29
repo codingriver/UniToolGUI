@@ -43,6 +43,7 @@ namespace CloudflareST.GUI
         private Label         _helperCommandOutput;
         private readonly StringBuilder _helperOutputBuffer = new StringBuilder();
         private string _helperLastDiagnosticReport;
+        private Coroutine _helperStatusToastCoroutine;
 
         // 开机自启 Toggle 引用，供事件回调刷新
         private Toggle _startupToggle;
@@ -366,6 +367,55 @@ namespace CloudflareST.GUI
 #endif
         }
 
+        private void ScheduleHelperStatusToast(string prefix, float delaySec = 0.35f)
+        {
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            if (_helperStatusToastCoroutine != null)
+                StopCoroutine(_helperStatusToastCoroutine);
+            _helperStatusToastCoroutine = StartCoroutine(DelayedShowHelperStatusToast(prefix, delaySec));
+#endif
+        }
+
+        private System.Collections.IEnumerator DelayedShowHelperStatusToast(string prefix, float delaySec)
+        {
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            yield return new UnityEngine.WaitForSeconds(delaySec);
+            var status = MacHelperInstallService.QueryStatus();
+            ShowHelperStatusToast(status, prefix);
+            _helperStatusToastCoroutine = null;
+#else
+            yield break;
+#endif
+        }
+
+        private void ShowHelperStatusToast(MacHelperStatus status, string prefix)
+        {
+#if (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || (UNITY_EDITOR_OSX && MAC_HELPER_IN_EDITOR)
+            bool installed = status != null && status.isInstalled;
+            bool connected = status != null && status.isConnected;
+            bool trustExists = !string.IsNullOrEmpty(status?.trustFilePath) && File.Exists(status.trustFilePath);
+
+            string stateText = !installed
+                ? "未安装"
+                : (connected ? "已连接" : "已安装未连接");
+            string title = string.IsNullOrWhiteSpace(prefix) ? "权限组件状态" : prefix;
+            string toastMsg;
+            if (!installed)
+            {
+                toastMsg = $"{title}：未安装权限组件，请先安装"
+                           + (trustExists ? "（信任文件已写入）" : "");
+                ToastManager.Warning(toastMsg);
+                return;
+            }
+
+            toastMsg = $"{title}：{stateText}，信任文件{(trustExists ? "已存在" : "未找到")}";
+            if (connected)
+                ToastManager.Success(toastMsg);
+            else
+                ToastManager.Info(toastMsg);
+#endif
+        }
+
         // 在后台线程重连 helper，完成后在主线程刷新状态标签
         // 用于安装/卸载/刷新信任后，避免 XPC Connect 阻塞主线程
         private void RefreshMacHelperStatusWithReconnect()
@@ -377,11 +427,19 @@ namespace CloudflareST.GUI
                 {
                     MacHelperService.Disconnect();
                     bool connected = MacHelperService.Connect();
-                    UnityMainThreadDispatcher.Enqueue(() => RefreshMacHelperStatus());
+                    UnityMainThreadDispatcher.Enqueue(() =>
+                    {
+                        RefreshMacHelperStatus();
+                        MacHelperInstallService.NotifyStateChanged();
+                    });
                 }
                 catch
                 {
-                    UnityMainThreadDispatcher.Enqueue(() => RefreshMacHelperStatus());
+                    UnityMainThreadDispatcher.Enqueue(() =>
+                    {
+                        RefreshMacHelperStatus();
+                        MacHelperInstallService.NotifyStateChanged();
+                    });
                 }
             });
 #endif
@@ -467,8 +525,9 @@ namespace CloudflareST.GUI
 
         private void OnHelperRefreshStatusClicked(ClickEvent evt)
         {
-            RefreshMacHelperStatus();
-            ToastManager.Info("已刷新权限组件状态");
+            RefreshMacHelperStatusWithReconnect();
+            MacHelperInstallService.NotifyStateChanged();
+            ScheduleHelperStatusToast("状态检查结果");
         }
 
         private void OnHelperDiagnoseClicked(ClickEvent evt)
@@ -647,8 +706,8 @@ namespace CloudflareST.GUI
             AppendLog(ok ? "[INFO] 权限信任刷新成功: " + message : "[ERROR] 权限信任刷新失败: " + message);
             if (ok)
             {
-                ToastManager.Success("信任刷新成功");
                 RefreshMacHelperStatusWithReconnect();
+                ScheduleHelperStatusToast("信任刷新结果", 0.8f);
             }
             else
             {

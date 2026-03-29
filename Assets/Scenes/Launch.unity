@@ -230,6 +230,11 @@ MonoBehaviour:
   WindowsWindowPreset: 0
   _lastWindowsWindowPreset: 0
   SyncMacPresetToProjectSettings: 0
+  AboutGuiVersionText: 1.0.0
+  AboutDllVersionText: 1.0.0
+  AboutRepoUrl: https://github.com/codingriver/CloudflareSpeedTest-CSharphttps://github.com/codingriver/UniToolGUI
+  AboutRepoButtonText: "\u67E5\u770B\u6E90\u7801\u4ED3\u5E93"
+  AboutLicenseText: MIT License
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
