@@ -229,7 +229,7 @@ MonoBehaviour:
   _lastMacWindowPreset: 0
   WindowsWindowPreset: 0
   _lastWindowsWindowPreset: 0
-  SyncMacPresetToProjectSettings: 0
+  SyncMacPresetToProjectSettings: 1
   AboutGuiVersionText: 1.0.0
   AboutDllVersionText: 1.0.0
   AboutRepoUrl: https://github.com/codingriver/CloudflareSpeedTest-CSharphttps://github.com/codingriver/UniToolGUI
@@ -358,7 +358,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95f9540d22cc4eb44b6c0139beb68cae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Tooltip: Unity App
+  Tooltip: UniTool
   MinimizeToTray: 1
   SimulateInEditor: 1
   WindowsIcoFileName: app.ico
